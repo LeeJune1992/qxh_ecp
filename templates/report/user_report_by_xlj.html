@@ -1,0 +1,53 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#express_id').select2({
+                width:'150px',
+                placeholder:'快递公司',
+                allowClear:true
+            })
+        });
+    </script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span6">
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+                <thead>
+                <tr>
+                    <th>共进线</th>
+                    <th>首次订购</th>
+                    <th>二次订购</th>
+                    <th>三次订购</th>
+                    <th>多次订购</th>
+                    <th>无订购</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                {% for row in rows %}
+                        <td>{{ row[0] }}</td>
+                {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors with context %}
+{% set category='item' %}
+{% block title %}sku查询{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/jquery-barcode.min.js') }}"></script>
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2();
+        });
+
+    </script>
+{% endblock %}
+
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+     .table tr td{
+         vertical-align: middle;
+     }
+     .table tr th{
+         vertical-align: middle;
+         text-align: center;
+         font-size: 11px;
+     }
+     .center{
+         text-align: center;
+     }
+    </style>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="名称/编码">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('admin.add_sku') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 添加商品SKU</a>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th rowspan="2">编码</th>
+            <th rowspan="2">名称</th>
+            <th rowspan="2">条码</th>
+            <th rowspan="2">属性</th>
+            <th rowspan="2">零售价</th>
+            <th rowspan="2">市场价</th>
+            <th rowspan="2">活动价</th>
+            <th rowspan="2">允许为赠品</th>
+            <th rowspan="2">阀值</th>
+            <th rowspan="2">警戒值</th>
+            {% for store_name in config['STORES'].values() %}
+            <th colspan="2" style="background-color: #faf2cc;text-align: center;width: 110px">{{ store_name }}</th>
+            {% endfor %}
+            <th style="text-align: center" rowspan="2"></th>
+        </tr>
+        <tr>
+            {% for store_name in config['STORES'].values() %}
+            <th>库存量</th>
+            <th>销售量</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for sku in pagination.items %}
+{#            style="height:50px"{% if sku.actual_quantity<= sku.threshold %} class="error"{% elif sku.actual_quantity<= sku.warning_threshold %} class="warning"{% endif %}#}
+            <tr {% if not sku.status %}class="warning"{% endif %}>
+                <td>{{ sku.id }}</td>
+                <td>{{ sku.name }}<br><code>{{ sku.item.name }}</code></td>
+                <td>{% if sku.code %}<a href="javascript:void(0);" onclick='$(this).parent().barcode("{{ sku.code }}", "int25",{barWidth:2, barHeight:20});'> {{ sku.code }}</a>{% endif %}</td>
+                <td>
+{#                    <dl class="dl-horizontal" style="margin-top: 0;margin-bottom: 0">#}
+{#                        {% for pt,pv in sku.property_list %}#}
+{#                        <dt style="width: 35px"><span class="label">{{ pt }}</span></dt>#}
+{#                        <dd style="margin-left: 40px">{{ pv }}</dd>#}
+{#                            {% endfor %}#}
+{#                    </dl>#}
+
+                    <dl class="dl-horizontal" style="margin-top: 0;margin-bottom: 0">
+                        {% for pt,pv in sku.property_list %}
+                            <dt style="width: 40px;color: darkgray;font-weight: normal">{{ pt }}：</dt>
+                            <dd style="margin-left: 40px;text-align: left;color: darkolivegreen">{{ pv }}</dd>
+                        {% endfor %}
+                    </dl>
+
+{#                    {% autoescape false %}{{ sku.property_list|join('<br/>') }}{% endautoescape %}#}
+                </td>
+                <td>{{ sku.price }}</td>
+                <td>{{ sku.market_price if sku.market_price>0 else '-'}}</td>
+                <td>{{ sku.discount_price if sku.discount_price>0 else '-' }}</td>
+                <td>{% if sku.allowed_gift %}<code>是</code>{% endif %}</td>
+                <td>{{ sku.threshold }}</td>
+                <td>{{ sku.warning_threshold }}</td>
+                {% set sku_stocks = sku.stocks %}
+                {% for store_id in config['STORES'].keys() %}
+                    {% set qty = sku_stocks[store_id][0] %}
+                <td style="text-align: center;font-size: 16px">{% if qty<=sku.threshold %}<span style="font-weight: bold;color: red">{{ qty }}</span>{% else %}{{ qty }}{% endif %} </td>
+                <td style="text-align: center">{{ sku_stocks[store_id][1] }}</td>
+                {% endfor %}
+                <td style="text-align: center">
+                    <a href="{{ url_for('admin.edit_sku',sku_id=sku.id) }}" title="Edit SKU"><i class="icon-pencil icon-black"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination) }}
+
+{% endblock %}

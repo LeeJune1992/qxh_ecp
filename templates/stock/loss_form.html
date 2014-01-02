@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import form_errors,horizontal_field,inline_field,addon_field %}
+{% set category='stock' %}
+{% set prefix='编辑' if is_edit else '登记' %}
+{% block title %}报损登记{% endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+    $(function () {
+        $('select').select2({
+            width:'220px'
+        });
+
+
+        $('body').data({'units': {}});
+        var units = $('body').data('units');
+        {% for k,obj in form.sku._get_object_list() %}
+            units['{{k}}'] = "{{ obj.unit }}";
+        {% endfor %}
+
+        var update_unit = function(){
+            var k = $('#sku').val();
+            if (units[k]==null){
+                $('#quantity-add-on').text('');
+            }
+            else{
+                $('#quantity-add-on').text(units[k]);
+            }
+        }
+
+        $('#sku').on('change',function(){
+            update_unit();
+        });
+        update_unit();
+    });
+</script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend class="lead">报损{{ prefix }}</legend>
+            {{ form.hidden_tag() }}
+            {{ horizontal_field(form.sku) }}
+            {{ addon_field(form.quantity,append_text="件",style="width:180px") }}
+            {{ horizontal_field(form.channel) }}
+            {{ horizontal_field(form.degree) }}
+            {{ horizontal_field(form.link_order_id) }}
+            {{ horizontal_field(form.remark,style="width:520px;height:120px") }}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">{{ prefix }}</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

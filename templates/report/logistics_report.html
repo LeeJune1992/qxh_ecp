@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% set category='report' %}
+{% block title %}物流报表{% endblock %}
+
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+    <style type="text/css">
+        .table tr td{
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table tr th{
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript">
+    $(function(){
+        $('.timepicker').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            autoclose: true,
+            todayBtn: true
+        });
+        $('.datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            language: 'zh-CN'});
+
+        $('select').select2({
+            width:'150px'
+        })
+
+    });
+    </script>
+{% endblock %}
+{% block content %}
+    <ul class="breadcrumb">
+        <li class="pull-right"><blockquote style="color: #ccc">物流报表</blockquote></li>
+        <li> <i class="icon-road"></i></li>
+        {% for endpoint,name in [('report.logistics_report_by_day_delivery','物流发货明细表'),
+        ('report.logistics_report_by_wlfhhz','物流发货汇总表'),
+        ('report.logistics_report_by_io','商品出入库明细表'),
+        ('report.logistics_report_by_loss','报损汇总表')] %}
+            {% if endpoint == request.endpoint %}
+                <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% else %}
+                <li><a href="{{ url_for(endpoint) }}">{{ name }}</a> {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    {% block report %}
+    {% endblock %}
+{% endblock %}

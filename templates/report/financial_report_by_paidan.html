@@ -1,0 +1,101 @@
+{% extends "report/financial_report.html" %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#express_id').select2({
+                width:'150px',
+                placeholder:'快递公司',
+                allowClear:true
+            })
+        });
+    </script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="express_id" name="express_id">
+            <option></option>
+            {% set express_id = request.args.get('express_id',0)|int %}
+            {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
+                <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>发货日期</th>
+            <th>订单号</th>
+            <th>员工</th>
+            <th>所属组</th>
+            <th>物流公司</th>
+            <th>订单类型</th>
+            <th>快递单号</th>
+            <th>客户姓名</th>
+            <th>省</th>
+            <th>市</th>
+            <th>县/地区</th>
+            <th>街道地址</th>
+            <th>结算金额</th>
+            <th>产品名称</th>
+            <th>数量</th>
+            <th>价格</th>
+            <th>金额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+            {% set num = d['items']|length %}
+            <tr>
+            <td rowspan="{{ num + 1 }}">{{ d['date'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['id'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['op'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['team'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['ename'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['ordertype'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['enum'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['ship_to'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['province'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['city'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['district'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ d['street1'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ '%.2f'|format(d['fee']) }}</td>
+            </tr>
+            {% for item in d['items'] %}
+            <tr><td style="text-align: left">{{ item['name'] }}</td><td>{{ item['num'] }}</td><td>{{ item['price'] }}</td><td>{{ item['fee'] }}</td></tr>
+            {% endfor %}
+        {% endfor %}
+{#        {% for d in data %}#}
+{#            <tr>#}
+{#                <td rowspan="{{ d.num + 1 }}">{{ d.category_name }}</td>#}
+{#                <td rowspan="{{ d.num + 1 }}">{{ d.quantity }}</td>#}
+{#                <td rowspan="{{ d.num + 1 }}">{{ '%.2f'|format(d.fee) }}</td>#}
+{#                <td colspan="4" style="background-color: #f7f7f7;height:0px;padding: 0;margin:0;border-width: 0"></td>#}
+{#            </tr>#}
+{#            {% for item in d['items'] %}#}
+{#                <tr>#}
+{#                <td>{{ item.item_name }}</td>#}
+{#                <td>{{ item.quantity }}</td>#}
+{#                <td>{{ '%.2f'|format(item.fee) }}</td>#}
+{#                <td>{% if item.fee>0 %}{{ '%.2f'|format((item.fee|float)/(item.quantity|float)) }}{% else %}0{% endif %}</td>#}
+{#                </tr>#}
+{#            {% endfor %}#}
+{#        {% endfor %}#}
+        </tbody>
+    </table>
+    <div class="alert alert-success">
+        订单数：<strong>{{ data|length }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结算金额：<strong>{{ '%.2f'|format(data|sum(attribute='fee')) }}元</strong>
+    </div>
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

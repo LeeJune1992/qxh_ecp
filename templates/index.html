@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+        .time {
+            font-size: 11px;
+            color: #ccc;
+            text-align: center;
+        }
+
+        .table td {
+            border-bottom: 1px dashed #ccc;
+            border-top-width: 0px;
+        }
+
+        .accordion-toggle {
+            border-top: 1px dashed #ccc;
+        }
+        .op_status{
+            background-color: #fff;
+            margin-bottom: 10px;
+        }
+        .op_status a{
+            margin-left: 50px;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        $('.op_status a').on('click',function(){
+            var req = $.ajax({
+                url: '{{ url_for('admin.change_op_status') }}',
+                dataType: "json",
+                type: 'POST'
+            });
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.reload(true);
+                }
+                else {
+                    bootbox.alert("操作失败：" + data.error);
+                }
+
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert('发生错误:' + error);
+            });
+            return false;
+        });
+    });
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="row-fluid">
+
+        <div class="span4 offset1">
+        {% set need_order_approval = config['ROLE_ALLOWED_ORDER_STATUS'].has_key(current_user.role_id) %}
+{#        {% if need_order_approval %}#}
+{#            <p id="tip" class="block nav-header well well-small" style="font-size: 14px">#}
+{#                <i class="icon-star"></i> 当前待处理订单 <a href="{{ url_for('admin.order_approval') }}"><span style="color: red;font-weight: bold" id="pending_order_nums">{{ order_nums }}</span></a> 个#}
+{##}
+{#                {% if expect_user_nums>0 %}#}
+{#                    <br/>#}
+{#                    <i class="icon-star"></i> 今日预约客户数 <a href="{{ url_for('admin.my_users') }}"><span style="color: blue;font-weight: bold">{{ expect_user_nums }}</span></a> 人#}
+{#                {% endif %}#}
+{#            </p>#}
+{##}
+{#        {% endif %}#}
+
+
+            <div id="info" class="alert">
+                <h3 style="color: #666">Welcome，{{ current_user.nickname }}!</h3>
+
+                {% if need_order_approval %}
+                    <p class="op_status well well-small">
+                       当前状态：<span class="label">{{current_user.status_name}}</span>
+                        {% if current_user.status==2 %}
+                            <a href="#" class="btn btn-success btn-small"><i class="icon-ok icon-white"></i> 上班签到</a>
+                        {% elif current_user.status==1 %}
+                            <a href="#" class="btn btn-danger btn-small"><i class="icon-off icon-white"></i> 下班登记</a>
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <p class="alert alert-success">你当前的角色是<span
+                        style="color:red;text-decoration: underline"> {{ current_user.role_name }}</span>。</p>
+            </div>
+            <p>
+                <a href="{{ url_for('admin.express') }}" class="pull-left"><i class="icon-circle-arrow-right icon-black"></i> 快递单查询入口</a>
+            </p>
+
+        </div>
+        <div class="span6">
+            <p class="well well-small nav-header subtitle">公告板</p>
+            <div class="accordion" id="news">
+                {% for news in news_list %}
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#news"
+                       href="#news-{{ news.id }}">
+                        {{ news.title|safe }} <span
+                            style="color: #ccc;font-size: 12px;float: right">{{ news.created|format_date }}</span>
+                    </a>
+                </div>
+                <div id="news-{{ news.id }}" class="accordion-body collapse">
+                    <div class="accordion-inner">{{ news.content|safe }}
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

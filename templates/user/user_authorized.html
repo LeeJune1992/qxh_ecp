@@ -1,0 +1,1357 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import place_auto_complete_js,assign_log_output %}
+{% set category='user' %}
+{% block title %}修改客户资料 - {{ user.name }}{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}"/>
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 95px;
+            background-color: #f5f3ef;
+            font-weight: bold;
+            border: 1px dashed #ccc;
+            padding-top: 4px;
+            padding-right: 10px;
+            padding-bottom: 4px;
+            text-align: right;
+            color: #777;
+            height: 20px;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 120px;
+        }
+
+        .form-horizontal .control-group {
+            margin-bottom: 12px;
+        }
+
+        .accordion-group {
+            margin-top: 10px;
+        }
+
+        .space {
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+
+        .accordion-heading {
+            background-color: #fcf8e3;
+            font-size: 12px;
+        }
+
+        .accordion-heading a {
+            padding: 0;
+            font-weight: bold;
+            color: #666;
+
+        }
+
+        .accordion-inner {
+            padding-left: 20px;
+            padding-bottom: 5px;
+            padding-top: 15px;
+            background-color: #fcfcfc;
+        }
+
+        .entry-group {
+            display: block;
+            padding: 0px;
+        }
+
+        .entry-group-title {
+            width: 60px;
+            float: left;
+            text-align: right;
+            padding-right: 5px;
+
+        }
+
+        form hr {
+            margin-top: 0px;
+            margin-bottom: 15px;
+        }
+
+        .accordion-inner table tr td {
+            color: #666;
+            text-align: left;
+        }
+
+        pre {
+            margin: 0;
+            padding: 0;
+            padding-left: 5px;
+            background-color: transparent;
+            border-width: 0;
+            border-left: 4px solid #e0f2be;
+        }
+
+        .table tr td {
+            font-size: 14px;
+        }
+
+        .table th {
+            background-color: #f7f7f7;
+        }
+
+        .table-entries {
+            font-size: 12px;
+        }
+
+        .delete {
+            font-weight: bold;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .form-actions {
+            background-color: #ffffff;
+            border-top: 1px dashed #eee;
+        }
+
+        .say{
+            width: 420px;
+            max-width: 520px;
+        }
+
+
+        .menubar{
+            text-align: right;
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#f1f1f1), to(#ffffff));
+            height: 45px;
+            margin-bottom: 165px;
+        }
+
+        .menubar .btn{
+            margin-right: 10px;
+        }
+
+    </style>
+{%- endblock %}
+
+{% block js -%}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/media.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-inputmask.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}"
+        charset="UTF-8"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}"
+        charset="UTF-8"></script>
+<script type="text/javascript">
+$(function () {
+    $('#dialog_type').select2({
+        width: '220px'
+    });
+
+    new MMMS('m1', 'm2', 'm3');
+    $('#medias select').select2({
+        width: '200px'
+    });
+
+    $('#gender').select2({
+        placeholder: '性别',
+        width: '135px'
+    });
+
+    $('#expect_time').datetimepicker({
+        language: 'zh-CN',
+        format: 'yyyy-mm-dd hh:ii',
+        minuteStep: 5,
+        startDate: new Date(),
+        todayBtn: true
+    }).on('changeDate', function (ev) {
+            });
+
+    $('#origin').select2({
+        placeholder: '客户来源',
+        width: '95px'
+    });
+    $('#product_intention').select2({
+        placeholder: '产品意向',
+        width: '125px'
+    });
+
+    $('#assign_operator').select2({
+        width: '130px',
+        placeholder: '归属员工'
+    });
+    $('#assign_operator').select2("disable");
+
+    $('#profession').select2({
+        placeholder: '职业分类',
+        width: '300px'
+    });
+
+//    $('#ages').select2({
+//        placeholder: '客户年龄段',
+//        width: '300px'
+//    });
+
+    $('#address select').select2({
+        width: '155px'
+    });
+
+    $('#income').select2({
+        placeholder: '客户收入范围',
+        width: '300px'
+    });
+
+    $('#dialog_type').select2({
+        width: '220px'
+    });
+
+    $('.entry-select').select2({
+        width: '80px'
+    });
+
+    $('#intent_level').select2({
+        width: '130px'
+    });
+
+    $('#birthday').inputmask({
+        mask: '9999-99-99'
+    });
+
+    var Entry = {
+        data: function (c) {
+            if (c == null) {
+                return $.data(document.body);
+            }
+            else {
+                return $('body').data(c);
+            }
+        },
+        init: function (data) {
+            if (data == null) {
+                $('body').data({'LIFE': {}, 'BODY': {}});
+            }
+            else {
+                $('body').data(data);
+            }
+        },
+        update: function (c) {
+            var entries = Entry.data(c);
+            var $sel = $('#' + c);
+            if (!$.isEmptyObject(entries)) {
+                var _html = '<table class="tabletable-condensed table-striped table-entries" style="width:470px"><tbody>';
+                for (var i in entries) {
+                    var entry = entries[i];
+                    _html += '<tr><td style="width:100px"><code style="color:green">' + entry.c2 + '</code> <code>' + entry.c3 + '</code></td><td>' + entry.v + '</td><td style="width:40px;text-align:center"><a href="#" class="delete" data-c="' + c + '" data-code="' + i + '">&times;</a></td></tr>';
+                }
+                _html += '</tbody></table>';
+                $sel.html(_html);
+                $('a.delete').on('click', Entry.del);
+            }
+            else {
+                $sel.html(null);
+            }
+        },
+        del: function (event) {
+            var code = $(this).data('code');
+            var c = $(this).data('c');
+            var entries = Entry.data(c);
+            if (entries[code] != null) {
+                delete entries[code];
+                Entry.update(c);
+            }
+            return false;
+        },
+        add: function () {
+            var $sel = $(this).siblings("select");
+            var $input = $(this).siblings('input');
+            var c1 = $(this).data('c1');
+            var c2 = $(this).data('c2');
+            var c3 = $sel.find('option:selected').text();
+            var code = $sel.val();
+            var v = escape_html($input.val());
+
+            var data_type = $sel.find('option:selected').data('type');
+            if (data_type == 1 && v == '') {
+                $input.focus();
+                return false;
+            }
+
+            var entries = Entry.data(c1);
+            entries[code] = {'c2': c2, 'c3': c3, 'v': v};
+            Entry.update(c1);
+            //$input.val(null);
+            return false;
+        }
+    };
+
+    $('a.add-entry').on('click', Entry.add);
+
+    $('select.entry-select').change(function () {
+        var sel_id = $(this).val();
+        var $input = $(this).siblings('input');
+        entries = Entry.data();
+        for (var i in entries) {
+            var _entries = entries[i];
+            for (var j in _entries) {
+                if (sel_id == j) {
+                    _entry = _entries[j];
+                    $input.val(_entry.v);
+                    return;
+                }
+            }
+        }
+    });
+
+
+    var selected_concerns = function () {
+        var _ids = [];
+        $('input[name="concern"]').filter(':checked').each(function () {
+            _ids.push($(this).val());
+        });
+        return _ids;
+    };
+
+    $('input.say').keypress(function (e) {
+        if (e.which == 13) {
+            var new_txt = $(this).val();
+            if (new_txt == '') {
+                if ($(this).attr('name') == 'yg') {
+                    $('input[name=kh]').focus();
+                }
+                else {
+                    $('input[name=yg]').focus();
+                }
+                return false;
+            }
+            var person = $(this).data('person');
+            var _area = $('textarea[name=dialog_content]');
+            var text = _area.val();
+            if (text != '') {
+                text += '\n';
+            }
+            text += person + '说：' + new_txt;
+            _area.val(text);
+            _area.scrollTop(_area[0].scrollHeight - _area.height());
+            $(this).val(null);
+            if ($(this).attr('name') == 'yg') {
+                $('input[name=kh]').focus();
+            }
+            else {
+                $('input[name=yg]').focus();
+            }
+            return false;
+        }
+    });
+
+    function show_success(info) {
+        $('#success').show();
+        $('#success p').empty().html(info);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+
+    function show_err(err) {
+        $('#error').show();
+        $('#error p').empty().html(err);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+
+    /*   地址查询   */
+    new PCAS("province", "city", "district");
+    $('#address select').change(function () {
+        var _name = $(this).attr('name');
+        if (_name == 'province') {
+            $('#city').select2('val', '').change();
+        }
+        else if (_name == 'city') {
+            $('#district').select2('val', '').change();
+        }
+        else {
+            var _address = "";
+            $.each(['#province', '#city', '#district'], function (index, name) {
+                var d = $(name).val();
+                if (d != "请选择" && d != "市辖县" && d != "市辖区") {
+                    _address += $(name).val();
+                }
+            });
+            $('#address .add-on').empty().text(_address);
+        }
+    });
+
+    $('#reset_address').click(function () {
+        $('#address-form').hide();
+        $('#address_id').val(0);
+        return false;
+    });
+
+    $('#add-address').click(function () {
+        $('#ship_to').val(null);
+        $('#province').val(null).change();
+        $('#city').val(null).change();
+        $('#district').val(null).change();
+        $('#street1').val(null);
+        $('#phone').val(null);
+        $('#tel').val(null);
+        $('#email').val(null);
+        $('#postcode').val(null);
+        $('#address_id').val(0);
+        $('#save_address').text('增加收货地址');
+        $('#address-form').show();
+        $(window).scrollTop($('#address-form').offset().top);
+        return false;
+    });
+
+    $('form#address-form').submit(function () {
+        address.update(function (data) {
+            if (data.result == true) {
+                show_shipping_address();
+                $('#address-form').hide();
+            }
+            else {
+                bootbox.alert('地址更新失败:' + data.error);
+            }
+        });
+        return false;
+    });
+
+    var show_shipping_address = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_address_api',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var addresses = data.addresses;
+            if (!$.isEmptyObject(addresses)) {
+                var html = '<table class="table table-bordered table-condensed table-history"><thead><tr><th>收货人</th><th>手机号</th><th>电话</th><th>收货地址</th><th>邮编</th><th></th></tr></thead><tbody>';
+                $.each(addresses, function () {
+
+                    var attrs = '';
+                    $.each(this, function (i, item) {
+                        attrs += i + '="' + item + '" ';
+                    });
+                    tip_info = '<a href="#" class="edit_address" ' + attrs + '><i class="icon-edit"></i></a>';
+                    html += '<tr><td>' + this.ship_to + '</td><td>' + this.phone + '</td><td>' + this.tel + '</td><td>' + this.format_address + '</td><td>' + this.postcode + '</td><td style="text-align:center">' + tip_info + '</td></tr>';
+                });
+
+                html += '</tbody></table>';
+                $('#shipping_address').html(html);
+
+                $('a.edit_address').click(function () {
+                    var addr = $(this);
+                    $('#address_id').val(addr.attr('id'));
+                    $.each(['ship_to', 'street1', 'postcode', 'phone', 'tel', 'email'], function (k, i) {
+                        $('#' + i).val(addr.attr(i));
+                    });
+
+                    $.each(['province', 'city', 'district'], function (k, i) {
+                        $('#' + i).val(addr.attr(i)).change();
+                    });
+                    $('#address-form').show();
+                    $('#save_address').text('更新地址');
+                    $(window).scrollTop($('#address-form').offset().top);
+                    return false;
+                });
+            }
+            else {
+                $('#shipping_address').html('');
+            }
+        });
+    };
+    show_shipping_address();
+
+    var show_orders = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_orders',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var orders = data.orders;
+            if (!$.isEmptyObject(orders)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>订单编号</th><th>付款方式</th><th>金额</th><th>状态</th><th>员工</th><th>下单时间</th><th></th></tr></thead><tbody>';
+                for (var i in orders) {
+                    order = orders[i];
+                    html += '<tr><td>' + order.id + '</td><td>' + order.payment + '</td><td>' + order.fee + '</td><td>' + order.status + '</td><td>' + order.op_name + '</td><td>' + order.time + '</td><td><a href="/order/detail/' + order.id + '">查看详情</a></td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#order_history').html(html);
+                $('#order_nums').html(orders.length);
+            }
+            else {
+                $('#order_history').html('尚无订购记录！');
+                $('#order_nums').html(0);
+            }
+
+            var order_items = data.order_items;
+            if (!$.isEmptyObject(order_items)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>商品名称</th><th>单价</th><th>订购数量</th><th>金额</th></tr></thead><tbody>';
+                for (var i in order_items) {
+                    order_item = order_items[i];
+                    html += '<tr><td>' + order_item.name + '</td><td>' + order_item.price + '</td><td>' + order_item.quantity + '</td><td>' + order_item.fee + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#order_item_history').html(html);
+            }
+        });
+    };
+    show_orders();
+
+    var show_sms = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_sms',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>短信内容</th><th>状态</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.status + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#sms_history').html(html);
+                $('#sms_nums').html(sms_list.length);
+            }
+            else {
+                $('#sms_history').html('无短信记录');
+                $('#sms_nums').html(0);
+            }
+        });
+    };
+
+    show_sms();
+
+    var Dialog = {
+        update: function () {
+            var req = $.ajax({
+                url: '{{ url_for('admin.user_dialogs',user_id=user.user_id) }}',
+                dataType: "json",
+                cache: false,
+                type: 'GET'
+            });
+            req.done(function (data) {
+                var dialogs = data.result;
+                if (!$.isEmptyObject(dialogs)) {
+                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+                    for (var i in dialogs) {
+                        dialog = dialogs[i];
+                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.op_name + '</td></tr>';
+                    }
+                    html += '</tbody></table>';
+                    $('#dialog_history').html(html);
+                    $('#dialog_nums').html(dialogs.length);
+                }
+                else {
+                    $('#dialog_history').html(null);
+                    $('#dialog_nums').html(0);
+                }
+            });
+        },
+        add: function () {
+            var solution = escape_html($('#dialog_solution').val());
+            var content = escape_html($('#dialog_content').val());
+            var type = $('#dialog_type').val();
+
+            if (content == '') {
+                bootbox.alert('沟通内容不能为空！');
+                return false;
+            }
+
+            if (type == '') {
+                bootbox.alert('请选择沟通的类型！');
+                return false;
+            }
+
+            var req = $.ajax({
+                url: '{{ url_for('admin.add_dialog',user_id=user.user_id) }}',
+                dataType: "json",
+                type: 'POST',
+                data: {solution: solution, content: content, type: type}
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    Dialog.update();
+                    $('#dialog_solution').val(null);
+                    $('#dialog_content').val(null);
+                    show_success('沟通记录已保存！');
+                }
+                else {
+                    bootbox.alert('添加沟通记录失败：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+            return false;
+        }
+    };
+    Dialog.update();
+    $('a#add_dialog').click(Dialog.add);
+
+    $('#expect_over').click(function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.complete_user_expect',user_id=user.user_id) }}',
+            dataType: "json",
+            type: 'POST'
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#user_expect').hide();
+            }
+            else {
+                bootbox.alert('发生错误：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
+
+    $('a#drop_user').click(function () {
+        var confirm_text = '确认申请放弃该客户？';
+        bootbox.prompt(confirm_text, function (result) {
+            if(result === null){
+				return;
+			}else if(result == ''){
+				bootbox.alert('原因为空,请填写原因!');
+				return;
+			}
+
+            var req = $.ajax({
+                url: '{{ url_for('admin.giveup_user',user_id=user.user_id) }}',
+                dataType: "json",
+                type: 'POST',
+                data: {reason: result}
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.href = "{{ url_for('admin.my_users') }}";
+                }
+                else {
+                    bootbox.alert('发生错误：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+        });
+        return false;
+    });
+
+
+    $('a#sms_notify').click(function () {
+        var _obj = $(this);
+        var confirm_text = '<b>短信内容：</b><br/><p style="color:blue">'+_obj.data('message')+'</p>';
+        bootbox.confirm(confirm_text, function (result) {
+            if (result != true) {
+                return;
+            }
+
+            var req = $.ajax({
+                url: '{{ url_for('admin.user_sms_notify',user_id=user.user_id) }}',
+                dataType: "json",
+                type: 'POST'
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    _obj.hide();
+                }
+                else {
+                    bootbox.alert('发生错误：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+        });
+        return false;
+    });
+
+    $('#user_id').val({{ user.user_id }});
+    $('#name').val('{{ user.name }}');
+    $('#origin').val({{ user.origin }}).change();
+	{%if user.product_intention or user.product_intention > -1 %}
+    $('#product_intention').val({{ user.product_intention }}).change();
+	{%endif%}
+    $('#gender').val('{{ user.gender }}').change();
+    $('#intent_level').val('{{ user.intent_level }}').change();
+    $('#birthday').val('{{ user.birthday|default('',true) }}');
+    $('#remark').val('{{ user.remark|default('',true) }}');
+    $('#ages').val({{ user.ages }});
+    $('#user_phone').val('{{ user.phone|default('',true) }}');
+    $('#user_phone2').val('{{ user.phone2|default('',true) }}');
+    $('#user_tel').val('{{ user.tel|default('',true) }}');
+    $('#user_tel2').val('{{ user.tel2|default('',true) }}');
+    {% if user.profession %}$('#profession').val('{{ user.profession|default('',true) }}').change();{% endif %}
+    $('#income').val({{ user.income }}).change();
+    $('#expect_time').val('{{ user.expect_time|default('',true) }}');
+
+    $('#m1').val('{{ user.m1|default('',true) }}').change();
+    $('#m2').val('{{ user.m2|default('',true) }}').change();
+    $('#m3').val('{{ user.m3|default('',true) }}').change();
+
+    {% if user.entries %}
+    var data = JSON.parse('{{user.entries|replace("'","")|safe}}');
+    Entry.init(data);
+    for (var i in data) {
+        Entry.update(i);
+    }
+    ;
+    $('select.entry-select').change();
+    {% else %}
+    Entry.init(null);
+    {% endif %}
+
+
+    $('form#sms-form').submit(function(){
+        var sms_message = $('#sms_message').val();
+        if (sms_message==null || sms_message==''){
+            alert('短信内容不允许为空');
+            $('#sms_message').focus();
+            return false;
+        }
+
+        if (sms_message.length>140){
+            alert('短信内容不允许超过140个字');
+            return false;
+        }
+
+        var req = $.ajax({
+            url: '{{ url_for('admin.add_sms',user_id=user.user_id) }}',
+            dataType: "json",
+            type: 'POST',
+            data: {message: sms_message}
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#smsModal').modal('hide');
+                bootbox.alert('短信已提交，请等待管理员审核！');
+            }
+            else {
+                bootbox.alert('添加短信失败：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
+
+
+    function update_order_link(){
+        var _href = '/order/add?user_id='+'{{ user.user_id }}'+'&phone='+$('#user_phone').val()+'&name='+$('#name').val();
+        $('#order_link').attr('href',_href);
+    }
+
+    /*   提交表单   */
+    $('form#user-form').submit(function () {
+        var add_btn = $('button[type="submit"]');
+
+        //验证客户姓名
+        var username = $('#name').val();
+        if (username==null || username==''){
+            show_err('客户姓名不允许为空');
+            $('#name').focus();
+            return false;
+        }
+
+        //验证客户来源
+        var user_origin = $('#origin').val();
+        if(user_origin==''||user_origin==null){
+            show_err('请选择客户来源');
+            $('#origin').focus();
+            return false;
+        }
+		//验证产品意向
+		var product_intention = $('#product_intention').val();
+		if(product_intention==''||product_intention==null){
+			show_err('请选择产品意向');
+			$('#product_intention').focus();
+			return false;
+		}
+		//验证性别
+		var gender = $('#gender').val();
+		if (gender==null || gender==''){
+			show_err('性别不允许为空');
+			$('#gender').focus();
+			return false;
+		}
+		//验证客户年龄
+		var ages = $('#ages').val();
+		if (ages==null || ages=='NaN'){
+			show_err('客户年龄不允许为空');
+			$('#ages').focus();
+			return false;
+		}else{
+			ages = parseInt(ages);
+			if(parseInt(ages)!=ages){
+				show_err('客户年龄填写不正确');
+				$('#ages').focus();
+				return false;
+			}else if(ages>99 || ages<10){
+				 show_err('客户年龄填写不正确');
+				$('#ages').focus();
+				return false;
+			}
+		}
+
+        //验证电话号码
+        var phone = $('#user_phone').val();
+        if(!validate_phone(phone)){
+            show_err('电话号码输入不正确。本地号码无需+区号028，手机号码首位不允许为0。');
+            $('#phone').focus();
+            return false;
+        }
+
+        var other_phones = ['#user_phone2','#user_tel','#user_tel2'];
+        for (var i in other_phones ){
+            var _phone = other_phones[i];
+            var v = $(_phone).val();
+            if (v!='' && !validate_phone(v)){
+                show_err('电话号码输入不正确。本地号码无需+区号028，手机号码首位不允许为0。');
+                $(_phone).focus();
+                return false;
+            }
+        }
+
+        add_btn.attr('disabled', true);
+        //validate form
+        var values = $('form').serializeArray();
+        values.push({name: 'entries', value: JSON.stringify(Entry.data())});
+        values.push({name: 'concerns', value: JSON.stringify(selected_concerns())});
+        var req = $.ajax({
+            url: "{{ url_for('admin.edit_user',user_id=user.user_id) }}",
+            dataType: 'json',
+            type: 'POST',
+            data: $.param(values)});
+
+        req.done(function (data) {
+            if (data.result == true) {
+                show_success('保存资料成功！');
+                update_order_link();
+            }
+            else {
+                show_err(data.error);
+            }
+        });
+        req.fail(function (request, status, err) {
+            show_err('发生未知错误，请与管理员联系!');
+        });
+        req.always(function () {
+            add_btn.attr('disabled', false);
+        });
+        return false;
+    });
+
+    $('#dialogCollapse').on('hidden',function(){
+        $('.menubar').css('margin-bottom','40px');
+    });
+
+    $('#dialogCollapse').on('shown',function(){
+        $('.menubar').css('margin-bottom','165px');
+    });
+
+});
+</script>
+{{ place_auto_complete_js() }}
+{%- endblock %}
+
+{%- block main -%}
+    <form name="sms-form" id="sms-form">
+    <div id="smsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <blockquote style="color:#ccc">提示：短信需经后台审核后才可正常发送。</blockquote>
+        </div>
+        <div class="modal-body">
+            <textarea class="span12" style="height: 90px" id="sms_message" name="sms_message" placeholder="短信内容"></textarea>
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-success" type="submit">确认提交</button>
+        </div>
+
+    </div>
+    </form>
+
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+
+    <div class="alert alert-block alert-success fade in" id="success" style="display: none">
+        <button type="button" class="close" onclick="$('#success').hide();">&times;</button>
+        <p></p>
+    </div>
+
+    <div class="accordion" id="accordion2" style="margin-bottom: 140px">
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+                <i class="icon-chevron-down"></i> 基本资料
+            </a>
+        </div>
+        <form id="user-form" class="form-horizontal" method="post">
+            <fieldset>
+                <div id="collapseOne" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+
+                        <div class="row-fluid" style="padding-bottom: 0">
+                            <div class="span6">
+                                <div class="control-group">
+                                    <label class="control-label">客户</label>
+
+                                    <div class="controls">
+                                        <input id="name" name="name" placeholder="姓名" type="text"
+                                               style="width: 55px">
+                                        <input id="remark" name="remark" placeholder="备注" type="text"
+                                               style="width: 125px;color: red">
+                                        <select id="origin" name="origin" class="space">
+                                            <option></option>
+                                            {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                                                <option value="{{ k }}">{{ v }}</option>
+                                            {%- endfor -%}
+                                        </select>
+
+                                    </div>
+                                </div>
+
+
+                                <div class="control-group">
+                                    <label class="control-label">手机号码</label>
+
+                                    <div class="controls">
+                                        <input id="user_phone" name="user_phone" style="width: 140px" type="text"
+                                               placeholder="手机号码1" value="{{ request.args.get('phone','') }}">
+                                        <input id="user_phone2" name="user_phone2" style="width: 140px" type="text"
+                                               placeholder="手机号码2">
+
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label">座机电话</label>
+
+                                    <div class="controls">
+                                        <input id="user_tel" name="user_tel" style="width: 140px" type="text"
+                                               placeholder="座机号码1">
+                                        <input id="user_tel2" name="user_tel2" style="width: 140px" type="text"
+                                               placeholder="座机号码2">
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label">意向等级</label>
+
+                                    <div class="controls">
+                                        <select id="intent_level" name="intent_level" class="space">
+                                            {% for lv in config['USER_INTENT_LEVELS'] %}
+                                                <option value="{{ lv }}">{{ lv }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select id="product_intention" name="product_intention" class="space">
+                                            <option></option>
+                                            {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
+                                                <option value="{{ k }}">{{ v }}</option>
+                                            {%- endfor -%}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">归属员工</label>
+
+                                    <div class="controls">
+                                        <select name="assign_operator" id="assign_operator">
+                                            {% if user %}
+                                                {% if user.assign_operator_id %}
+                                                    <option value="{{ user.assign_operator_id }}">{{ user.assign_operator.nickname }}</option>
+                                                {% else %}
+                                                    <option></option>
+                                                {% endif %}
+                                            {% else %}
+                                                <option value="{{ current_user.id }}">{{ current_user.nickname }}</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="span6">
+                                <div class="control-group">
+                                    <label class="control-label">出生</label>
+
+                                    <div class="controls">
+                                        <select id="gender" name="gender">
+                                            <option></option>
+                                            <option value="保密">保密</option>
+                                            <option value="男">男</option>
+                                            <option value="女">女</option>
+                                        </select>
+                                        <input id="birthday" name="birthday" style="width: 145px" type="text"
+                                               placeholder="1900-00-00">
+
+
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">客户年龄</label>
+
+                                    <div class="controls">
+                                        <input id="ages" name="ages" class="input-large" value="{{user.ages}}" type="text" />岁
+										<!--<select id="ages" name="ages" class="space">
+                                            <option></option>
+
+                                            {% for k,v in config['USER_AGES'].iteritems() %}
+                                                <option value="{{ k }}">{{ v }}</option>
+                                            {% endfor %}
+                                        </select>-->
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label">从事行业</label>
+
+                                    <div class="controls">
+                                        <select id="profession" name="profession" class="space">
+                                            <option></option>
+
+                                            {% for name in config['USER_PROFESSION_CONFIG'].values() %}
+                                                <option value="{{ name }}">{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label">收入范围</label>
+
+                                    <div class="controls">
+                                        <select id="income" name="income" class="space">
+                                            <option></option>
+                                            {% for income_id,name in config['USER_INCOME_CONFIG'].iteritems() %}
+                                                <option value="{{ income_id }}">{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label" style="background-color: #bce8f1">预约时间</label>
+
+                                    <div class="controls">
+                                        <input id="expect_time" name="expect_time" class="input-large" type="text"/>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <hr/>
+                            <div class="span12">
+
+                                <div class="control-group">
+                                    <label class="control-label" style="background-color: #fdf59a">媒体来源</label>
+
+                                    <div class="controls" id="medias">
+                                        <select id="m1" name="m1" style="width: 200px"></select>
+                                        <select id="m2" name="m2" style="width: 200px"></select>
+                                        <select id="m3" name="m3" style="width: 200px"></select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">关心问题</label>
+
+                                    <div class="controls">
+                                        {% for k,v in config['CONCERNS'].iteritems() %}
+                                            <label class="inline checkbox"><input type="checkbox" name="concern"
+                                                                                  value="{{ k }}" {{ 'checked' if user and k in user.concerns else '' }}/>{{ v }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+                </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo">
+                <i class="icon-chevron-down"></i> 身体状态
+            </a>
+        </div>
+        <div id="collapseTwo" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid">
+                    <div class="span6">
+                        {%- for group_id,group_name,entries,css in config['USER_BODY_CONFIG'] -%}
+                            <div class="entry-group space">
+                                <div class="entry-group-title"><span class="{{ css }}">{{ group_name }}</span></div>
+                                <select id="{{ group_id }}" class="entry-select">
+                                    {%- for entry_id,entry_name,entry_type in entries -%}
+                                        <option value="{{ entry_id }}"
+                                                data-type="{{ entry_type }}">{{ entry_name }}</option>
+                                    {%- endfor -%}
+                                </select>
+                                <input type="text" style="width: 240px" name="value" placeholder="症状"/>
+                                <a href="#" class="add-entry btn btn-small" data-c2="{{ group_name }}"
+                                   data-c1="BODY">添加</a>
+                            </div>
+                        {%- endfor -%}
+                        <hr/>
+                    </div>
+                    <div class="span6" id="BODY">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseThree">
+                <i class="icon-chevron-down"></i> 生活习惯
+            </a>
+        </div>
+        <div id="collapseThree" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <textarea name="habits_customs" style="width:600px; height:120px;" class="input">{{user.habits_customs}}</textarea>
+                        <hr/>
+                    </div>
+                    <div class="span6" id="LIFE">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navbar navbar-fixed-bottom menubar">
+        <div class="container-fluid">
+        <button type="submit" class="btn btn-success btn-small">保存资料</button>
+        <a href="{{ url_for('admin.add_order',phone=user.phone,name=user.name,user_id=user.user_id) }}" class="btn btn-primary btn-small" id="order_link">创建订单</a>
+        {% if user.assign_operator_id == current_user.id %}
+            {% set mobile_phones = user.mobile_phones %}
+            {% if user.user_type==2 and not user.is_sms and mobile_phones %}
+            <a href="#" id="sms_notify" class="btn btn-warning btn-small" data-message="{{ user.sms_message }}">短信提醒</a>
+            {% endif %}
+            {% if mobile_phones %}
+                <a href="#" id="send_sms" class="btn btn-warning btn-small" onclick="$('#smsModal').modal('show');">发送短信</a>
+            {% endif %}
+            <a href="#" id="drop_user" class="btn btn-danger btn-small">申请放弃客户</a>
+        {% endif %}
+            </div>
+    </div>
+
+
+    </fieldset>
+    </form>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#dialogModule">
+                <i class="icon-chevron-down"></i> 沟通记录 (<span id="dialog_nums"></span>)
+            </a>
+        </div>
+        <div id="dialogModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid" style="padding-bottom: 0" id="dialog_history">
+                    <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/> 正在费力加载中...
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#addressModule">
+                <i class="icon-chevron-down"></i> 收货地址
+            </a>
+        </div>
+        <div id="addressModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div id="shipping_address"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                border="0"/>正在费力加载中...
+                </div>
+                <a href="#" id="add-address"><i class="icon-plus"></i> 增加收货地址</a>
+                <hr/>
+                <form action="" id="address-form" class="form-horizontal dl-horizontal" style="display: none">
+                    <input id="address_id" name="address_id" type="hidden" value="0">
+                    <input id="user_id" name="user_id" type="hidden" value="{{ user.user_id }}">
+
+                    <div class="control-group">
+                        <label class="control-label" for="ship_to">收货人姓名</label>
+
+                        <div class="controls">
+                            <input type="text" id="ship_to" name="ship_to" class="input input-large"
+                                   required='请输入用户姓名'/>
+                        </div>
+                    </div>
+
+
+                    <div class="control-group">
+                        <label class="control-label" for="street1">地 址</label>
+
+                        <div class="controls">
+                            <div id="address">
+                                <select id="province" name="province" class="select2" style="width: 155px"></select>
+                                <select id="city" name="city" class="select2" style="width: 170px"></select>
+                                <select id="district" name="district" class="select2"
+                                        style="width: 160px"></select><br/>
+
+                                <div class="input-prepend" style="margin-top: 10px">
+                                    <span class="add-on"></span>
+                                    <input type="text" id="street1" name="street1" class="input input-large"
+                                           style="width: 300px" placeholder="街道地址" required/>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="phone">联系电话</label>
+
+                        <div class="controls">
+                            <input type="text" id="phone" name="phone" placeholder="手机号码" required/>
+                            <input type="text" id="tel" name="tel" placeholder="固定电话" style="margin-left: 10px"/>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="email">邮箱地址</label>
+
+                        <div class="controls">
+                            <input type="text" id="email" name="email" class="input"/>
+
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="postcode">邮政编码</label>
+
+                        <div class="controls">
+                            <input type="text" id="postcode" name="postcode" class="input input-small"
+                                   placeholder="邮政编码"/>
+
+                        </div>
+                    </div>
+                    <div id="update_address" style="margin-left: 130px">
+                        <button type="submit" class="btn btn-success" id="save_address">保存地址</button>
+                        <a href="#" id="reset_address" class="btn">取消</a><span style="margin-left: 20px"></span>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#orderModule">
+                <i class="icon-chevron-down"></i> 历史购买记录 (<span id="order_nums"></span>)
+            </a>
+        </div>
+        <div id="orderModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid">
+                    <div class="span7" id="order_history">
+                        <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                    </div>
+                    <div class="span5" id="order_item_history"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#smsModule">
+                <i class="icon-chevron-down"></i> 短信记录　(<span id="sms_nums"></span>)
+            </a>
+        </div>
+        <div id="smsModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div id="sms_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                           border="0"/>正在费力加载中...
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+
+{%- endblock -%}
+
+{% block ext_content %}
+    <div class="accordion-group  navbar navbar-fixed-bottom" id="dialogCollapse">
+        <div class="accordion-heading" style="background-color:#e0f2be">
+            <a class="accordion-toggle" data-toggle="collapse" href="#addDialogModule">
+                <i class="icon-chevron-down"></i> 增加沟通记录
+            </a>
+        </div>
+        <div id="addDialogModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row">
+                    <div class="span3">
+                        <select id="dialog_type" name="dialog_type">
+                            {% for dialog_type,name in config['DIALOG_TYPES'].iteritems() %}
+                                <option value="{{ dialog_type }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <br/>
+                        <textarea name="dialog_solution" id="dialog_solution"
+                                  style="width: 210px;height: 50px;margin-top: 10px" placeholder="解决方案"></textarea>
+
+                    </div>
+                    <div class="span4">
+                        <textarea name="dialog_content" id="dialog_content"
+                                  style="width:265px;height:90px;background-color:#f5f3ef;overflow-y: auto"
+                                  placeholder="沟通内容"></textarea>
+                    </div>
+                    <div class="span5">
+                        <div class="input-prepend">
+                            <span class="add-on">员工说：</span>
+                            <input name="yg" type="text" data-person="员工" class="say"
+                                   style="background-color: #fff">
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on">客户说：</span>
+                            <input name="kh" type="text" data-person="客户" class="say"
+                                   style="background-color: #fff">
+                        </div>
+                        <a href="#" class="btn btn-success btn-mini" id="add_dialog">添加沟通记录</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block sidebar -%}
+    {{ super() }}
+    <div style="font-size:12px;line-height: 18px;margin-top: 30px;text-align: right">
+        {% for log in assign_logs %}
+            <div style="border-bottom: #cccccc dashed 1px;margin-bottom: 8px;padding-right: 5px">{{ assign_log_output(log) }}</div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import horizontal_field,form_errors with context %}
+{% set prefix='修改' if is_edit else '发布' %}
+{% block title %}{{ prefix }}公告{% endblock %}
+{% set category='knowledge' %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/wysiwyg-color.css') }}" />
+    <style type="text/css" media="screen">
+        form ul{
+            margin-left: 0;
+        }
+        form ul li{
+            list-style: none;
+            float:left;
+            margin-right: 5px;
+
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/wysihtml5-0.3.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-wysihtml5.js') }}"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $('textarea#content').wysihtml5();
+        });
+    </script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" id="registerHere" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ prefix }}知识</legend>
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, False) }}
+
+           <div class="control-group">
+                <label for="title" class="control-label">标题</label>
+                <div class="controls">
+                	<input type="text" style="width:420px" id="title" name="title" value="{% if knowledge%}{{knowledge.title}}{%endif%}" />
+                </div>
+            </div>
+           <div class="control-group">
+                <label for="category_id" class="control-label">类型</label>
+                <div class="controls">
+                    <select name="category_id" id="category_id">
+                    {%for item in items%}
+                    	<option value="{{item.id}}"{% if knowledge and knowledge.category_id==item.id%} selected="selected"{%endif%}>{{item.name}}</option>
+                    {%endfor%}
+                    </select>
+                </div>
+            </div>
+           <div class="control-group">
+                <label for="content" class="control-label">内容</label>
+                <div class="controls">
+                	<textarea id="content" name="content" style="width:650px; height:350px;">{% if knowledge%}{{knowledge.content}}{%endif%}</textarea>
+                </div>
+            </div>
+            
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ prefix }}知识</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

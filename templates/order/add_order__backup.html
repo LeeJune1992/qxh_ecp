@@ -1,0 +1,553 @@
+{% extends "layout.html" %}
+{% set category='order' %}
+{% block title %}订单录入{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .form-horizontal .control-group {
+            margin-bottom: 12px;
+        }
+
+        .delete {
+            font-weight: bold;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .bigdrop.select2-container .select2-results {
+            max-height: 300px;
+        }
+
+        .bigdrop .select2-results {
+            max-height: 300px;
+        }
+
+        .c1 {
+            background-color: #f2dede;
+            padding-left: 5px;
+            padding-top: 4px;
+            margin-bottom: 5px;
+            max-width: 450px;
+            border: 1px dashed #aaa;
+            font-size: 12px;
+        }
+        .sku_set_style{
+            font-weight:bolder;
+        }
+    </style>
+
+{%- endblock %}
+{% block js -%}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+    <script type="text/javascript">
+    $(function () {
+        function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html('发生错误：'+err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        };
+
+        $('body').data({'items': {}});
+        $('select.select2').select2({
+            width:'220px'
+        });
+
+        $('#item').select2({
+            width:'280px'
+        });
+
+        $('#username').blur(function(){
+            $('#ship_to').val($(this).val());
+        });
+
+        $('#unit').text($('#item option:selected').attr('unit'));
+        $('#item').change(function(){
+            $('#unit').text($('#item option:selected').attr('unit'));
+        });
+
+        /*   地址查询   */
+        new PCAS("province", "city", "district");
+        $('#address select').change(function () {
+            var _address = "";
+            $.each(['#province', '#city', '#district'], function (index, name) {
+                var d = $(name).val();
+                if (d != "请选择" && d != "市辖县" && d != "市辖区") {
+                    _address += $(name).val();
+                }
+            });
+            $('#address .add-on').empty().text(_address);
+        });
+
+
+
+        $('#update_address a').on('click',function (e) {
+            e.preventDefault();
+            address.update();
+            return false;
+        });
+
+        $('#reset_address').on('click',function(e){
+            var $selected = $("input[name=old_address]:checked");
+            if ($selected != null){
+                e.preventDefault();
+                address.reset();
+                $selected.removeAttr('checked');
+                $('#reset_address').hide();
+                $('#ship_to').focus();
+            }
+        });
+
+        /*   客户检索   */
+        $("#user_id").val(0);
+        $("#user_id").select2({
+            placeholder: "",
+            width:"220px",
+            minimumInputLength: 2,
+            maximumInputLength: 5,
+            allowClear: true,
+            id: 'user_id',
+            ajax: {
+                url: "{{ url_for('admin.simple_users') }}",
+                dataType: 'json',
+                quietMillis: 500,
+                data: function (term, page) {
+                    return {q: term};
+                },
+                results: function (data, page) {
+                    var more = (page * 10) < data.total;
+                    return {results: data.users, more: more};
+                }
+            },
+            formatResult: function (user) {
+                return "" + user.name + " <span class='pull-right' style='font-size:12px'>" + user.tel + "</span>"
+            },
+            formatSelection: function (user) {
+                $('#new_user').hide();
+                address.show(user.user_id);
+                $('#username').val(user.name).attr('disabled', true);
+                return user.name + " | " + user.tel
+            },
+            formatInputTooShort: function (input, min) {
+                return "输入姓名或电话查询"
+            },
+            escapeMarkup: function (m) {
+                return m;
+            }
+        }).on('change', function (e) {
+                    if (e.removed) {
+                        $('#new_user').show();
+                        $("user_id").val(0);
+                        $('#username').val('').attr('disabled', false);
+                        address.cleanup();
+                    }
+                });
+
+        /*   提交订单   */
+        $('form').submit(function () {
+            var add_btn = $('button[type="submit"]');
+            var items = $('body').data('items');
+            if ($.isEmptyObject(items)) {
+                alert('尚未添加任何商品');
+                return false;
+            }
+
+            var user_id = parseInt($('#user_id').val());
+            if (isNaN(user_id)) {
+                user_id = 0;
+            }
+
+            var phone = $('#phone').val();
+            if(!validate_phone(phone)){
+                alert('电话号码输入不正确');
+                $('#phone').focus();
+                return false;
+            }
+
+            if (user_id == 0 && $('#username').val() == '') {
+                alert('客户不可为空');
+                return false;
+            }
+
+            var discount_fee = parseInt($('#discount_fee').val());
+            if (isNaN(discount_fee)) {
+                discount_fee = 0;
+            }
+
+            if (discount_fee < 0) {
+                alert('优惠金额小于０');
+                return false;
+            }
+
+            //alert($(this).serialize());
+            add_btn.attr('disabled', true);
+            add_btn.text('提交中...');
+
+            //validate form
+            var values = $('form').serializeArray();
+            values.push({name: 'items', value: JSON.stringify(items)});
+            values.push({name: 'user_id', value: user_id});
+            var add_order = $.ajax({
+                url: "{{ request.path }}",
+                dataType: 'json',
+                type: 'POST',
+                data: $.param(values)});
+            add_order.done(function (data) {
+                if (data.result == true) {
+                    var html = '<div class="alert alert-block alert-success fade in"><h4 class="alert-heading">订单创建成功，订单号为：<a href="/order/detail/'+data.desc+'">' + data.desc + '</a></h4></div>';
+                    $('#add-order').empty().html(html);
+                }
+                else {
+                    show_err(data.desc);
+                }
+            });
+            add_order.fail(function (request, status, error) {
+                show_err(error);
+            });
+            add_order.always(function () {
+                add_btn.attr('disabled', false);
+                add_btn.text('创建订单');
+            });
+            return false;
+        });
+
+        /*  订单发票  */
+        $("input[name='need_invoice']").change(function () {
+            var need_invoice = parseInt($(this).val());
+            if (need_invoice == 1) {
+                $("input[name='invoice_name']").show();
+            }
+            else {
+                $("input[name='invoice_name']").hide();
+            }
+        });
+
+        /*  订单商品  */
+        var order = {
+            refresh: function () {
+                var items = $('body').data('items');
+                var $sel = $('#selected-items');
+                var total_fee = 0;
+                if (!$.isEmptyObject(items)) {
+                    $sel.html('<table id="display-items" class="table table-condensed"><thead><tr><th class="span3">商品</th><th style="text-align:center">数量</th><th style="text-align:center">单价</th><th></th></tr></thead></table>');
+                    for (var i in items) {
+                        var item = items[i];
+                        total_fee += item.price * item.quantity;
+                        var style = (item.type=='1')?'':'color:red';
+                        $('<tr style="background-color:#fcfcfc;'+style+'"><td>' + item.name + "</td><td style=\"text-align:center\"><code>" + item.quantity+'</code> '+item.unit + "</td><td style=\"text-align:center\">" + item.price + '</td><td><a href="#" id="del-' + i + '">&times;</a></td></tr>').appendTo($('table#display-items'));
+                        //$("a#del-"+i).click(function(){order.del});
+                        $("a#del-" + i).bind('click', {'id': i}, order.del);
+                        $("a#del-" + i).addClass('delete');
+                    }
+                    //$sel.append('</table>');
+                    $('#fee').show();
+                    $('#fee').text("商品总价：￥" + total_fee);
+                }
+                else {
+                    $sel.html('<span class="alert alert-warning span12">尚未选择任何商品</span>');
+                    $('#fee').hide();
+                }
+                $('input#total_fee').val(total_fee);
+            },
+            del: function (event) {
+                data = event.data;
+                var items = $('body').data('items');
+                if (items[data.id] != null) {
+                    delete items[data.id];
+                    order.refresh();
+                }
+            },
+            add: function (e) {
+                var items = $('body').data('items');
+                var quantity = parseInt($('input[name=quantity]').val());
+                if (isNaN(quantity) || quantity <= 0) {
+                    alert('商品数量不正确');
+                    return false;
+                }
+                ;
+                var id = $('#item').val();
+                if (items[id] == null) {
+                    var $selected = $('#item option:selected');
+                    items[id] = {'name': $selected.text(),'unit':$selected.attr('unit'),'type':parseInt($selected.attr('type')), 'price': parseFloat($selected.attr('price')), 'quantity': quantity};
+                }
+                else {
+                    items[id].quantity += quantity;
+                }
+                order.refresh();
+            }
+        }
+        $('#add-item').on('click',order.add);
+        order.refresh();
+    });
+    </script>
+{%- endblock %}
+
+{%- block main -%}
+    <form id="add-order" class="form-horizontal dl-horizontal" method="post" action="{{ request.path }}">
+    <fieldset>
+    <legend class="lead">订单录入</legend>
+    <div style="display:none;">
+        <input id="total_fee" name="total_fee" type="hidden">
+        <input id="address_id" name="address_id" type="hidden" value="0">
+        {% set link_order_id = request.args.get('link_order_id',0)|int %}
+        <input id="link_order_id" name="link_order_id" type="hidden" value="{{ link_order_id }}">
+    </div>
+
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+
+
+    <div class="accordion-heading">
+        <a data-toggle="collapse" href="#one">
+            <p class="subtitle">基本信息 </p>
+        </a>
+    </div>
+    <div id="one" class="accordion-body collapse in">
+        <div class="control-group">
+            <label class="control-label">客户查询</label>
+
+            <div class="controls">
+                <input id="user_id" name="user_id" class="bigdrop" type="hidden" style="width: 220px">
+
+            </div>
+        </div>
+        <div class="control-group" id="new_user">
+            <label class="control-label" for="username">新客户资料</label>
+
+            <div class="controls">
+                <input id="username" name="username" class="bigdrop" type="text" placeholder="姓名">
+                <label class="radio inline"><input id="gender-1" name="gender" type="radio" value="保密" checked="checked">保密</label>
+                <label class="radio inline"><input id="gender-2" name="gender" type="radio" value="男">男</label>
+                <label class="radio inline"><input id="gender-3" name="gender" type="radio" value="女">女</label>
+
+                <select id="user_origin" name="user_origin" class="select2" style="width: 120px">
+                    {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+
+            </div>
+        </div>
+
+        <hr/>
+        <div class="control-group">
+            <label class="control-label" for="item">选择商品</label>
+
+            <div class="controls">
+                <select id="item" name="item" class="select2" style="width: 285px">
+                    {%- for item in items -%}
+                        <option value="{{ item.id }}" price="{{ item.price }}"
+                                quantity="{{ item.quantity }}" unit="{{ item.unit }}" type="{{ item.type }}"{% if item.type==2 %} class="sku_set_style"{% endif %}>{{ item.name }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <div class="input-append" style="margin-left: 15px">
+                    <input class="input-mini" id="quantity" name="quantity" type="text" value="1">
+                    <span class="add-on" id="unit">件</span>
+                </div>
+                <a class="btn btn-warning" id="add-item" style="margin-left: 20px">添加商品</a>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-bottom: 0">
+            <label class="control-label">已选商品</label>
+
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span7" id="selected-items"></div>
+                </div>
+                <p id="fee" class="alert alert-warning" style="font-size: 14px;width: 140px;font-weight: bold"></p>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="discount_type">折扣</label>
+
+            <div class="controls">
+                <select id="discount_type" name="discount_type" class="select2" style="width: 220px"
+                        placeholder="请选择优惠策略">
+
+                    {%- for k,v in config['DISCOUNT_TYPES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <div class="input-append" style="margin-left: 15px">
+                    <input class="input-mini" id="discount_fee" name="discount_fee" type="text" placeholder="折扣金额">
+                    <span class="add-on">元</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="payment_type">付款方式</label>
+
+            <div class="controls">
+                <ul class="radio inline" id="payment_type">
+                    {%- for k,v in config['ORDER_PAYMENTS'].iteritems() -%}
+                        <li style="margin-right:35px">
+                            <input id="payment_type-{{ k }}" name="payment_type" type="radio" value="{{ k }}"
+                                    {% if loop.first %} checked="checked"{% endif %}><label
+                                for="payment_type-{{ k }}">{{ v }}</label></li>
+                    {%- endfor -%}
+                </ul>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="order_type">订单类型</label>
+
+            <div class="controls">
+                <select id="order_type" name="order_type" class="select2" style="width: 220px">
+                    {%- for k,v in config['ORDER_TYPES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="order_mode">成交方式</label>
+
+            <div class="controls">
+                <select id="order_mode" name="order_mode" class="select2" style="width: 220px">
+                    {%- for k,v in config['ORDER_MODES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="accordion-heading">
+        <a data-toggle="collapse" href="#two">
+            <p class="subtitle">收货人地址 </p>
+        </a>
+    </div>
+    <div id="two" class="accordion-body collapse in">
+        <div class="control-group" id="address_list" style="display: none">
+            <label class="control-label">常用地址</label>
+
+            <div class="controls">
+                <ul class="radio unstyled">加载中...</ul>
+                <a href="javascript:void(0)" id="reset_address" style="display: none">创建新地址</a>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="ship_to">收货人姓名</label>
+
+            <div class="controls">
+                <input type="text" id="ship_to" name="ship_to" class="input input-large" required='请输入用户姓名'/>
+            </div>
+        </div>
+
+
+        <div class="control-group">
+            <label class="control-label" for="street1">地 址</label>
+
+            <div class="controls">
+                <div id="address">
+                    <select id="province" name="province" style="width: 135px"></select>
+                    <select id="city" name="city" style="width: 150px"></select>
+                    <select id="district" name="district" style="width: 150px"></select><br/>
+
+                    <div class="input-prepend" style="margin-top: 10px">
+                        <span class="add-on"></span>
+                        <input type="text" id="street1" name="street1" class="input input-large"
+                               style="width: 300px" placeholder="街道地址" required/>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="phone">联系电话</label>
+
+            <div class="controls">
+                <input type="text" id="phone" name="phone" placeholder="手机号码" required/>
+                <input type="text" id="tel" name="tel" placeholder="固定电话" style="margin-left: 10px"/>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="email">邮箱地址</label>
+
+            <div class="controls">
+                <input type="text" id="email" name="email" class="input"/>
+
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="postcode">邮政编码</label>
+
+            <div class="controls">
+                <input type="text" id="postcode" name="postcode" class="input input-small" placeholder="邮政编码"/>
+
+            </div>
+        </div>
+        <div id="update_address" style="display:none;margin-left: 130px;margin-bottom: 10px">
+            <a href="#" class="btn btn-danger" style="width: 195px">更新收货地址</a><span style="margin-left: 20px"></span>
+        </div>
+    </div>
+    <div class="accordion-heading">
+        <a data-toggle="collapse" href="#three">
+            <p class="subtitle">订单备注 </p>
+        </a>
+    </div>
+    <div id="three" class="accordion-body collapse in">
+        <div class="control-group">
+            <label class="control-label" for="need_invoice">是否需要发票</label>
+
+            <div class="controls">
+                <ul class="radio inline" id="need_invoice">
+                    <li style="padding-right: 20px"><input id="need_invoice-1" name="need_invoice" type="radio"
+                                                           value="1"><label for="need_invoice-1">是</label></li>
+                    <li style="padding-right: 20px"><input id="need_invoice-0" name="need_invoice" type="radio"
+                                                           value="0" checked="checked"><label
+                            for="need_invoice-0">否</label></li>
+
+                </ul>
+                <input type="text" id="invoice_name" name="invoice_name" class="input input-xlarge"
+                       placeholder="发票抬头" style="display: none"/>
+            </div>
+
+        </div>
+
+
+        <div class="control-group">
+            <label class="control-label" for="remark">订单备注</label>
+
+            <div class="controls">
+                <textarea class="span10" id="remark" name="remark" placeholder="如：节假日及周末不送货"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">创建订单</button>
+    </div>
+
+    </fieldset>
+    </form>
+{%- endblock -%}

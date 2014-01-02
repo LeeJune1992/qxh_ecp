@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% set category='order' %}
+{% block title %}号码查询{% endblock %}
+{% block css %}
+{{ super() }}
+<style type="text/css">
+.phone{
+    color: orangered;
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 20px;
+    letter-spacing: 2px;
+}
+</style>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(function(){
+    function show_err(err) {
+        $('#error').show();
+        $('#error p').empty().html(err);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+});
+</script>
+{% endblock %}
+{% block main %}
+    <form method="get" class="form-search inline well well-small">
+        <input type="text" class="input-medium" name="m" placeholder="快递单号" value="{{ request.args.get('m','') }}"> - <input type="text" class="input-small" name="code" placeholder="3位查询码" maxlength="3"  value="{{ request.args.get('code','') }}">
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+    </form>
+    {% if error %}
+    <div class="alert alert-block alert-error fade in" id="error">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if phones %}
+        <div class="alert alert-info">
+        <b>收方号码：</b>
+    <p class="phone">{{ phones|safe }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

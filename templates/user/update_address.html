@@ -1,0 +1,131 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import place_auto_complete_js %}
+{% block title %}修改地址{% endblock %}
+{%- block css -%}
+{{ super() }}
+<style type="text/css">
+    .form-horizontal .control-label {
+        float: left;
+        width: 100px;
+        background-color: #f9f9f9;
+        padding-top: 5px;
+        padding-right: 10px;
+        padding-bottom: 5px;
+        text-align: right;
+        border-bottom: 1px solid #eeeeee;
+        border-right: 1px solid #eeeeee;
+    }
+
+    .form-horizontal .controls {
+        margin-left: 130px;
+    }
+
+    .form-horizontal .control-group {
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+    <script type="text/javascript">
+        $(function () {
+        /*   地址查询   */
+        new PCAS("province", "city", "district");
+
+        $('#address select').change(function () {
+            var address = "";
+            $.each(['#province', '#city', '#district'], function (index, name) {
+                var d = $(name).val();
+                if (d != "请选择" && d != "市辖县" && d != "市辖区") {
+                    address += $(name).val();
+                }
+            });
+            $('#address .add-on').empty().text(address);
+        });
+
+
+        $('#update_address a[ref]').on('click',function (e) {
+            e.preventDefault();
+            address.update();
+        });
+        $('#ship_to').val("{{ address.ship_to }}");
+        $('#province').val("{{ address.province }}").change();
+        $('#city').val("{{ address.city }}").change();
+        $('#district').val("{{ address.district }}").change();
+        $('#street1').val("{{ address.street1 }}");
+        $('#phone').val("{{ address.phone }}");
+        $('#tel').val("{{ address.tel }}");
+        $('#email').val("{{ address.email }}");
+        $('#postcode').val("{{ address.postcode }}");
+{#        alert('ok');#}
+    });
+</script>
+{{ place_auto_complete_js() }}
+{% endblock %}
+
+{% block main %}
+<form id="address-form" class="form-horizontal dl-horizontal" method="post" action="{{ request.path }}">
+    <fieldset>
+        <legend class="lead">修改地址</legend>
+        <input type="hidden" name="user_id" id="user_id" value="{{ address.user_id }}">
+        <input type="hidden" name="address_id" id="address_id" value="{{ address.id }}">
+        <div class="control-group">
+            <label class="control-label" for="ship_to">收货人姓名</label>
+
+            <div class="controls">
+                <input type="text" id="ship_to" name="ship_to" class="input input-large" required='请输入客户姓名'/>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="street1">地 址</label>
+
+            <div class="controls">
+                <div id="address">
+                    <select id="province" name="province" style="width: 135px"></select>
+                    <select id="city" name="city" style="width: 150px"></select>
+                    <select id="district" name="district" style="width: 150px"></select><br/>
+
+                    <div class="input-prepend" style="margin-top: 10px">
+                        <span class="add-on"></span>
+                        <input type="text" id="street1" name="street1" class="input input-large"
+                               style="width: 300px" placeholder="街道地址" required/>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="phone">联系电话</label>
+
+            <div class="controls">
+                <input type="text" id="phone" name="phone" placeholder="手机号码" required/>
+                <input type="text" id="tel" name="tel" placeholder="固定电话" style="margin-left: 10px"/>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="email">邮箱地址</label>
+
+            <div class="controls">
+                <input type="text" id="email" name="email" class="input"/>
+
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="postcode">邮政编码</label>
+
+            <div class="controls">
+                <input type="text" id="postcode" name="postcode" class="input input-small" placeholder="邮政编码"/>
+
+            </div>
+        </div>
+        <div id="update_address" class="form-actions" style="padding-left: 90px">
+            <a href="#" class="btn btn-danger" style="width: 145px" ref="action">更新收货地址</a><span style="margin-left: 20px"></span>
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

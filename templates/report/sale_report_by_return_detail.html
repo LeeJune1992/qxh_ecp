@@ -1,0 +1,107 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#op').select2({
+                width:'150px',
+                placeholder:'选择员工',
+                allowClear:true
+            });
+
+            $('#express_id').select2({
+                width:'150px',
+                placeholder:'快递公司',
+                allowClear:true
+            });
+
+            $('#is_arrival').select2({
+                width:'100px',
+                placeholder:'是否到货',
+                allowClear:true
+            });
+
+        });
+    </script>
+{% endblock %}
+
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="s_start_date" class="timepicker input input-medium" name="s_start_date" type="text" value="{{ request.args['s_start_date'] }}" placeholder="销售开始时间" />
+        <input id="s_end_date" class="timepicker input input-medium" name="s_end_date" type="text" value="{{ request.args['s_end_date'] }}" placeholder="销售结束时间" />
+        <input id="start_date" class="timepicker input input-medium" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="退货开始时间" />
+        <input id="end_date" class="timepicker input input-medium" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="退货结束时间" />
+        <select id="op" name="op">
+            <option></option>
+            {% set sel_id = request.args.get('op',0)|int %}
+            {% for op_id,op_name in ops %}
+            <option value="{{ op_id }}" {% if op_id==sel_id %}selected="selected"{% endif %}>{{ op_name }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="express_id" name="express_id">
+            <option></option>
+            {% set express_id = request.args.get('express_id',0)|int %}
+            {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
+                <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
+            {%- endfor -%}
+        </select>
+
+        <select id="is_arrival" name="is_arrival" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_arrival = request.args.get('is_arrival',0)|int %}
+            {%- for k,v in [(1,'已到货'),(2,'未到货'),] -%}
+                <option value="{{ k }}" {% if k==is_arrival %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <div class="alert alert-success">
+        订单数：<strong>{{ rows|length }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;订单金额：<strong>{{ total_fee }}元</strong>
+    </div>
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>所属部门</th>
+            <th>组名</th>
+            <th>员工</th>
+            <th>客户姓名</th>
+            <th>订单号</th>
+            <th>产品明细</th>
+            <th>订单金额</th>
+            <th>优惠金额</th>
+            <th>物流公司</th>
+            <th>物流单号</th>
+            <th>退货完成时间</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for op_id,op_name,team,username,order_id,item_info,fee,discount_fee,express_id,express_number,arrival_time in rows %}
+            <tr>
+                <td>{{ config['DEPARTMENTS'][team[0]] }}</td>
+                <td>{{ config['TEAMS'][team] }}</td>
+                <td>{{ op_name }}</td>
+                <td>{{ username }}</td>
+                <td><a href="{{ url_for('admin.order_detail',order_id=order_id) }}">{{ order_id }}</a></td>
+                <td><pre>{{ item_info }}</pre></td>
+                <td>{{ fee }}</td>
+                <td>{{ discount_fee }}</td>
+                <td>{{ config['EXPRESS_CONFIG'][express_id]['name'] }}</td>
+                <td>{{ express_number }}</td>
+                <td>{{ arrival_time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors  with context %}
+{% set category='securitycode' %}
+{% block title %}帐号管理{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/media.js') }}"></script>
+    <script type="text/javascript">
+    $(function(){
+        $('a.confirm').on('click',function(e){
+            var operator_id = parseInt($(this).data('id'));
+            bootbox.confirm($(this).data('confirm'), function(result) {
+                if (result!=true){
+                    return;
+                }
+                var req = $.ajax({
+                    url: '/operator/delete/' + operator_id,
+                    dataType: "json",
+                    type: 'POST'
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+            });
+            return false;
+        });
+		/*   地址查询   */
+        new PCAS("province", "city", "district");
+    });
+	$('form').submit(function () {
+		var code = $('#code').val();
+		if (code==null || code==''){
+			bootbox.alert('防伪码不能为空!');
+			//show_err('客户姓名不允许为空');
+			$('#code').focus();
+			return false;
+		}else if(code.length != 8){
+			bootbox.alert('防伪码是8位!');
+			$('#code').focus();
+			return false;
+		}
+		var username = $('#username').val();
+		if (username==null || username==''){
+			bootbox.alert('姓名不能为空!');
+			$('#username').focus();
+			return false;
+		}
+		var tel = $('#tel').val();
+		if (tel==null || tel==''){
+			bootbox.alert('电话不能为空!');
+			$('#tel').focus();
+			return false;
+		}
+		var province = $('#province').val();
+		if (province==null || province==''){
+			bootbox.alert('省不能为空!');
+			$('#province').focus();
+			return false;
+		}
+		var city = $('#city').val();
+		if (city==null || city==''){
+			bootbox.alert('市不能为空!');
+			$('#city').focus();
+			return false;
+		}
+		var district = $('#district').val();
+		if (district==null || district==''){
+			bootbox.alert('地区不能为空!');
+			$('#district').focus();
+			return false;
+		}
+	});
+    </script>
+{% endblock %}
+
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+        <input type="text" class="input-medium" name="code" id="code" value="{{ request.args.get('code','') }}" placeholder="搜索防伪码">
+        <input type="text" class="input-medium" name="username" id="username" value="{{ request.args.get('username','') }}" placeholder="姓名">
+        <input type="text" class="input-medium" name="tel" id="tel" value="{{ request.args.get('tel','') }}" placeholder="电话">
+        <select id="province" name="province" style="width: 135px"></select>
+                                <select id="city" name="city" style="width: 150px"></select>
+                                <select id="district" name="district" style="width: 150px"></select>
+
+                                <input type="text" id="street" name="street" class="input input-large"
+                                       style="width: 340px" placeholder="详细地址"/>
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+    </form>
+	<div style="text-align:center; font-size:14px; padding:5px; color:#FF0000;">{% if sc.code %}防伪码真实{% else %}防伪码不存在{%  endif %}</div>
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr>
+            <th>操作员</th>
+            <th>防伪码</th>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>地址</th>
+            <th>查询时间</th>
+            <th>IP</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for operator in pagination.items %}
+            <tr>
+                <td>{{ operator.operator.nickname }}</td>
+                <td>{{ operator.code }}</td>
+                <td>{{ operator.username }}</td>
+                <td>{{ operator.tel }}</td>
+                <td>{{ operator.province }}{{ operator.city }}{{ operator.district }}{{ operator.street }}</td>
+                <td>{{ operator.created }}</td>
+                <td>{{ operator.ip }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+	{{ render_pagination(pagination) }}
+
+{% endblock %}

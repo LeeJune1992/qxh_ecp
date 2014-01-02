@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors,set_default_value with context %}
+{% set category='stock' %}
+{% block title %}报损查询{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2();
+
+            $('#start_date').datepicker({
+                format: 'yyyy-mm-dd',
+                language:'zh-CN'});
+
+            $('#end_date').datepicker({
+                format: 'yyyy-mm-dd',
+                language:'zh-CN'});
+
+            $('a[data-confirm]').on('click',function(e){
+                var confirm = parseInt($(this).data('confirm'));
+                var loss_id = parseInt($(this).data('loss_id'));
+
+                var req = $.ajax({
+                    url: '/stock/loss/approval/' + loss_id,
+                    dataType: "json",
+                    type: 'POST',
+                    data: {confirm: confirm}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline well well-small">
+        <input type="text" class="input-medium" name="sku_id"
+               placeholder="SKU编码" {{ set_default_value('sku_id') }}>
+        <input type="text" class="input-medium" name="name" placeholder="商品名称" {{ set_default_value('name') }}>
+
+        <select id="status" name="status" class="select2" style="width: 120px">
+            {% set status = request.args.get('status',0)|int %}
+            {%- for k,v in config['LOSS_STATUS'].iteritems() -%}
+                <option value="{{ k }}" {% if k==status %}selected{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+
+        <button type="submit" class="btn btn-primary" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>编码</th>
+            <th>商品名称</th>
+            <th>报损数量</th>
+            <th>类型</th>
+            <th>关联订单</th>
+            <th>损坏渠道</th>
+            <th>损坏程度</th>
+            <th>备注</th>
+            <th>报损人</th>
+            <th>状态</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for loss in pagination.items %}
+            <tr>
+                <td>{{ loss.sku_id }}</td>
+                <td>{{ loss.sku.name }}</td>
+                <td>{{ loss.quantity }}</td>
+                <td>{{ loss.type_name }}</td>
+                <td>{% if loss.type==1 %}<a href="{{ url_for('admin.order_detail',order_id=loss.link_order_id) }}">{{ loss.link_order_id }}</a>{% else %}-{% endif %}</td>
+                <td>{{ loss.channel_name }}</td>
+                <td>{{ loss.degree_name }}</td>
+                <td>{{ loss.remark }}</td>
+                <td>{{ loss.operator.nickname }}</td>
+                <td>{{ loss.status_name }}</td>
+                <td style="text-align: center">
+                    {% if loss.status in (1,2,) %}
+{#                        <a href="{{ url_for('admin.edit_stock',stock_id=loss.id) }}" title="Edit stock"><i class="icon-pencil icon-black"></i></a><br/>#}
+                        {% if loss.status==2 %}
+                            <a href="#" class="btn btn-warning" style="margin-bottom: 5px" data-loss_id="{{ loss.id }}" data-confirm="1">通过</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination) }}
+{% endblock %}

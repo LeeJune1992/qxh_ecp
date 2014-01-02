@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import inline_field %}
+{% set category='analytics' %}
+{% block css %}
+{{ super() }}
+<link href="{{ url_for('static', filename='google-code-prettify/prettify.css') }}" type="text/css" rel="stylesheet" />
+<style type="text/css">
+blockquote{
+    color: #ccc;
+}
+code{
+    color: red;
+    font-size: 14px;
+    padding: 4px;
+}
+</style>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='google-code-prettify/prettify.js') }}"></script>
+<script type="text/javascript">
+$(function(){
+    prettyPrint();
+});
+</script>
+{% endblock %}
+{% block title %}广告代码{% endblock %}
+{% block main %}
+<blockquote >{{ ad.name }}</blockquote>
+<hr/>
+{% set link_url = ad.link_url %}
+{% if ad.ad_type==1 %}
+<h4>STEP 1：广告链接地址</h4>
+<code>{{ link_url }}</code>
+<br/><br/>
+<h4>STEP 2：复制下方代码，并嵌入专题页面</h4>
+<blockquote>请于&lt;/body&gt;代码之前嵌入</blockquote>
+<pre class="prettyprint">
+    &lt;script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+        var _maq = _maq || [];
+        (function() {
+            var ma = document.createElement('script'); ma.type = 'text/javascript'; ma.async = true;
+            ma.src = ('https:' == document.location.protocol ? 'https://analytics' : 'http://analytics') + '.ai7mei.com/a.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ma, s);
+        })();
+    &lt;/script&gt;
+</pre>
+{% elif ad.ad_type==2 %}
+    <h4>广告链接地址</h4>
+    <code>{{ link_url }}</code>
+{% endif %}
+
+<hr/>
+<div>
+效果预览：
+<a href="{{ link_url }}" target="_blank">
+    {% if ad.ad_mode==1 %}
+    <img src="{{ ad.ad_img }}" border="0" />
+    {% else %}
+        <h2>{{ ad.ad_txt }}</h2>
+    {% endif %}
+</a>
+
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import horizontal_field,form_errors with context %}
+{% set category='perm' %}
+{% if form.name.data %}
+{% set _title = "修改角色" %}
+{% else %}
+{% set _title = "添加角色" %}
+{% endif %}
+{% block title %}{{ _title }}{% endblock %}
+{% block main %}
+    <div class="row-fluid">
+    <div class="span7 well">
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ _title }}</legend>
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, False) }}
+            {%- for field in form %}
+                {% if not field|is_hidden_field %}
+                    {{ horizontal_field(field) }}
+                {%- endif %}
+            {%- endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ _title }}</button>
+            </div>
+
+        </fieldset>
+    </form>
+    </div>
+    <div class="span5"><p class="lead">角色列表</p><hr/>
+        <table class="table table-bordered table-condensed">
+            <thead>
+            <tr class="">
+                <th>角色名</th>
+                <th style="text-align: center">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for role in roles %}
+                <tr {% if role_id == role.id %}class="label-warning"{% endif %}>
+                <td>{{ role.name }}</td>
+                <td><a href="{{ url_for('admin.role',role_id=role.id) }}"><i class="icon-edit"></i></a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+{% endblock %}

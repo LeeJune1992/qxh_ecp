@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% set category='report' %}
+{% block title %}财务报表{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+    <style type="text/css">
+        .table tr td{
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table tr th{
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript">
+        $(function(){
+            $('.timepicker').datetimepicker({
+                language: 'zh-CN',
+                format: 'yyyy-mm-dd hh:ii',
+                minuteStep: 5,
+                autoclose: true,
+                todayBtn: true
+            });
+
+            $('select').select2({
+                width:'150px'
+            })
+
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <ul class="breadcrumb">
+        <li class="pull-right"><blockquote style="color: #ccc">财务报表</blockquote></li>
+        <li> <i class="icon-hand-right"></i></li>
+        {% for endpoint,name in [
+        ('report.financial_report_by_sale','商品销售表'),
+        ('report.financial_report_by_return','商品退货表'),
+        ('report.financial_report_by_dzbb','物流对账报表'),
+        ('report.financial_report_by_dzbbmx','物流对账报表明细'),
+        ('report.financial_report_by_paidan','物流派单表'),
+        ('report.financial_report_by_paidantongji','物流派单表统计'),
+        ('report.financial_report_by_paidan_tuihuo','物流派单退货表'),
+        ('report.financial_report_by_paidantuihuotongji','物流派单退货表统计'),
+        ('report.financial_report_by_qianshou','物流签收表'),
+        ('report.financial_report_by_qianshoutongji','物流签收表统计'),
+        ('report.financial_report_by_qianshou_tuihuo','物流签收退货表')] %}
+            {% if endpoint == request.endpoint %}
+                <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% else %}
+                <li><a href="{{ url_for(endpoint) }}">{{ name }}</a> {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    {% block report %}
+    {% endblock %}
+{% endblock %}

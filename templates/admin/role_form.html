@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+{% set category='admin' %}
+{% set role_id = role.id if role else 0 %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .controls ul li{
+            margin-right: 20px;
+        }
+
+        .perm-title{
+            border: 1px solid #ddd;
+            background-color: #f0ede7;
+            padding-left: 25px;
+            padding-top: 5px;
+            height: 25px;
+        }
+        .perm-title label{
+            font-weight: bold;
+        }
+
+    </style>
+
+{%- endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html('发生错误：'+err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        };
+
+        var sel_perms = {% autoescape false %}{{ role.endpoints if role else '[]' }}{% endautoescape %};
+
+        $.each(sel_perms,function(i){
+            $('input[id="'+sel_perms[i]+'"]').attr('checked',true);
+        });
+
+        $('.perm-title input[type="checkbox"]').on('change',function(){
+            $('input[name="'+$(this).attr('id')+'"]').prop('checked',$(this).is(':checked'));
+        });
+
+        $('li input[type="checkbox"]').on('change',function(){
+            if ($(this).is(':checked')){
+                $('input[id="'+$(this).attr('name')+'"]').attr('checked',true);
+            }
+        });
+
+        $('form').submit(function(){
+            var btn = $('button[type="submit"]');
+            var perms = [];
+            var role_name = $('#role_name').val();
+            if (!role_name || role_name == ''){
+                bootbox.alert('角色名不允许为空！',function(){
+                    $('#role_name').focus();
+                });
+                return false;
+            }
+            $('input[type="checkbox"]:checked').each(function(){
+                perms.push($(this).attr('id'));
+            });
+
+            btn.attr('disabled',true);
+            var request = $.ajax({
+                url: "{{ request.path }}",
+                dataType: 'json',
+                type: 'POST',
+                data: {endpoints:JSON.stringify(perms),name:role_name,role_id:{{ role_id }}}
+            });
+
+            request.done(function (data) {
+                if (data.result == true) {
+                    bootbox.alert('{{"修改《"+role.name+"》角色成功！" if role else "创建角色成功！" }}',function(){
+                        window.location.replace('{{ url_for('admin.roles') }}');
+                    });
+
+                }
+                else {
+                    show_err(data.error);
+                    btn.attr('disabled',false);
+                }
+            });
+            request.fail(function (request, status, error) {
+                show_err(error);
+                btn.attr('disabled',false);
+            });
+            return false;
+        });
+    });
+    </script>
+{% endblock %}
+{% block title %}{{ "修改角色" if role_id else "创建角色" }}{% endblock %}
+{% block main %}
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ "修改角色" if role_id else "创建角色" }}</legend>
+            <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+                <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+                <p></p>
+            </div>
+            <input type="hidden" name="role_id" value="{{ role_id }}" />
+            <div class="control-group">
+                <label class="control-label">角色名</label>
+                <div class="controls">
+                    <input type="text" name="role_name" id="role_name" value="{{ role.name if role else '' }}"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">权限配置</label>
+                <div class="controls">
+                    {% for module_id,endpoints in perms.iteritems() %}
+                    <div class="checkbox perm-title"> <input id="{{ module_id }}" name="{{ module_id }}" type="checkbox"><label for="{{ module_id }}">{{ config['MODULES'][module_id] }}</label></div>
+                    <ul class="checkbox inline" style="margin-bottom: 10px">
+                        {% for endpoint,name in endpoints %}
+                        <li><input id="{{ endpoint }}" name="{{ module_id }}" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                        {% endfor %}
+                    </ul>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ "修改角色" if role_id else "创建角色" }}</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

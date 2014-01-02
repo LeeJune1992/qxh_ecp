@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import inline_field,horizontal_field,render_pagination with context %}
+{% set category='analytics' %}
+{% block title %}广告管理{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+
+        .thumb{
+            max-width: 120px;
+            max-height: 100px;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2({
+                width:'120px'
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="名称">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('analytics.ad_add') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 添加广告</a>
+    </form>
+    <table class="table table-bordered table-condensed table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>名称</th>
+            <th>产品</th>
+            <th>媒体</th>
+            <th>广告位</th>
+            <th>广告内容</th>
+            <th>广告类型</th>
+            <th>投放目标地址</th>
+            <th>创建日期</th>
+            <th>备注</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for ad in pagination.items %}
+            <tr>
+                <td>{{ ad.name }}</td>
+                <td>{{ ad.product_name }}</td>
+                <td>{{ ad.medium_name }}</td>
+                <td>{{ ad.place_name }}</td>
+                <td>{% if ad.ad_mode==1 %}<a href="{{ ad.ad_img }}" target="_blank"><img src="{{ ad.ad_img }}" border="0" class="thumb" /></a>{% else %}{{ ad.ad_txt }}{% endif %}</td>
+                <td>{{ ad.type_name }}</td>
+                <td>{{ ad.to_url|url_link|safe }}</td>
+                <td>{{ ad.created|format_date }}</td>
+                <td>{{ ad.remark }}</td>
+                <td style="text-align: center">
+                    <a href="{{ url_for('analytics.ad_code',code=ad.code) }}">查看广告代码</a>
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination) }}
+{% endblock %}

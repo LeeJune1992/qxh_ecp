@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors with context %}
+{% set category='knowledge' %}
+{% block title %}公告管理{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/bootbox.min.js')}}"></script>
+    <script type="text/javascript">
+    $(function(){
+        $('a.confirm').on('click',function(e){
+            var news_id = parseInt($(this).data('id'));
+            bootbox.confirm($(this).data('confirm'), function(result) {
+                if (result!=true){
+                    return;
+                }
+                var req = $.ajax({
+                    url: '/knowledge/delete/' + news_id,
+                    dataType: "json",
+                    type: 'POST'
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+            });
+            return false;
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr class="table-condensed">
+            <th style="width: 250px">标题</th>
+            <th>类别</th>
+            <th>时间</th>
+            <th style="text-align: center;width: 90px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for news in pagination.items %}
+            <tr>
+                <td>{{ news.title }}</td>
+                <td>{{ news.category.name }}</td>
+                <td>{{ news.created|format_date}}</td>
+                <td style="text-align: center">
+                    <a href="{{ url_for('admin.edit_knowledge',knowledge_id=news.id) }}"><i class="icon-pencil icon-black"></i></a>
+                    <a href="#" data-id="{{ news.id }}" data-confirm="确认删除公告《{{ news.title }}》？" class="confirm"><i class="icon-remove icon-black"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+{% endblock %}

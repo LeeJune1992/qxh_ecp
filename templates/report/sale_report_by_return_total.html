@@ -1,0 +1,69 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#is_arrival').select2({
+                width:'100px',
+                placeholder:'是否到货',
+                allowClear:true
+            });
+
+        });
+    </script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="s_start_date" class="timepicker input input-medium" name="s_start_date" type="text" value="{{ request.args['s_start_date'] }}" placeholder="销售开始时间" />
+        <input id="s_end_date" class="timepicker input input-medium" name="s_end_date" type="text" value="{{ request.args['s_end_date'] }}" placeholder="销售结束时间" />
+        <input id="start_date" class="timepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" class="timepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <select id="is_arrival" name="is_arrival" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_arrival = request.args.get('is_arrival',0)|int %}
+            {%- for k,v in [(1,'已到货'),(2,'未到货'),] -%}
+                <option value="{{ k }}" {% if k==is_arrival %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report" style="width: 600px">
+        <thead>
+        <tr>
+            <th>所属部门</th>
+            <th>到货总额</th>
+            <th>订单数</th>
+            <th>订单均额</th>
+            <th>退货日期</th>
+            <th>订单数</th>
+            <th>金额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr>
+                <th rowspan="{{ row['n'] }}" scope="row">{{ config['DEPARTMENTS'][row['team']] }}</th>
+                <td rowspan="{{ row['n'] }}">{{ row['fee'] }}</td>
+                <td rowspan="{{ row['n'] }}">{{ row['orders'] }}</td>
+                <td rowspan="{{ row['n'] }}">{{ '%.2f'|format(row['avg_fee']) }}</td>
+                <td colspan="3" style="background-color: #f7f7f7;height:0px;padding: 0;margin:0;border-width: 0"></td>
+            </tr>
+            {% for dt,orders,fee in row['detail'] %}
+                <tr>
+                    <td>{{ dt }}</td>
+                    <td>{{ orders }}</td>
+                    <td>{{ fee }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+{% endblock %}

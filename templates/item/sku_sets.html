@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors  with context %}
+{% set category='item' %}
+{% block title %}套餐查询{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+        .table tr th,
+        .table tr td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-item tr td{
+            text-align: left;
+        }
+
+        .table-item tr th{
+            background-color: #efefef;
+        }
+
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2({
+                width:'220px'
+            });
+
+            $('a#update_status').on('click',function(){
+                var sku_set_id = $(this).data('id');
+                var req = $.ajax({
+                    url: '/item/sku_set/update_status/' + sku_set_id,
+                    dataType: "json",
+                    type: 'POST'
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="名称/编码">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('admin.add_sku_set') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 添加套餐</a>
+    </form>
+
+    <table class="table table-bordered table-condensed">
+        <thead>
+        <tr class="table-condensed">
+            <th>编码</th>
+            <th>名称</th>
+            <th style="width: 380px">配置商品</th>
+            <th>价格</th>
+            <th>状态</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for sku_set in pagination.items %}
+            <tr {% if not sku_set.is_valid %}class="warning"{% endif %}>
+                <td>{{ sku_set.id }}</td>
+                <td>{{ sku_set.name }}</td>
+                <td>
+                    <p>
+                    <table class='table-item table table-bordered'>
+                    <thead>
+                    <tr>
+                        <th>商品名称</th>
+                        <th>套餐价格</th>
+                        <th>数量</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for sku,quantity in sku_set.skus %}
+                            <tr>
+                                <td><span>{{ sku.name }}</span></td>
+                                <td>{{ sku_set.price_config[sku.id] }}</td>
+                                <td><strong>{{ quantity }}</strong>{{ sku.unit }}</td>
+                                </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                    </p>
+                </td>
+                <td>{{ sku_set.price }}</td>
+                <td>
+                    {{ '正常' if sku_set.is_valid else '停用' }}
+                </td>
+
+                <td style="text-align: center">
+                    {% if sku_set.is_valid %}
+                    <a href="#" id="update_status" data-id="{{ sku_set.id }}" class="btn btn-danger">暂停</a>
+                    {% else %}
+                        <a href="#" id="update_status" data-id="{{ sku_set.id }}" class="btn btn-success">启用</a>
+                    {% endif %}
+              </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+{% endblock %}

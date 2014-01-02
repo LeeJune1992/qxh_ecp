@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% set category='report' %}
+{% block title %}营销报表{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+{#    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2/ui/minified/jquery-ui.min.js') }}"></script>#}
+{#    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2/ui/minified/jquery.ui.datepicker.min.js') }}"></script>#}
+{#    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2/ui/minified/jquery.ui.slider.min.js') }}"></script>#}
+{#    <script type="text/javascript" src="{{ url_for('static', filename='js/jQuery-Timepicker-Addon/jquery-ui-timepicker-addon.js') }}"></script>#}
+{#    <script type="text/javascript" src="{{ url_for('static', filename='js/jQuery-Timepicker-Addon/localization/jquery-ui-timepicker-zh-CN.js') }}"></script>#}
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript">
+    $(function(){
+        $('.timepicker').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            autoclose: true,
+            todayBtn: true
+        });
+
+    });
+    </script>
+{% endblock %}
+{% block content %}
+    <ul class="breadcrumb">
+        <li class="pull-right"><blockquote style="color: #ccc">营销报表</blockquote></li>
+        <li> <i class="icon-user"></i></li>
+        {% for endpoint,name in [
+        ('report.sale_report_by_team','部门销售统计'),
+        ('report.sale_report_by_item','产品销售统计'),
+        ('report.sale_report_by_ygxs','员工产品销售统计'),
+        ('report.sale_report_by_ygdhtj','员工产品到货统计'),
+        ('report.sale_report_by_staff','员工销售统计'),
+        ('report.sale_report_by_ddxsmxtj','订单销售明细统计'),
+        ('report.sale_report_by_arrival_detail','到货明细表'),
+        ('report.sale_report_by_arrival_total','到货汇总表'),
+        ('report.sale_report_by_return_detail','退货明细表'),
+        ('report.sale_report_by_return_total','退货汇总表'),
+        ('report.sale_report_by_user_total','会员客户数量统计'),
+        ('report.jiexian_tongji','外呼统计'),
+        ('report.xlj_tongji','心力健统计')] %}
+{#        {% if current_user.action() %}#}
+            {% if endpoint == request.endpoint %}
+                <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% else %}
+                <li><a href="{{ url_for(endpoint) }}">{{ name }}</a> {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    {% block report %}
+    {% endblock %}
+{% endblock %}

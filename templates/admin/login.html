@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import addon_field %}
+{% block title %}登录{% endblock %}
+{% block navbar %}
+    <hr/>
+{% endblock %}
+{% block content %}
+    <div class="span6 offset3">
+        {% block alert %}{{ super() }}{% endblock %}
+        <form class="form form-horizontal" action="{{ request.path }}" method="post">
+            <fieldset>
+                {{ form.hidden_tag() }}
+                {{ addon_field(form.username,prepend_text='<i class="icon-user"></i>',class="input-large") }}
+                {{ addon_field(form.password,prepend_text='<i class="icon-lock"></i>',class="input-large") }}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">登录</button>
+                </div>
+            </fieldset>
+        </form>
+    </div><!--/span-->
+{% endblock %}

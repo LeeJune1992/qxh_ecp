@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination with context %}
+
+{% set category='order' %}
+{% block title %}差额订单处理{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+
+            $('form').submit(function(){
+                var _id = $(this).attr('id');
+                var quantity = parseInt($('input[name="quantity-'+_id+'"]').val());
+                var price =parseFloat($('input[name="price-'+_id+'"]').val());
+                var fee = parseFloat($('input[name="fee-'+_id+'"]').val());
+
+                var req = $.ajax({
+                    url: '{{ url_for('admin.except_orders') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    data: {quantity: quantity,price:price,fee:fee,id:_id}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>订单号</th>
+            <th>订单状态</th>
+            <th>订单金额</th>
+            <th>商品金额</th>
+            <th>差额</th>
+            <th>商品名称</th>
+            <th>价格</th>
+            <th>数量</th>
+            <th>金额</th>
+            <th style="text-align: center;width: 100px"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+            {% set num = order['order_items']|length %}
+            <tr>
+                <td rowspan="{{ num + 1 }}"><a href="{{ url_for('admin.order_detail',order_id=order['order_id']) }}">{{ order['order_id'] }}</a></td>
+                <td rowspan="{{ num + 1 }}">{{ order['status'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ order['order_fee'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ order['item_fee'] }}</td>
+                <td rowspan="{{ num + 1 }}" style="color: red">{{ order['diff_fee'] }}</td>
+
+            </tr>
+            {% for order_item in order['order_items']  %}
+            <form id="{{ order_item.id }}">
+            <tr>
+                <td>{{ order_item.name }}</td>
+                <td><input type="text" value="{{ order_item.price }}" name="price-{{ order_item.id }}" class="input input-mini"/></td>
+                <td><input type="text" value="{{ order_item.quantity }}" name="quantity-{{ order_item.id }}" class="input input-mini"/></td>
+                <td><input type="text" value="{{ order_item.fee }}" name="fee-{{ order_item.id }}" class="input input-mini"/></td>
+                <td><button type="submit" class="btn">调整</button></td>
+            </tr>
+            </form>
+            {% endfor %}
+
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

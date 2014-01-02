@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% set category='user' %}
+{% block title %}客户检索{% endblock %}
+
+{% block main %}
+    <form action="{{ url_for('admin.search_user') }}" method="get" class="form-search inline well well-small">
+        <input type="text" class="input-medium" name="m" placeholder="电话号码">
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+    </form>
+
+{% endblock %}

@@ -1,0 +1,15 @@
+
+<table>
+{% for order in pagination %}
+<tr><td>{{ order.order_id }}</td>
+<td>{{ order.created|format_date }}</td>
+<td>{{ order.actual_fee }}</td>
+<td>{% if order.express_id %}{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}{% endif %}</td>
+<td>{% for order_item in order.order_items %}
+{{ order_item.name }}{% if order_item.pkg_name %}{{ order_item.pkg_name }}{% endif %},
+{{ order_item.quantity }}{{ order_item.unit|default('',true) }},{{ order_item.fee }}
+{% endfor %}
+</td>
+</tr>
+{% endfor %}
+</table>

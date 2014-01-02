@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination with context %}
+
+{% set can_sms_mass = current_user.action('sms_mass') %}
+
+{% set category='user' %}
+{% block title %}短信查询{% endblock %}
+{% block css %}
+{{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $('#status').select2({
+                width:'120px',
+                placeholder:'短信状态',
+                allowClear:true
+            });
+
+            $('.timepicker').datetimepicker({
+                language: 'zh-CN',
+                format: 'yyyy-mm-dd hh:ii',
+                minuteStep: 5,
+                autoclose: true,
+                todayBtn: true
+            });
+
+            {% if can_sms_mass %}
+
+            $('#sms-form').submit(function(){
+                var phones = $('#phones').val().replace(/ /g,'').replace(/\n/g,',');
+                if(phones == ''){
+                    alert('群发号码不允许为空！');
+                    $('#phones').focus();
+                    return false;
+                }
+                var message = $('#message').val();
+                if(message == ''){
+                    alert('群发内容不允许为空！');
+                    $('#message').focus();
+                    return false;
+                }
+                if(message.length>160){
+                    alert('群发内容不允许超过160个字符！');
+                    $('#message').focus();
+                    return false;
+                }
+
+                var req = $.ajax({
+                    url: '{{ url_for('admin.sms_mass') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    data: {message: message,phones:phones,remark:$('#remark').val()}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+            {% endif %}
+
+            $('a[data-confirm]').on('click',function(e){
+                var confirm = parseInt($(this).data('confirm'));
+                var sms_id = parseInt($(this).data('sms_id'));
+                var req = $.ajax({
+                    url: '/user/sms/approval/' + sms_id,
+                    dataType: "json",
+                    type: 'POST',
+                    data: {confirm: confirm}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+
+            $('#sms-mass').click(function(){
+                $('#smsModal').modal('show');
+                $('#phones').focus();
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" name="query-form" method="get" class="form-search inline well well-small">
+        <select id="status" name="status" class="select2" style="width: 120px">
+            <option></option>
+            {% set status = request.args.get('status',-1)|default('-1',true)|int %}
+            {%- for k,v in config['SMS_STATUS'].iteritems() -%}
+                <option value="{{ k }}" {% if k==status %}selected{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" class="timepicker" />
+        <input id="end_date" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" class="timepicker" />
+
+        <button type="submit" class="btn btn-primary" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+        {% if can_sms_mass %}
+        <a href="#" class="btn btn-success pull-right" id="sms-mass">短信群发</a>
+        {% endif %}
+    </form>
+
+    {% if can_sms_mass %}
+    <form name="sms-form" id="sms-form" method="POST">
+        <div id="smsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-header">
+                <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+                <h2>短信群发</h2>
+                <blockquote style="color:#ccc">提示：短信需经后台审核后才可正常发送。</blockquote>
+            </div>
+            <div class="modal-body">
+                <textarea class="span12" style="height: 90px" id="phones" name="phones" placeholder="群发号码，多个号码请换行"></textarea>
+                <textarea class="span12" style="height: 60px" id="message" name="message" placeholder="发送内容"></textarea>
+                <input class="span12 input" type="text" style="height: 25px" id="remark" name="remark" placeholder="备注"/>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success" type="submit">确认发送</button>
+            </div>
+
+        </div>
+    </form>
+    {% endif %}
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th style="width: 50px">客户</th>
+            <th>号码</th>
+            <th style="width: 400px">短信内容</th>
+            <th>状态</th>
+            <th>备注</th>
+            <th>员工</th>
+            <th style="width: 90px">创建时间</th>
+            <th style="text-align: center;width: 100px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for sms in pagination.items %}
+            <tr>
+                <td>
+                    {% set user = sms.user %}
+                    {% if user %}
+                    <a href="{{ url_for('admin.user',user_id=user.user_id,token=user.user_token) }}">{{ user.name }}</a>
+                    {% endif %}
+                </td>
+                <td style="word-break:break-all">{{ sms.phone }}</td>
+                <td>{{ sms.message }}</td>
+                <td>{{ sms.status_name }}</td>
+                <td>{{ sms.remark }}</td>
+
+                <td>
+                    {% set operator = sms.operator %}
+                    {% if operator %}
+                        {{ operator.nickname }}
+                    {% endif %}
+                </td>
+                <td>{{ sms.created|format_date('%m-%d %H:%M:%S') }}</td>
+                <td style="text-align: center">
+                    {% if sms.status==0 %}
+                        <a href="#" class="btn btn-success btn-mini" data-sms_id="{{ sms.seqid }}" data-confirm="1">通过</a>
+                        <a href="#" class="btn btn-danger btn-mini" data-sms_id="{{ sms.seqid }}" data-confirm="0">删除</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="alert alert-info pull-left">
+        合计：<strong>{{ pagination.items|length }}</strong>条
+    </div>
+
+    {{ render_pagination(pagination) }}
+{% endblock %}

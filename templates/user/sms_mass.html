@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination with context %}
+
+{% set category='user' %}
+{% block title %}短信群发{% endblock %}
+{% block css %}
+{{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#status').select2({
+                width:'120px',
+                placeholder:'短信状态',
+                allowClear:true
+            });
+
+            $('.timepicker').datetimepicker({
+                language: 'zh-CN',
+                format: 'yyyy-mm-dd hh:ii',
+                minuteStep: 5,
+                autoclose: true,
+                todayBtn: true
+            });
+            $('a[data-confirm]').on('click',function(e){
+                var confirm = parseInt($(this).data('confirm'));
+                var sms_id = parseInt($(this).data('sms_id'));
+                var req = $.ajax({
+                    url: '/user/sms/approval/' + sms_id,
+                    dataType: "json",
+                    type: 'POST',
+                    data: {confirm: confirm}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline well well-small">
+        <select id="status" name="status" class="select2" style="width: 120px">
+            <option></option>
+            {% set status = request.args.get('status',-1)|default('-1',true)|int %}
+            {%- for k,v in config['SMS_STATUS'].iteritems() -%}
+                <option value="{{ k }}" {% if k==status %}selected{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" class="timepicker" />
+        <input id="end_date" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" class="timepicker" />
+
+        <button type="submit" class="btn btn-primary" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+{% endblock %}

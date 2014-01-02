@@ -1,0 +1,77 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+{% block report %}
+    {{ search_date_form() }}
+    <hr>
+    <div class="alert alert-success">
+        订单数：<strong>{{ total_orders }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;销售额：<strong>{{ '%.2f'|format(total_fee) }}元</strong>
+    </div>
+    <div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span6">
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>所属部门</th>
+            <th>组别</th>
+            <th>订单量</th>
+            <th>零费用订单量</th>
+            <th>销售额</th>
+            <th>订单均额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr>
+                <td>{{ config['DEPARTMENTS'][row[0][0]] }}</td>
+                <td>{{ config['TEAMS'][row[0]] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ '%.2f'|format(row[2]) }}</td>
+                {% set fee_order_nums = (row[1]-row[3])|int  %}
+                <td>{% if fee_order_nums>0 %}{{ '%.2f'|format(row[2]/fee_order_nums) }}{% else %}0{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="span6">
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>所属部门</th>
+            <th>销售总额</th>
+            <th>订单数</th>
+            <th>订单均额</th>
+            <th>日期</th>
+            <th>订单数</th>
+            <th>销售额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows2 %}
+            <tr>
+                <td rowspan="{{ row['n'] }}">{{ config['DEPARTMENTS'][row['team']] }}</td>
+                <td rowspan="{{ row['n'] }}">{{ row['fee'] }}</td>
+                <td rowspan="{{ row['n'] }}">{{ row['orders'] }}</td>
+                <td rowspan="{{ row['n'] }}">{{ '%.2f'|format(row['avg_fee']) }}</td>
+                <td colspan="3" style="background-color: #f7f7f7;height:0px;padding: 0;margin:0;border-width: 0"></td>
+            </tr>
+            {% for dt,orders,fee in row['detail'] %}
+                <tr>
+                <td>{{ dt }}</td>
+                <td>{{ orders }}</td>
+                <td>{{ fee }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+        </div>
+    </div>
+    </div>
+
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+{% endblock %}

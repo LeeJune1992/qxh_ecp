@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import form_errors,horizontal_field,inline_field,addon_field %}
+{% set category='stock' %}
+{% block title %}入库登记{% endblock %}
+{% block js -%}
+    {{ super() }}
+    <script>
+    $('#datepicker2').datepicker({
+    format: 'yyyy-mm-dd',
+    language:'zh-CN'});
+    $('select').select2({
+        width:'280px'
+    });
+    $('body').data({'units': {}});
+    var units = $('body').data('units');
+    {% for k,obj in form.sku._get_object_list() %}
+    units['{{k}}'] = "{{ obj.unit }}";
+    {% endfor %}
+
+    var update_unit = function(){
+        var k = $('#sku').val();
+        if (units[k]==null){
+            $('#quantity-add-on').text('');
+        }
+        else{
+            $('#quantity-add-on').text(units[k]);
+        }
+    }
+
+    $('#sku').on('change',function(){
+        update_unit();
+    });
+    update_unit();
+
+
+    var update_order_input = function(){
+        var c = $('#c').val();
+        if (c=='20'){
+            $('#order-info').show();
+        }
+        else{
+            $('#order-info').hide();
+        }
+    }
+
+    $('#c').on('change',function(){
+        update_order_input();
+    });
+    update_order_input();
+    </script>
+{%- endblock %}
+
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 120px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block main %}
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{% if is_edit %}入库修改{% else %}入库登记{% endif %}</legend>
+            {{ form.hidden_tag() }}
+        <div class="row-fluid">
+            <div class="span6">
+            {{ horizontal_field(form.sku,style="width:220px") }}
+            {{ horizontal_field(form.store_id,style="width:220px") }}
+            {{ horizontal_field(form.c,style="width:220px") }}
+            {{ addon_field(form.quantity,append_text="件",class="span9") }}
+            {{ horizontal_field(form.remark,style="width:270px;height:72px") }}
+
+            </div>
+        <div class=" span6">
+            <div id="order-info">{{ horizontal_field(form.order_id) }}</div>
+            {{ horizontal_field(form.code) }}
+            {{ horizontal_field(form.shelf_number) }}
+            {{ horizontal_field(form.mfg_date,id="datepicker") }}
+            {{ horizontal_field(form.exp_date,id="datepicker2") }}
+            {{ horizontal_field(form.made_in) }}
+            {{ addon_field(form.purchase_price,append_text="元",class="span9") }}
+
+        </div>
+        </div>
+            <hr/>
+            <button type="submit" class="btn btn-large btn-success">{% if is_edit %}确认修改{% else %}入库登记{% endif %}</button>
+        </fieldset>
+    </form>
+{% endblock %}

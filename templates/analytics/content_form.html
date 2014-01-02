@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import form_errors,horizontal_field,inline_field,addon_field %}
+{% set category='analytics' %}
+{% set prefix='编辑' if is_edit else '新增' %}
+{% block title %}{{ prefix }}广告内容{% endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+    $(function () {
+        $('select').select2({
+            width:'220px'
+        });
+        function changeModeField(){
+            var mode = parseInt($('#mode').val());
+            switch (mode){
+                case 1:
+                    $('#_img').show();
+                    $('#_txt').hide();
+                    break;
+                case 2:
+                    $('#_img').hide();
+                    $('#_txt').show();
+                    break;
+            }
+        }
+
+        $('select[name="mode"]').change(function(){
+            changeModeField();
+        });
+
+        changeModeField();
+    });
+</script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend class="lead">{{ prefix }}广告内容展示</legend>
+            {{ form.hidden_tag() }}
+            {{ horizontal_field(form.name) }}
+            {{ horizontal_field(form.type) }}
+            {{ horizontal_field(form.mode) }}
+            <div id="_img" style="display: none">{{ horizontal_field(form.img) }}</div>
+            <div id="_txt" style="display: none">{{ horizontal_field(form.txt) }}</div>
+            {{ horizontal_field(form.to_url) }}
+            {{ horizontal_field(form.remark) }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">{{ prefix }}</button>
+            </div>
+        </fieldset>
+    </form>
+{% endblock %}

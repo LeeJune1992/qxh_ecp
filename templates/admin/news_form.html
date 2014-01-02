@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import horizontal_field,form_errors with context %}
+{% set prefix='修改' if is_edit else '发布' %}
+{% block title %}{{ prefix }}公告{% endblock %}
+{% set category='admin' %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/wysiwyg-color.css') }}" />
+    <style type="text/css" media="screen">
+        form ul{
+            margin-left: 0;
+        }
+        form ul li{
+            list-style: none;
+            float:left;
+            margin-right: 5px;
+
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/wysihtml5-0.3.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-wysihtml5.js') }}"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $('textarea#content').wysihtml5();
+        });
+    </script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" id="registerHere" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ prefix }}公告</legend>
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, False) }}
+
+            {{ horizontal_field(form.title,style="width:420px") }}
+            {{ horizontal_field(form.content,style="width:570px;height:120px") }}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ prefix }}公告</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

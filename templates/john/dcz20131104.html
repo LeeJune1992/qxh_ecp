@@ -1,0 +1,7 @@
+
+<table>
+{% for order in pagination %}
+<tr><td>{{ order.order_id }}</td><td>{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}</td><td>'{{ order.express_number }}</td>
+</tr>
+{% endfor %}
+</table>

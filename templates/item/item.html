@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import inline_field %}
+{% set category='item' %}
+{% block title %}商品配置{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2({
+                width:'120px'
+            });
+
+            $('a[data-confirm]').bind('click', function() {
+                var item_id = $(this).data('item_id');
+                bootbox.confirm($(this).data('confirm'), function(result) {
+                    if (result!=true){
+                        return;
+                    }
+                    var req = $.ajax({
+                        url: '/item/del/' + item_id,
+                        dataType: "json",
+                        type: 'POST'
+                    });
+                    req.done(function (data) {
+                        if (data.result == true) {
+                            window.location.reload(true);
+                        }
+                        else {
+                            bootbox.alert("操作失败：" + data.error);
+                        }
+                    });
+                    req.fail(function (request, status, error) {
+                        bootbox.alert('发生错误:' + error);
+                    });
+                });
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="{{ request.path }}" method="post" class="form-search inline well">
+        {{ form.hidden_tag() }}
+        {{ inline_field(form.name) }}
+        {{ form.category_id(class="input-small") }}
+        {{ inline_field(form.desc,class="input-xlarge") }}
+        <button type="submit" class="btn btn-success"><i class="icon-plus icon-white"></i> 添加商品</button>
+    </form>
+
+    <table class="table table-bordered table-condensed table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>商品名称</th>
+            <th>类型</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.category_name }}</td>
+                <td style="text-align: center">
+                    <a href="#" data-item_id="{{ item.id }}" data-confirm="确认删除商品《{{ item.name }}》？" class="confirm"><i class="icon-remove icon-black"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

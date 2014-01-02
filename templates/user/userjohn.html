@@ -1,0 +1,35 @@
+
+<table>
+{% for user in pagination %}
+{% if user.mobile_phones and ',' in user.mobile_phones %}
+    {% for p in user.mobile_phones.split(',') %}
+    {% if p %}
+    <tr>
+    <td>0{{ p }}</td>
+    <tr>
+    {% endif %}
+    {% endfor %}
+{% elif user.mobile_phones %}
+    <tr>
+    <td>0{{ user.mobile_phones }}
+    </td>
+    </tr>
+{% endif %}
+{% endfor %}
+{% for user in pagination2 %}
+{% if user.mobile_phones and ',' in user.mobile_phones %}
+    {% for p in user.mobile_phones.split(',') %}
+    {% if p %}
+    <tr>
+    <td>0{{ p }}</td>
+    <tr>
+    {% endif %}
+    {% endfor %}
+{% elif user.mobile_phones %}
+    <tr>
+    <td>0{{ user.mobile_phones }}
+    </td>
+    </tr>
+{% endif %}
+{% endfor %}
+</table>

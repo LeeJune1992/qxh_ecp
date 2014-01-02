@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import form_errors,horizontal_field,inline_field,addon_field %}
+{% set category='item' %}
+{% set prefix='编辑' if is_edit else '添加' %}
+{% block title %}{{ prefix }}商品SKU{% endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+    $(function () {
+        $('#item').select2({
+            width:'220px'
+        });
+        $('#unit').select2({
+            width:'62px'
+        });
+
+        $('#threshold-add-on').text($('#unit').val());
+        $('#warning_threshold-add-on').text($('#unit').val());
+
+        $('#unit').change(function(){
+            $('#threshold-add-on').text($(this).val());
+            $('#warning_threshold-add-on').text($(this).val());
+        });
+    });
+</script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend class="lead">{{ prefix }}商品SKU</legend>
+            {{ form.hidden_tag() }}
+            {{ horizontal_field(form.name) }}
+            {% if is_edit %}
+            {{ horizontal_field(form.item,readonly="readonly") }}
+            {% else %}
+            {{ horizontal_field(form.item,style="width:220px") }}
+            {% endif %}
+            {{ horizontal_field(form.code) }}
+            <div class="control-group ">
+                <label class="control-label" for="p1">规格参数</label>
+
+                <div class="controls">
+                    {{ form.p1(placeholder=form.p1.label.text,class="input-medium") }}
+                    {{ form.p2(placeholder=form.p2.label.text,class="input-medium") }}
+                    {{ form.p3(placeholder=form.p3.label.text,class="input-medium") }}
+                </div>
+            </div>
+            {{ addon_field(form.price,append_text="元",class="span9") }}
+            {{ addon_field(form.market_price,append_text="元",class="span9") }}
+            {{ addon_field(form.discount_price,append_text="元",class="span9") }}
+            {{ addon_field(form.threshold,append_text="件",class="span9") }}
+            {{ addon_field(form.warning_threshold,append_text="件",class="span9") }}
+            {{ horizontal_field(form.unit,style="width:160px") }}
+            {{ horizontal_field(form.allowed_gift,style="width:220px") }}
+            {{ horizontal_field(form.status,style="width:220px") }}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">{{ prefix }}</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

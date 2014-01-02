@@ -1,0 +1,76 @@
+{% extends "report/logistics_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#store_id').select2({
+            width:'150px',
+            placeholder:'仓库',
+            allowClear:true
+        })
+    });
+</script>
+{% endblock %}
+
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="store_id" name="store_id">
+            <option></option>
+            {% set store_id = request.args.get('store_id',0)|int %}
+            {%- for k,d in config['STORES'].iteritems() -%}
+                <option value="{{ k }}" {% if k==store_id %}selected{% endif %}>{{ d }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" class="datepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" class="datepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th rowspan="2">库房</th>
+            <th rowspan="2">日期</th>
+            <th rowspan="2">商品名称</th>
+            <th colspan="{{ config['STOCK_IN_CATEGORIES']|length + 1 }}">本期入库</th>
+            <th colspan="{{ config['STOCK_OUT_CATEGORIES']|length + 1 }}">本期出库</th>
+            <th rowspan="2" style="background-color: #e2dfd8">本期库存</th>
+        </tr>
+        <tr>
+            {% for v in config['STOCK_IN_CATEGORIES'].values() %}
+            <th style="background-color: #faf2cc;font-weight: bold">{{ v }}</th>
+            {% endfor %}
+            <th>入库总数</th>
+            {% for v in config['STOCK_OUT_CATEGORIES'].values() %}
+            <th style="background-color: #faf2cc;font-weight: bold">{{ v }}</th>
+            {% endfor %}
+            <th>出库总数</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+        <tr>
+        <td>{{ d['store'] }}</td>
+            <td>{{ d['date'] }}</td>
+            <td>{{ d['name'] }}</td>
+            {% for i in config['STOCK_IN_CATEGORIES'].keys() %}
+            <td style="text-align: center">{{ d['ins'][i] }}</td>
+            {% endfor %}
+            <td style="text-align: center">{{ d['in_quantity'] }}</td>
+            {% for i in config['STOCK_OUT_CATEGORIES'].keys() %}
+            <td style="text-align: center">{{ d['outs'][i] }}</td>
+            {% endfor %}
+            <td style="text-align: center">{{ d['out_quantity'] }}</td>
+            <td style="text-align: center">{{ d['quantity'] }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

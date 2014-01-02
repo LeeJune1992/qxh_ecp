@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import horizontal_field,form_errors with context %}
+{% set prefix='修改' if is_edit else '新增' %}
+{% block title %}{{ prefix }}客户{% endblock %}
+{% set category='user' %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        $('select').select2({
+            width:'220px'
+        });
+    });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" id="registerHere" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ prefix }}客户资料</legend>
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, False) }}
+            {% if is_edit %}
+                {{ horizontal_field(form.name,readonly='readonly') }}
+            {% else %}
+                {{ horizontal_field(form.name) }}
+            {% endif %}
+            {{ horizontal_field(form.gender) }}
+            {{ horizontal_field(form.phone) }}
+            {{ horizontal_field(form.email) }}
+            {{ horizontal_field(form.origin,style="width:220px") }}
+            {{ horizontal_field(form.status,style="width:220px") }}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ prefix }}客户</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

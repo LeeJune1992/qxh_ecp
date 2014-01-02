@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors with context %}
+{% set category='stock' %}
+{% block title %}库存查询{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2();
+
+            $('a[data-confirm]').on('click',function(e){
+                var confirm = parseInt($(this).data('confirm'));
+                var stock_id = parseInt($(this).data('stock_id'));
+
+                var req = $.ajax({
+                    url: '/stock/approval/' + stock_id,
+                    dataType: "json",
+                    type: 'POST',
+                    data: {confirm: confirm}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+     .table th,
+     .table td {
+         text-align: center;
+         vertical-align: middle;
+         font-size: 12px;
+     }
+    </style>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="名称/编码">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('admin.add_stock') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 入库登记</a>
+    </form>
+
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr class="table-condensed">
+            <th>编号</th>
+            <th>SKU编码</th>
+            <th style="min-width: 140px">商品名称</th>
+            <th style="min-width: 60px">库房</th>
+            <th>货架</th>
+            <th>条码</th>
+            <th>产地</th>
+            <th>生产日期</th>
+            <th>截止有效期</th>
+            <th>进货价</th>
+            <th>总数量</th>
+            <th>剩余库存</th>
+            <th>状态</th>
+            <th>备注</th>
+            <th style="text-align: center;min-width:100px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% set display_purchase = current_user.action('purchase_price') %}
+        {% for stock in pagination.items %}
+            <tr>
+                <td>{{ stock.id }}</td>
+                <td><a href="{{ url_for('admin.stocks',q=stock.sku.id) }}">{{ stock.sku.id }}</a></td>
+                <td>{{ stock.sku.name }}</td>
+                <td>{{ config['STORES'][stock.store_id] }}</td>
+                <td>{{ stock.shelf_number }}</td>
+                <td>{{ stock.code }}</td>
+                <td>{{ stock.made_in }}</td>
+
+                <td>{{ stock.mfg_date|format_date }}</td>
+                <td>{{ stock.exp_date|format_date }}</td>
+                <td style="text-align: center">{% if display_purchase %}{{ stock.purchase_price}}{% else %}*{% endif %}</td>
+                <td>{{ stock.in_quantity }}</td>
+                <td>{{ stock.quantity }}</td>
+                <th>{% if stock.status==9 %}{{ stock.status_name }}{% else %}{{ stock.status_name }}{% endif %}</th>
+                <td>{{ stock.remark|default('-',true) }}</td>
+                <td style="text-align: center">
+                    {% if stock.status in (1,2,) %}
+                    <a href="{{ url_for('admin.edit_stock',stock_id=stock.id) }}" title="Edit stock"><i class="icon-pencil icon-black"></i></a><br/>
+                    {% if stock.status==2 %}
+                    <a href="#" class="btn btn-success" style="margin-bottom: 5px" data-stock_id="{{ stock.id }}" data-confirm="1">财务确认</a>
+                    <a href="#" class="btn btn-warning" data-stock_id="{{ stock.id }}" data-confirm="0">打回审核</a>
+                    {% endif %}
+                {% endif %}
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+{% endblock %}

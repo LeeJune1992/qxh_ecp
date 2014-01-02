@@ -1,0 +1,406 @@
+{% extends "layout.html" %}
+{% set category='order' %}
+{% block title %}订单修改{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .form-horizontal .control-group {
+            margin-bottom: 12px;
+        }
+
+        .delete {
+            font-weight: bold;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .bigdrop.select2-container .select2-results {
+            max-height: 300px;
+        }
+
+        .bigdrop .select2-results {
+            max-height: 300px;
+        }
+
+        .c1 {
+            background-color: #f2dede;
+            padding-left: 5px;
+            padding-top: 4px;
+            margin-bottom: 5px;
+            max-width: 450px;
+            border: 1px dashed #aaa;
+            font-size: 12px;
+        }
+        .sku_set_style{
+            font-weight:bolder;
+        }
+    </style>
+
+{%- endblock %}
+{% block js -%}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+    <script type="text/javascript">
+    $(function () {
+        function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html('发生错误：'+err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        };
+
+        $('body').data({'items': {}});
+        $('select.select2').select2({
+            width:'220px'
+        });
+
+        $('#item').select2({
+            width:'280px'
+        });
+
+        $('#unit').text($('#item option:selected').attr('unit'));
+        $('#item').change(function(){
+            $('#unit').text($('#item option:selected').attr('unit'));
+        });
+
+        $('#order_type').change(function(){
+            var order_type_id = parseInt($(this).val());
+            if (order_type_id==8 || order_type_id==9){
+                $('#client_ip').show();
+            }
+            else{
+                $('#client_ip').hide();
+            }
+
+            if(order_type_id>=100){
+                $('input:radio[name=payment_type]').filter('[value=2]').prop('checked', true);
+                $('input:radio[name=payment_type]').attr('disabled',true);
+            }
+            else{
+                $('input:radio[name=payment_type]').attr('disabled',false);
+            }
+        });
+
+        /*  订单发票  */
+        $("input[name='need_invoice']").change(function () {
+            var need_invoice = parseInt($(this).val());
+            if (need_invoice == 1) {
+                $("input[name='invoice_name']").show();
+            }
+            else {
+                $("input[name='invoice_name']").hide();
+            }
+        });
+
+        /* 初始化数据 */
+        var items_changed = 0;
+        var items = $('body').data('items');
+        {% for order_item in order.order_items %}
+        items['{{ order_item.new_sku_id }}'] = {'name': '{{ order_item.name }}','sku-id':'{{ order_item.sku_id }}','unit':'{{ order_item.unit }}','type':1, 'price': {{ order_item.price }}, 'quantity': {{ order_item.quantity }}};
+        {% endfor %}
+
+        $('#client_ip').val("{{ order.client_ip|default('',True) }}");
+        $('#discount_type').val({{ order.discount_type }}).change();
+        $('#discount_fee').val({{ order.discount_fee }});
+        $('input:radio[name=payment_type][value={{ order.payment_type }}]').click();
+        $('#order_type').val({{ order.order_type }}).change();
+        $('#order_mode').val({{ order.order_mode }}).change();
+        {% if order.need_invoice %}
+        $('input:radio[name=need_invoice][value=1]').prop('checked', true);
+        $("input[name='invoice_name']").val('{{ order.invoice_name|default('',True) }} }}');
+        $("input[name='invoice_name']").show();
+        {% endif %}
+        $('#remark').val(escape_html('{{ order.remark|replace('\r\n','') }}'));
+        $('#user_remark').val(escape_html('{{ order.user_remark|default('',True)|replace('\r\n','') }}'));
+
+        /*   提交订单   */
+        $('form').submit(function () {
+            var add_btn = $('button[type="submit"]');
+            var items = $('body').data('items');
+            if ($.isEmptyObject(items)) {
+                bootbox.alert('尚未添加任何商品');
+                return false;
+            }
+
+            var discount_fee = parseInt($('#discount_fee').val());
+            if (isNaN(discount_fee)) {
+                discount_fee = 0;
+            }
+
+            if (discount_fee < 0) {
+                bootbox.alert('优惠金额小于０');
+                return false;
+            }
+
+            //alert($(this).serialize());
+            add_btn.attr('disabled', true);
+            add_btn.text('提交中...');
+
+            var payment_type = $('input:radio[name=payment_type]:checked').val();
+
+            //validate form
+            var values = $('form').serializeArray();
+            values.push({name: 'items', value: JSON.stringify(items)});
+            values.push({name:'items_changed',value:items_changed});
+            values.push({name: 'payment_type', value: payment_type});
+
+            var req = $.ajax({
+                url: "{{ request.path }}",
+                dataType: 'json',
+                type: 'POST',
+                data: $.param(values)});
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.href = "{{ url_for('admin.orders') }}";
+                }
+                else {
+                    show_err(data.desc);
+                }
+            });
+            req.fail(function(request, status, error) {
+                show_err(error);
+            });
+            req.always(function() {
+                add_btn.attr('disabled', false);
+                add_btn.text('修改订单');
+            });
+            return false;
+        });
+
+        /*  订单商品  */
+        var order = {
+            refresh: function () {
+                var items = $('body').data('items');
+                var $sel = $('#selected-items');
+                var total_fee = 0;
+                if (!$.isEmptyObject(items)) {
+                    $sel.html('<table id="display-items" class="table table-condensed"><thead><tr><th class="span3">商品</th><th style="text-align:center">数量</th><th style="text-align:center">单价</th><th></th></tr></thead></table>');
+                    for (var i in items) {
+                        var item = items[i];
+                        total_fee += item.price * item.quantity;
+                        var style = 'background-color:#fcfcfc';
+                        if(item.price=='0'){
+                            style = 'background-color:#fcf8f1;color:red';
+                        }
+                        else if(item.type=='2'){
+                            style = 'background-color:#fcfaf8;color:green';
+                        }
+                        $('<tr style="'+style+'"><td>' + item.name + "</td><td style=\"text-align:center\"><strong>" + item.quantity+'</strong> '+item.unit + "</td><td style=\"text-align:center\">" + item.price + '</td><td><a href="javascript:void(0);" id="del-' + i + '">&times;</a></td></tr>').appendTo($('table#display-items'));
+                        //$("a#del-"+i).click(function(){order.del});
+                        $("a#del-" + i).bind('click', {'id': i}, order.del);
+                        $("a#del-" + i).addClass('delete');
+                    }
+                    //$sel.append('</table>');
+                    $('#fee').show();
+                    $('#fee').text("商品总价：￥" + total_fee);
+                }
+                else {
+                    $sel.html('<span class="alert alert-warning span12">尚未选择任何商品</span>');
+                    $('#fee').hide();
+                }
+            },
+            clear:function(){
+              if (items_changed==0){
+                  $('body').data({'items': {}});
+                  items_changed = 1;
+              }
+            },
+            del: function (event) {
+                order.clear();
+                data = event.data;
+                var items = $('body').data('items');
+                if (items[data.id] != null) {
+                    delete items[data.id];
+                }
+                order.refresh();
+            },
+            add: function (e) {
+                order.clear();
+                var items = $('body').data('items');
+                var quantity = parseInt($('input[name=quantity]').val());
+                if (isNaN(quantity) || quantity <= 0) {
+                    bootbox.alert('商品数量不正确');
+                    return false;
+                }
+                ;
+                var id = $('#item').val();
+                if (items[id] == null) {
+                    var $selected = $('#item option:selected');
+                    items[id] = {'name': $selected.text(),'unit':$selected.attr('unit'),'sku-id':$selected.attr('sku-id'),'type':parseInt($selected.attr('type')), 'price': parseFloat($selected.attr('price')), 'quantity': quantity};
+                }
+                else {
+                    items[id].quantity += quantity;
+                }
+                order.refresh();
+            }
+        }
+        $('#add-item').on('click',order.add);
+        order.refresh();
+    });
+    </script>
+{%- endblock %}
+
+{%- block main -%}
+    <form id="add-order" class="form-horizontal dl-horizontal" method="post" action="{{ request.path }}">
+    <fieldset>
+    <legend class="lead">订单修改 <span class="label label-important"> {{ order.order_id }}</span></legend>
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+
+
+    <div class="accordion-heading">
+        <a data-toggle="collapse" href="#one">
+            <p class="subtitle">基本信息 </p>
+        </a>
+    </div>
+    <div id="one" class="accordion-body collapse in">
+        <div class="control-group">
+            <label class="control-label" for="item">选择商品</label>
+
+            <div class="controls">
+                <select id="item" name="item" class="select2" style="width: 285px">
+                    {%- for item in items -%}
+                        <option value="{{ item.id }}" sku-id="{{ item.sku_id }}" price="{{ item.price }}" unit="{{ item.unit }}" type="{{ item.type }}"{% if item.type==2 %} class="sku_set_style"{% endif %}>{{ item.name }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <div class="input-append" style="margin-left: 15px">
+                    <input class="input-mini" id="quantity" name="quantity" type="text" value="1">
+                    <span class="add-on" id="unit">件</span>
+                </div>
+                <a class="btn btn-warning" id="add-item" style="margin-left: 20px">添加商品</a>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-bottom: 0">
+            <label class="control-label">已选商品</label>
+
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span7" id="selected-items"></div>
+                </div>
+                <p id="fee" class="alert alert-warning" style="font-size: 14px;width: 140px;font-weight: bold"></p>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="discount_type">折扣</label>
+
+            <div class="controls">
+                <select id="discount_type" name="discount_type" class="select2" style="width: 220px"
+                        placeholder="请选择优惠策略">
+
+                    {%- for k,v in config['DISCOUNT_TYPES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <div class="input-append" style="margin-left: 15px">
+                    <input class="input-mini" id="discount_fee" name="discount_fee" type="text" placeholder="折扣金额">
+                    <span class="add-on">元</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="order_type">订单类型</label>
+
+            <div class="controls">
+                <select id="order_type" name="order_type" class="select2" style="width: 220px">
+                    {%- for k,v in config['ORDER_TYPES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <input id="client_ip" name="client_ip" type="text" placeholder="客户IP地址" style="width: 130px;margin-left: 15px;display: none" />
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="order_mode">成交方式</label>
+
+            <div class="controls">
+                <select id="order_mode" name="order_mode" class="select2" style="width: 220px">
+                    {%- for k,v in config['ORDER_MODES'].iteritems() -%}
+                        <option value="{{ k }}">{{ v }}</option>
+                    {%- endfor -%}
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="payment_type">付款方式</label>
+
+            <div class="controls">
+                <ul class="radio inline" id="payment_type">
+                    {%- for k,v in config['ORDER_PAYMENTS'].iteritems() -%}
+                        <li style="margin-right:35px">
+                            <input id="payment_type-{{ k }}" name="payment_type" type="radio" value="{{ k }}"
+                                    {% if loop.first %} checked="checked"{% endif %}><label
+                                for="payment_type-{{ k }}">{{ v }}</label></li>
+                    {%- endfor -%}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="accordion-heading">
+        <a data-toggle="collapse" href="#three">
+            <p class="subtitle">订单备注 </p>
+        </a>
+    </div>
+    <div id="three" class="accordion-body collapse in">
+        <div class="control-group">
+            <label class="control-label" for="need_invoice">是否需要发票</label>
+
+            <div class="controls">
+                <ul class="radio inline" id="need_invoice">
+                    <li style="padding-right: 20px"><input id="need_invoice-1" name="need_invoice" type="radio"
+                                                           value="1"><label for="need_invoice-1">是</label></li>
+                    <li style="padding-right: 20px"><input id="need_invoice-0" name="need_invoice" type="radio"
+                                                           value="0" checked="checked"><label
+                            for="need_invoice-0">否</label></li>
+
+                </ul>
+                <input type="text" id="invoice_name" name="invoice_name" class="input input-xlarge"
+                       placeholder="发票抬头" style="display: none"/>
+            </div>
+
+        </div>
+
+
+        <div class="control-group">
+            <label class="control-label" for="remark">订单备注</label>
+
+            <div class="controls">
+                <textarea class="span10" id="remark" name="remark" placeholder="订单内部备注"></textarea>
+                <textarea class="span10" id="user_remark" name="user_remark" placeholder="客户备注，如：节假日及周末不送货" style="margin-top: 10px;height: 20px"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">修改订单</button>
+    </div>
+
+    </fieldset>
+    </form>
+{%- endblock -%}

@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import horizontal_field,form_errors with context %}
+{% set prefix='修改' if is_edit else '添加' %}
+{% block title %}{{ prefix }}帐号{% endblock %}
+{% set category='admin' %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        $('select').select2({
+            width:'220px'
+        });
+    });
+    </script>
+{% endblock %}
+{% block main %}
+    <form class="form-horizontal" id="registerHere" method='post' action='{{ request.path }}'>
+        <fieldset>
+            <legend>{{ prefix }}帐号</legend>
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, False) }}
+            {% if is_edit %}
+                {{ horizontal_field(form.username,readonly='readonly') }}
+            {% else %}
+                {{ horizontal_field(form.username) }}
+            {% endif %}
+            {{ horizontal_field(form.password) }}
+            {{ horizontal_field(form.nickname) }}
+            {{ horizontal_field(form.op_id) }}
+            {{ horizontal_field(form.email) }}
+            {{ horizontal_field(form.team) }}
+            {{ horizontal_field(form.role,style="width:220px") }}
+            {{ horizontal_field(form.assign_user_type,style="width:220px") }}
+            {{ horizontal_field(form.is_admin,style="width:220px") }}
+
+
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success" >{{ prefix }}帐号</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}

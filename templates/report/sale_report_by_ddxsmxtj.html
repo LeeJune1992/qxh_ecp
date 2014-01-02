@@ -1,0 +1,91 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('#op').select2({
+                width:'150px',
+                placeholder:'选择员工',
+                allowClear:true
+            });
+
+            $('#express_id').select2({
+                width:'150px',
+                placeholder:'快递公司',
+                allowClear:true
+            })
+
+        });
+    </script>
+{% endblock %}
+
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" class="timepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" class="timepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <select id="op" name="op">
+            <option></option>
+            {% set sel_id = request.args.get('op',0)|int %}
+            {% for op_id,op_name in ops %}
+            <option value="{{ op_id }}" {% if op_id==sel_id %}selected="selected"{% endif %}>{{ op_name }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="express_id" name="express_id">
+            <option></option>
+            {% set express_id = request.args.get('express_id',0)|int %}
+            {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
+                <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
+            {%- endfor -%}
+        </select>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <div class="alert alert-success">
+        订单数：<strong>{{ rows|length }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;订单金额：<strong>{{ total_fee }}元</strong>
+    </div>
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>所属部门</th>
+            <th>组名</th>
+            <th>员工</th>
+            <th>客户姓名</th>
+            <th>订单号</th>
+            <th>产品明细</th>
+            <th>订单金额</th>
+            <th>优惠金额</th>
+            <th>物流公司</th>
+            <th>物流单号</th>
+            <th>订单时间</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr>
+                <td>{{ row['depart'] }}</td>
+                <td>{{ row['team'] }}</td>
+                <td>{{ row['op_name'] }}</td>
+                <td>{{ row['username'] }}</td>
+                <td><a href="{{ url_for('admin.order_detail',order_id=row['order_id']) }}">{{ row['order_id'] }}</a></td>
+                <td><pre>{{ row['items'] }}</pre></td>
+                <td>{{ row['fee'] }}</td>
+                <td>{{ row['discount_fee'] }}</td>
+                <td>{{ row['express_name'] }}</td>
+                <td>{{ row['express_number'] }}</td>
+                <td>{{ row['created'] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    {{ order_nums }}
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

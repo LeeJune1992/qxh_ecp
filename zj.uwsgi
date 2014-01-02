@@ -1,0 +1,304 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          uwsgi
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start the uWSGI server
+# Description:       Start uWSGI using start-stop-daemon
+#
+### END INIT INFO
+
+# Author: YuanXing
+# Create Date: 2010/04/13
+# Rework Date: 2010/05/31
+
+NAME=ecp.uwsgi
+PythonPATH=/data/www/ecp
+APPLOG=/var/log/ecp/web.log
+
+MODULE=application
+CALLABLE=app
+PROCESSES=8
+
+SOCKET=/var/tmp/${NAME}.sock
+
+DisableLogging=no	# sed "yes" to disable request logging
+MaxRequests=     	# maximum number of requests for each worker
+ListenQueue=4096	# -l,empty to default 64
+SocketTimeout=		# -z,empty to default 4s
+HarakiriTimeout=60	# -t,enable harakiri mode,empty to disable
+PostBuffering=4096	# buffer HTTP POST request higher than <bytes> to disk
+
+RUN_AS=www-data         # Change to this username/uid before starting the process.
+
+TASKSET=""              # Set a process's CPU affinity,Specify a numerical list of processors
+                        # For example, 0,5,7,9-11. Empty string mean don't set CPU affinity
+
+################################################################################
+#
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="ECP uWSGI server"
+
+DAEMON=/sbin/uwsgi
+PIDFILE=/var/tmp/$NAME.pid
+LOGFILE=/var/tmp/$NAME.log
+
+SCRIPTNAME=/etc/init.d/$NAME
+
+DAEMON_ARGS=
+[ "$DisableLogging" = "yes" ] 	&& DAEMON_ARGS="${DAEMON_ARGS} -L"
+[ -n "$MaxRequests" ] 		&& DAEMON_ARGS="${DAEMON_ARGS} -R $MaxRequests"
+[ -n "$ListenQueue" ] 		&& DAEMON_ARGS="${DAEMON_ARGS} -l $ListenQueue"
+[ -n "$SocketTimeout" ] 	&& DAEMON_ARGS="${DAEMON_ARGS} -z $SocketTimeout"
+[ -n "$HarakiriTimeout" ] 	&& DAEMON_ARGS="${DAEMON_ARGS} -t $HarakiriTimeout"
+[ -n "$PostBuffering" ]		&& DAEMON_ARGS="${DAEMON_ARGS} --post-buffering $PostBuffering"
+
+DAEMON_ARGS="${DAEMON_ARGS} --pythonpath $PythonPATH --module $MODULE --callable $CALLABLE -s $SOCKET -p $PROCESSES -M -d $LOGFILE --pidfile $PIDFILE -C"
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+VERBOSE=yes
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	touch "${LOGFILE}";chown ${RUN_AS}:${RUN_AS} "${LOGFILE}";chmod 644 "${LOGFILE}"
+	if [ -n "$APPLOG" ];then
+		su "${RUN_AS}" -m -c "touch ${APPLOG}"
+		if [ "$?" != "0" ];then
+		        echo "$APPLOG : ${APPLOG} permission error!"
+		        return 2
+		fi
+	fi
+	[ -f "$APPLOG" ] && chown ${RUN_AS}:${RUN_AS} "${APPLOG}" && chmod 644 "${APPLOG}"
+	[ -S "${SOCKET}" ]  && chown ${RUN_AS}:${RUN_AS} "${SOCKET}"
+
+	if [ ! -d /var/tmp/.python-eggs ]; then
+		mkdir -p /var/tmp/.python-eggs
+		chown ${RUN_AS}:${RUN_AS} /var/tmp/.python-eggs
+	fi
+	export PYTHON_EGG_CACHE=/var/tmp/.python-eggs
+
+	ulimit -H -n 10240
+	ulimit -n 10240
+
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --chuid $RUN_AS \
+             --exec $DAEMON --test > /dev/null  || return 1
+
+	if [ -n "$TASKSET" ];then
+	     taskset -c "$TASKSET" start-stop-daemon --start --quiet --pidfile $PIDFILE --chuid $RUN_AS \
+             --exec $DAEMON -- $DAEMON_ARGS || return 2
+	     RETVAL="$?"
+	else
+	     start-stop-daemon --start --quiet --pidfile $PIDFILE --chuid $RUN_AS \
+             --exec $DAEMON -- $DAEMON_ARGS || return 2
+	     RETVAL="$?"
+	fi
+
+	return "$RETVAL"
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	start-stop-daemon --stop --quiet --signal INT --retry=INT/30/KILL/5 --pidfile $PIDFILE --exec $DAEMON
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+
+	# Many daemons don't delete their pidfiles when they exit.
+	[ -f "$PIDFILE" ] && rm -f "$PIDFILE"
+	#[ -S "$SOCKET" ]  && rm -f "$SOCKET"
+	return "$RETVAL"
+}
+do_reload()
+{
+	start-stop-daemon --stop --quiet --signal HUP --pidfile $PIDFILE --exec $DAEMON
+	RETVAL="$?"
+	return "$RETVAL"
+}
+do_forcereload()
+{
+	start-stop-daemon --stop --quiet --signal TERM --pidfile $PIDFILE --exec $DAEMON
+	RETVAL="$?"
+	return "$RETVAL"
+}
+do_status()
+{
+        if [ -n "$1" ]; then
+            status_of_proc -p $PIDFILE "$DAEMON" "${NAME}" && exit 0 || exit $?
+        else
+            status_of_proc -p $PIDFILE "$DAEMON" "${NAME}" || true
+        fi
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	case "$?" in
+	   0)
+	     [ "$VERBOSE" != no ] && log_end_msg 0
+	     echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Started.($DAEMON_ARGS,TASKSET=$TASKSET)" >>$LOGFILE
+	     echo -n "   $NAME process number: "
+	     sleep 1
+	     echo `ps aux|grep $DAEMON|grep $NAME|grep -v "grep $NAME"|wc -l`
+	     [ -f "$PIDFILE" ] && chmod 644 "$PIDFILE"
+	     [ -S "$SOCKET" ] && chmod 644 "$SOCKET"
+	     ;;
+	   1)
+	     [ "$VERBOSE" != no ] && log_end_msg 0
+	     echo "   $NAME was already running."
+	     ;;
+	   *)
+	     [ "$VERBOSE" != no ] && log_end_msg 2
+	     echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Start failure.($DAEMON_ARGS,TASKSET=$TASKSET)" >>$LOGFILE
+	     echo "   $NAME Start failure!"
+	     exit 1
+	     ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+        #   0 if daemon has been stopped
+        #   1 if daemon was already stopped
+        #   2 if daemon could not be stopped
+        #   other if a failure occurred
+	   0)
+	     [ "$VERBOSE" != no ] && log_end_msg 0
+	     echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Stoped." >>$LOGFILE
+	     ;;
+	   1)
+	     [ "$VERBOSE" != no ] && log_end_msg 0
+	     echo "   $NAME was already stopped."
+	     ;;
+	   *)
+	     [ "$VERBOSE" != no ] && log_end_msg 1
+	     echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Stop failure." >>$LOGFILE
+	     echo "   $NAME Stop failure!"
+	     exit 1
+	     ;;
+	esac
+	;;
+  restart)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+		    0)
+			log_end_msg 0
+			echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Retarted.($DAEMON_ARGS,TASKSET=$TASKSET)" >>$LOGFILE
+			echo -n "   $NAME process number: "
+			sleep 1
+			echo `ps aux|grep $DAEMON|grep $NAME|grep -v "grep $NAME"|wc -l`
+			[ -f "$PIDFILE" ] && chmod 644 "$PIDFILE"
+			[ -S "$SOCKET" ] && chmod 644 "$SOCKET"
+			;;
+		    1)  # Old process is still running
+			log_end_msg 1
+			echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME old process is still running.($DAEMON_ARGS,TASKSET=$TASKSET)" >>$LOGFILE
+			echo "   $NAME old process is still running."
+			exit 1
+			;;
+		    *) # Failed to start
+			log_end_msg 2
+			echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Start failure.($DAEMON_ARGS,TASKSET=$TASKSET)" >>$LOGFILE
+			echo "   $NAME Start failure!"
+			exit 1
+			;;
+		esac
+		;;
+	  *)
+	     # Failed to stop
+	     log_end_msg 1
+             echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Stop failure." >>$LOGFILE
+             echo "   $NAME Stop failure!"
+	     exit 1
+	     ;;
+	esac
+	;;
+reload)
+	log_daemon_msg "Reloading $DESC" "$NAME"
+	do_reload
+	case "$?" in
+	0)
+		[ "$VERBOSE" != no ] && log_end_msg 0
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Reloaded." >>$LOGFILE
+		;;
+	1)
+		[ "$VERBOSE" != no ] && log_end_msg 1
+		echo "   $NAME was stopped,cannot reload."
+		exit 1
+		;;
+	2)
+		[ "$VERBOSE" != no ] && log_end_msg 1
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Reload failure." >>$LOGFILE
+		echo "   $NAME Reload failure!"
+		exit 1
+		;;
+	esac
+	;;
+  force-reload)
+	log_daemon_msg "Force-reloading $DESC" "$NAME"
+	do_forcereload
+	case "$?" in
+	0)
+		[ "$VERBOSE" != no ] && log_end_msg 0
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Force-reloaded." >>$LOGFILE
+		;;
+	1)
+		[ "$VERBOSE" != no ] && log_end_msg 1
+		echo "   $NAME was stopped,cannot reload."
+		;;
+	2)
+		[ "$VERBOSE" != no ] && log_end_msg 1
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $NAME Force-reload failure." >>$LOGFILE
+		echo "   $NAME Force-reload failure!"
+		exit 1
+		;;
+	esac
+	;;
+  status)
+	do_status status
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload|status}" >&2
+	exit 3
+	;;
+esac
+
+:

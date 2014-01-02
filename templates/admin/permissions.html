@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination  with context %}
+{% set category='perm' %}
+{% block title %}权限配置{% endblock %}
+
+{% block main %}
+    <form action="{{ url_for('admin.permissions') }}" method="post" class="form-search inline well">
+        <input type="text" class="input-medium" name="endpoint" placeholder="权限名称">
+        <input type="text" class="input-medium" name="uri" placeholder="URI">
+        <button type="submit" class="btn btn-success"><i class="icon-plus icon-white"></i> 添加权限</button>
+    </form>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr class="table-condensed">
+            <th>权限名称</th>
+            <th>节点</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for perm in pagination.items %}
+            <tr>
+                <td>{{ perm.endpoint }}</td>
+                <td>{{ perm.uri }}</td>
+                <td style="text-align: center">
+                    <a href="{{ url_for('admin.del_perm',id=perm.id) }}" data-confirm="确认删除权限《{{ perm.endpoint }}》？" class="confirm"><i class="icon-remove icon-black"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+
+{% endblock %}

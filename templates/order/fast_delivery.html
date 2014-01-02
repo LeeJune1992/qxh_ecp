@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination with context %}
+
+{% set category='order' %}
+{% block title %}一键发货{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+
+            $('a#delivery').click(function(){
+                if($('a#delivery').attr("disabled") == 'disabled'){
+					return;
+				}
+				$('a#delivery').attr("disabled",true);
+				var express_id = parseInt($(this).data('express_id'));
+                var confirm_text = '快递公司：<span style="color:red">'+$(this).data('express_name')+'</span>，待发订单数：<span style="color:red">'+$(this).data('order_nums')+'</span>，是否确认发货？';
+                bootbox.confirm(confirm_text, function(result) {
+                    if (result!=true){
+                        //alert($('a#delivery').attr("disabled"));
+						$('a#delivery').attr("disabled",false);
+						return;
+                    }
+                    var req = $.ajax({
+                        url: '{{ url_for('admin.order_fast_delivery') }}',
+                        dataType: "json",
+                        type: 'POST',
+                        data: {express_id: express_id}
+                    });
+                    req.done(function (data) {
+                        if (data.result == true) {
+                            window.location.reload(true);
+                        }
+                        else {
+                            bootbox.alert("操作失败：" + data.error);
+                        }
+                    });
+                    req.fail(function (request, status, error) {
+                        bootbox.alert('发生错误:' + error);
+                    });
+                    return false;
+                });
+                return false;
+
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>快递公司</th>
+            <th>待发货订单数</th>
+            <th>合计金额</th>
+            <th style="text-align: center;width: 100px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for express_order in express_orders %}
+            <tr>
+                <td>
+                    {{ express_order['express_name'] }}
+                </td>
+                <td>{{ express_order['order_nums'] }}</td>
+                <td>{{ express_order['total_fee'] }}</td>
+
+                <td style="text-align: center">
+                    {% if express_order['order_nums']>0 %}
+                        <a href="#"
+                           class="btn btn-success btn-mini"
+                           data-express_id="{{ express_order['express_id'] }}"
+                           data-express_name="{{ express_order['express_name'] }}"
+                           data-order_nums="{{ express_order['order_nums'] }}"
+                           data-id="{{ express_order['express_id'] }}"
+                           id="delivery">一键发货</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

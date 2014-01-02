@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors  with context %}
+{% set category='admin' %}
+{% block title %}帐号管理{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        $('a.confirm').on('click',function(e){
+            var operator_id = parseInt($(this).data('id'));
+            bootbox.confirm($(this).data('confirm'), function(result) {
+                if (result!=true){
+                    return;
+                }
+                var req = $.ajax({
+                    url: '/operator/delete/' + operator_id,
+                    dataType: "json",
+                    type: 'POST'
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+            });
+            return false;
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="搜索姓名">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('admin.add_operator') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 新增帐号</a>
+    </form>
+
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr>
+            <th>帐号</th>
+            <th>姓名</th>
+            <th>工号</th>
+            <th>邮箱</th>
+            <th>角色</th>
+            <th>所属组</th>
+            <th>指派客户</th>
+            <th>管理员</th>
+            <th>状态</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for operator in pagination.items %}
+            <tr{% if operator.status==9 %} class="error"{% endif %}>
+                <td>{{ operator.username }}</td>
+                <td>{{ operator.nickname }}</td>
+                <td style="text-align: center">{% if operator.op_id %}<code style="color:darkblue">{{ operator.op_id }}</code>{% endif %}</td>
+                <td>{{ operator.email|default('无',true)}}</td>
+                <td>{{ operator.role.name }}</td>
+                <td>{{ operator.team_fullname }}</td>
+                <td>
+                    {% for user_name in operator.assign_users %}
+                        <code>{{ user_name }}</code>
+                    {% endfor %}
+                </td>
+                <td>{% if operator.is_admin %}<span class="label label-info">是</span>{% endif %}</td>
+                <td>
+                {% if config['ROLE_ALLOWED_ORDER_STATUS'].has_key(current_user.role_id) %}
+                    {% if operator.status == 1 %}
+                    <span class="label label-success">上班</span>
+                    {% elif operator.status == 2 %}
+                    <span class="label label-warning">下班</span>
+                    {% elif operator.status == 9 %}
+                    <span class="label label-important">冻结</span>
+                    {% endif %}
+                {% endif %}
+                </td>
+                <td style="text-align: center">
+                    <a href="{{ url_for('admin.edit_operator',operator_id=operator.id) }}"><i class="icon-pencil icon-black"></i></a>
+                    <a href="#" data-id={{ operator.id }} data-confirm="确认删除帐号《{{ operator.username }}》？" class="confirm"><i class="icon-remove icon-black"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+
+{% endblock %}

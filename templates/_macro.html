@@ -1,0 +1,284 @@
+{% macro render_pagination(pagination) -%}
+    <div class="pagination pull-right">
+        <ul>
+        {%- for page in pagination.iter_pages() %}
+            {% if page %}
+                {% if page != pagination.page %}
+                    <li><a href="{{ request.endpoint|url_with_params(page=page) }}">{{ page }}</a></li>
+                {% else %}
+                    <li class="active"><a href="#">{{ page }}</a></li>
+                {% endif %}
+            {% else %}
+                <li><span class="ellipsis">…</span></li>
+            {% endif %}
+        {%- endfor %}
+        </ul>
+    </div>
+{%- endmacro %}
+
+{% macro nav_link(endpoint,name,num=0) -%}
+    {% if endpoint|is_authorize %}
+    {%- if url_for(endpoint) == request.script_root + request.path -%}
+        <li class="active"><a class="active" href="{{ url_for(endpoint) }}"><i class="icon-chevron-right"></i>{{ name }} {% if num>0 %}<span class="badge badge-important">{{ num }}</span>{% endif %}</a></li>
+    {%- else -%}
+        <li><a href="{{ url_for(endpoint) }}"><i class="icon-chevron-right"></i>{{ name }} {% if num %}<span class="badge badge-info">{{ num }}</span>{% endif %}</a> </li>
+    {%- endif -%}
+    {% endif %}
+{%- endmacro %}
+
+{% macro search_date_form() -%}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" class="timepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" class="timepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+{%- endmacro -%}
+
+{% macro set_default_value(name) -%}
+    {% if request.args.get(name,None) %}value='{{ request.args[name] }}'{% endif %}
+{%- endmacro %}
+
+{% macro order_status_link(status,order_id) -%}
+    {% set status_name=config['ORDER_STATUS'][status] %}
+    {% if status in (0,1,2,) %}
+        <a href="{{ url_for('admin.manage_order',order_id=order_id,status=status) }}" class="btn btn-mini btn-info">{{ status_name }}</a>
+    {% elif status in (3,4,) %}
+        <a href="{{ url_for('admin.manage_order',order_id=order_id,status=status) }}" class="btn btn-mini btn-warning">{{ status_name }}</a>
+    {% else %}
+        <a href="{{ url_for('admin.manage_order',order_id=order_id,status=status) }}" class="btn btn-mini btn-danger">{{ status_name }}</a>
+    {% endif %}
+{%- endmacro %}
+
+{% macro order_status(status) -%}
+    {% set status_name=config['ORDER_STATUS'][status] %}
+    {% if status == 100 %}
+        <span class="label label-success">{{ status_name }}</span>
+    {% elif status in (7,8,9,) %}
+        <span class="label label-warning">{{ status_name }}</span>
+    {% elif status>100 %}
+        <span class="label label-important">{{ status_name }}</span>
+    {% else %}
+        <span class="label">{{ status_name }}</span>
+    {% endif %}
+{%- endmacro %}
+
+{% macro sidebar(category) -%}
+    {% if current_user.is_authenticated() %}
+    {% if category=='order' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+{#            <li class="nav-header">订单管理</li>#}
+            {{ nav_link('admin.add_order','订单录入') }}
+            {{ nav_link('admin.orders','订单查询') }}
+            {% if not current_user.is_admin %}
+            {{ nav_link('admin.order_approval','待处理订单',0) }}
+                {% endif %}
+            {{ nav_link('admin.order_fast_delivery','一键发货') }}
+            {{ nav_link('admin.except_orders','差额订单调整') }}
+            {{ nav_link('admin.search_order_phone','号码查询') }}
+            {{ nav_link('admin.order_lhyd_yz','陆航韵达邮政录单') }}
+        </ul>
+    {% elif category=='user' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {% if not current_user.assign_user_type==2 or current_user.team=='C' %}
+            {{ nav_link('admin.add_user','新增客户') }}
+            {% endif %}
+            {{ nav_link('admin.my_users','我的客户库') }}
+            {{ nav_link('admin.manage_users','客户管理') }}
+            {{ nav_link('admin.public_new_users','公共库',num='新客户') }}
+            {{ nav_link('admin.public_old_users','公共库',num='会员客户') }}
+            {{ nav_link('admin.giveup_users','放弃客户审核') }}
+            {{ nav_link('admin.giveup_user_sq','我申请的放弃客户') }}
+            {{ nav_link('admin.giveup_user_audit','我审核的放弃客户') }}
+            {{ nav_link('admin.search_user_form','客户检索') }}
+            {{ nav_link('admin.sale_user_list','会员客户统计') }}
+            {{ nav_link('admin.sms_list','短信查询') }}
+            {{ nav_link('admin.search_knowledge','知识查询') }}
+
+
+        </ul>
+    {% elif category=='item' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {{ nav_link('admin.items','分类管理') }}
+            {{ nav_link('admin.skus','SKU管理') }}
+            {{ nav_link('admin.sku_set_manage','套餐管理') }}
+        </ul>
+    {% elif category=='stock' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {{ nav_link('admin.stock_in_list','入库查询') }}
+            {{ nav_link('admin.add_stock_in','入库登记') }}
+            {{ nav_link('admin.stock_out_list','出库查询') }}
+            {{ nav_link('admin.add_stock_out','出库登记') }}
+        </ul>
+{#    {% elif category == 'report' %}#}
+{#        <ul class="nav nav-list bs-docs-sidenav">#}
+{##}
+{#            <li class="dropdown-submenu">#}
+{#                <a tabindex="-1" href="#">营销报表</a>#}
+{#                <ul class="dropdown-menu">#}
+{#                    <li><a tabindex="-1" href="#">员工销售报表</a></li>#}
+{#                    <li><a tabindex="-1" href="#">部门销售报表</a></li>#}
+{#                    <li><a tabindex="-1" href="#">产品销售报表</a></li>#}
+{#                </ul>#}
+{#            </li>#}
+{#            <li><a href="/order/add"><i class="icon-chevron-right"></i>财务报表</a> </li>#}
+{#        </ul>#}
+
+    {% elif category=='admin' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+{#            <li class="nav-header">权限管理</li>#}
+            {{ nav_link('admin.operators','帐号管理') }}
+            {{ nav_link('admin.roles','权限管理') }}
+            {{ nav_link('admin.manage_news','公告管理') }}
+            {{ nav_link('admin.add_news','发布公告') }}
+{#            {{ nav_link('admin.permissions','权限配置') }}#}
+        </ul>
+    {% elif category=='analytics' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {{ nav_link('analytics.product_manage','产品管理') }}
+            {{ nav_link('analytics.medium_manage','媒体管理') }}
+            {{ nav_link('analytics.place_manage','广告位管理') }}
+            {{ nav_link('analytics.content_list','内容管理') }}
+            {{ nav_link('analytics.ad_list','广告管理') }}
+        </ul>
+    {% elif category=='securitycode' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {{ nav_link('admin.securitycodes','防伪码查询') }}
+        </ul>
+    {% elif category=='knowledge' %}
+        <ul class="nav nav-list bs-docs-sidenav">
+            {{ nav_link('admin.categorys','知识类别') }}
+            {{ nav_link('admin.manage_knowledge','知识管理') }}
+            {{ nav_link('admin.add_knowledge','发布知识') }}
+        </ul>
+    {% endif %}
+    {% endif %}
+{%- endmacro %}
+
+{%- macro inline_field(field) %}
+    {%- with required = "required" if kwargs['required'] or field.flags.required else "" -%}
+        {{field(placeholder=field.label.text, required=required, **kwargs)}}
+    {%- endwith %}
+{%- endmacro %}
+
+{%- macro addon_field(field,prepend_text,append_text) -%}
+    <div class="control-group {% if field.errors %}error{% endif %}">
+        {{field.label(class="control-label")}}
+        <div class="controls">
+            {% if prepend_text %}
+                <div class="input-prepend"><span class="add-on">{{ prepend_text|safe }}</span>
+            {% else %}
+                <div class="input-append">
+            {% endif %}
+            {{field(**kwargs)|safe}}
+            {% if append_text -%}
+                    <span class="add-on" id="{{ field.name }}-add-on">{{ append_text|safe }}</span>
+            {%- endif %}
+            </div>
+            {%- if field.errors -%}
+                {%- for error in field.errors -%}
+                    <span class="help-inline">{{error}}</span>
+                {%- endfor %}
+            {%- elif field.description -%}
+                <p class="help-inline">{{field.description|safe}}</p>
+            {%- endif -%}
+        </div>
+    </div>
+{% endmacro %}
+
+{%- macro horizontal_field(field) %}
+    <div class="control-group{% if field.errors %} error{% endif %}">
+        {{field.label(class="control-label")}}
+        <div class="controls">
+            {{field(**kwargs)|safe}}
+            {%- if field.errors %}
+                {%- for error in field.errors %}
+                    <span class="help-inline">{{error}}</span>
+                {%- endfor %}
+            {%- elif field.description -%}
+                <p class="help-inline">{{field.description|safe}}</p>
+            {%- endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{#_msg = ''#}
+{#if self.operator_id:#}
+{#_msg += u'#}
+{##}
+{##}
+{#user_type_name = USER_TYPES[self.user_type]#}
+{#if self.assign_operator_id:#}
+{#_msg += u'分配给<span style="color:red">%s</span>'%#}
+{#else:#}
+{#if self.is_abandon:#}
+{#_msg += u'放弃了'#}
+{#else:#}
+{#_msg += u'进入%s公共库'%user_type_name#}
+{##}
+{#_msg += u' (%s) %s'%(user_type_name,self.assign_time.strftime('%Y-%m-%d %H:%M:%S'))#}
+{#return _msg#}
+
+{%- macro assign_log_output(assign_log) -%}
+    <span style="color: #c0c0c0">{{ assign_log.assign_time|format_date('%Y-%m-%d %H:%M') }}</span> -
+    <span style="color: #ccc"> [{{ assign_log.user_type_name }}] </span><br/>
+    {% if assign_log.operator_id %}
+        经由 <span style="color:#a47e3c">{{ assign_log.operator.nickname }}</span>
+    {% endif %}
+    {% if assign_log.assign_operator_id  %}
+        分配给 <span style="color:red">{{ assign_log.assign_operator.nickname }}</span>
+    {% else %}
+        {% if assign_log.is_abandon %}
+            <span style="color:#e24f49">放弃维护</span>
+        {% else %}
+            调至 <span style="color:#0e90d2">{{ assign_log.user_type_name }}公共库</span>
+        {% endif %}
+    {% endif %}
+{%- endmacro -%}
+
+{% macro form_errors(form, hiddens=True) %}
+    {%- if form.errors %}
+        {%- for fieldname, errors in form.errors.iteritems() %}
+            {%- if (form[fieldname]|is_hidden_field and hiddens) or
+       (form[fieldname]|is_hidden_field and hiddens != 'only') %}
+                {%- for error in errors %}
+                    <span class="error help-inline">{{error}}</span>
+                {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+{%- endmacro %}
+
+
+{% macro place_auto_complete_js() %}
+{#<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>#}
+{#<script type="text/javascript">#}
+{#    $(function(){#}
+{#        var input = /** @type {HTMLInputElement} */(document.getElementById('street1'));#}
+{#        var options = {#}
+{#            componentRestrictions: {country: 'CN'}#}
+{#        };#}
+{#        new google.maps.places.Autocomplete(input,options);#}
+{#    });#}
+{#</script>#}
+{% endmacro %}
+
+
+{% macro quick_form(form, action=".", method="post", class="form form-horizontal", buttons = [('submit', 'primary', 'Save')]) %}
+    <form action="{{action}}" method="post" class="{{class}}">
+        {{ form.hidden_tag() }}
+        {{ form_errors(form, 'only') }}
+        {%- for field in form %}
+            {%- if not field|is_hidden_field -%}
+                {{ horizontal_field(field) }}
+            {%- endif -%}
+        {%- endfor %}
+        <div class="form-actions">
+            {% for name, type, text in buttons %}
+                <button name="{{name}}" type="submit" class="btn btn-{{type}}">{{text}}</button>
+            {%- endfor %}
+        </div>
+    </form>
+{%- endmacro %}

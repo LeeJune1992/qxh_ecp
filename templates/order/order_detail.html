@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% set category='order' %}
+{% block title %}查看订单{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+        td.right{
+            text-align: right;
+            background-color: #f7f7f7;
+            width: 150px;
+            color: #666;
+            padding-right: 10px;
+        }
+        .table td{
+            border: 1px dashed #cccccc;
+            font-size: 14px;
+        }
+
+        .table-items{
+            border:1px solid #efefef;
+            width: 80%;
+        }
+        .table-items td,.table-items th{
+            border-width: 0;
+            text-align: center;
+        }
+
+    </style>
+{% endblock %}
+{#{% block js %}#}
+{#    {{ super() }}#}
+{#    <script type="text/javascript">#}
+{#        $(function(){#}
+{#            {% if order.express_number  %}#}
+{#                var req = $.ajax({#}
+{#                    url: 'http://www.kuaidi100.com/applyurl?key=22b32e4d4cf39be1&com={{ config['EXPRESS_CONFIG'][order.express_id]['code'] }}&nu={{ order.express_number }}&show=2&muti=1&order=desc',#}
+{#                    dataType: "html",#}
+{#                    type: 'POST'#}
+{#                });#}
+{#                req.done(function (data) {#}
+{#                    $('#kuaidi').html(data);#}
+{#                });#}
+{#                req.fail(function (xhr, status, error) {#}
+{#                    $('#kuaidi').html(xhr.responseText);#}
+{#                });#}
+{#            {% endif %}#}
+{#        });#}
+{#    </script>#}
+{#{% endblock %}#}
+{%- block main -%}
+<section>
+    <table class="table detail">
+        <tr class="success"><td class="right">订单号</td><td><span style="font-weight:bold;color: orangered">{{ order.order_id }}</span> <a href="{{ url_for('admin.print_order_invoices',order_id=order.order_id) }}" target="_blank" style="padding-right: 20px;color: red" class="pull-right">打印发货单</a></td></tr>
+        {% if order.link_order_id %}
+            <tr class="error"><td class="right">关联订单</td><td><a href="{{ url_for('admin.order_detail',order_id=order.link_order_id) }}" target="_blank">{{ order.link_order_id }}</a></td></tr>
+        {% endif %}
+        <tr><td class="right">客户姓名</td><td><a href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.username }}</a></td></tr>
+        <tr><td class="right">订购商品</td><td><table class='table table-bordered table-striped table-items'>
+        <thead><tr><th>商品名称</th><th>数量</th><th>价格</th>{% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<th>入库数</th><th>报损数</th>{% endif %}</tr></thead>
+        {% for order_item in order.order_items %}
+            <tr><td style="text-align: left"><span>{{ order_item.name }}</span>{% if order_item.pkg_name %} <code>{{ order_item.pkg_name }}</code>{% endif %}</td><td>{{ order_item.quantity }}</td><td>{{ order_item.fee }}</td>
+                {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td style="color: red">{{ order_item.in_quantity }}</td><td style="color: red">{{ order_item.loss_quantity }}</td>{% endif %}
+
+            </tr>
+        {% endfor %}</table></tr>
+
+        <tr><td class="right">折扣</td><td>{{ config['DISCOUNT_TYPES'][order.discount_type] }} {% if order.discount_fee>0 %}<span class="label label-success">优惠金额 ￥{{ order.discount_fee }}</span>{% endif %}</td></tr>
+        <tr><td class="right">商品金额</td><td><span style="font-size: 14px;color: blue">￥{{ order.item_fee }}</span></td></tr>
+        <tr><td class="right">实际费用</td><td><span style="font-size: 14px;color: red">￥{{ order.actual_fee }}</span></td></tr>
+        <tr><td class="right">付款方式</td><td><span class="label label-warning">{{ order.payment_type_name }}</span></td></tr>
+        <tr><td class="right">订单类型</td><td>{{ config['ORDER_TYPES'][order.order_type] }} {% if order.client_ip %}<span class="label">IP: {{ order.client_ip }}</span>{% endif %}</td></tr>
+        <tr><td class="right">成交方式</td><td>{{ config['ORDER_MODES'][order.order_mode] }}</td></tr>
+        {% if is_auth %}
+        <tr class="warning"><td class="right">收货信息</td><td><address>
+            <strong>{{ order.shipping_address.format_address }}</strong> <span class="label label-success" style="font-size: 14px">{{ order.shipping_address.ship_to }}</span><br/>
+            <abbr title="联系方式">电话:</abbr>{{ order.shipping_address.phone|hide_phone }}<br/>
+            {% if order.shipping_address.tel %}<abbr title="联系方式">座机:</abbr>{{ order.shipping_address.tel|hide_phone }}<br/>{% endif %}
+            {% if order.shipping_address.postcode %}<abbr title="邮政编码">邮编:</abbr>{{ order.shipping_address.postcode }}<br/>{% endif %}
+            {% if order.shipping_address.email %}<abbr title="邮箱地址">邮箱:</abbr>{{ order.shipping_address.email }}{% endif %}
+        </address></td></tr>
+        {% endif %}
+        <tr><td class="right">是否需要发票</td><td>{% autoescape false %}{{ '<span class="label label-important">是</span>' if order.need_invoice else '否' }}{% endautoescape %}</td></tr>
+    {% if order.need_invoice %}
+        <tr><td class="right">发票抬头</td><td>{{ order.invoice_name }}</td></tr>
+    {% endif %}
+        <tr><td class="right">内部备注</td><td>{{ order.remark|default('-',true) }}</td></tr>
+        <tr><td class="right">客户备注</td><td>{{ order.user_remark|default('-',true) }}</td></tr>
+        <tr class="info"><td class="right">出货仓库</td><td>{{ order.store_name }}</td></tr>
+        <tr class="info"><td class="right">快递公司</td><td>{% if order.express_id %}{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}{% endif %}</td></tr>
+        <tr class="info"><td class="right">快递单号</td><td>
+            {% if order.express_number and order.express_id != 99  %}
+                {% if order.express_id in (3,7,) %}
+                <a href="http://www.kuaidi100.com/all/feihukuaidi.shtml?nu={{ order.express_number }}" target="_blank" title="点击查询快递详情">{{ order.express_number }}</a>
+                {% elif order.express_id == 9 %}{{ order.express_number }},
+                {% for lh in order.lhyd_postal %}
+                <a href="http://www.kuaidi100.com/chaxun?com=ems&nu={{ lh.express_number }}" target="_blank" title="点击查询快递详情">{{ lh.express_number }}</a>
+                {% endfor %}
+                {% else %}
+                <a href="http://www.kuaidi100.com/chaxun?com={{ config['EXPRESS_CONFIG'][order.express_id]['code'] }}&nu={{ order.express_number }}" target="_blank" title="点击查询快递详情">{{ order.express_number }}</a>
+                {% endif %}
+{#                <p id="kuaidi">查询中...</p>#}
+
+            {% endif %}
+        </td></tr>
+
+        <tr><td class="right">创建者</td><td>{{ order.publisher.nickname }}</td></tr>
+        <tr><td class="right">操作日志</td><td style="font-size:12px">
+            {% for log in logs %}
+                <span style="color:#333">{{ log.time }}</span> <span style="color:#002a80">{{ log.name }}</span> 将状态变更为 <span style="color:red"> {{ log.status }}</span> {% if log.ip %}<span style="color:#666"> -IP: {{ log.ip }}</span>{% endif %} {% if log.remark %}<span style="color:#999"> - {{ log.remark }}</span>{% endif %}<br/>
+            {% endfor %}
+        </td></tr>
+    </table>
+
+</section>
+{%- endblock -%}

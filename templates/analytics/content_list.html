@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import inline_field,horizontal_field,render_pagination with context %}
+{% set category='analytics' %}
+{% block title %}内容管理{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+
+        .thumb{
+            max-width: 120px;
+            max-height: 100px;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2({
+                width:'120px'
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline">
+        <input type="text" class="input-medium" name="q" value="{{ request.args.get('q','') }}" placeholder="名称">
+        <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
+        <a href="{{ url_for('analytics.content_add') }}" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> 添加广告内容</a>
+    </form>
+    <table class="table table-bordered table-condensed table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>ID</th>
+            <th>名称</th>
+            <th>类型</th>
+            <th>广告内容</th>
+            <th>目标地址</th>
+            <th>备注</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in pagination.items %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td><code>{{ item.type_name }}</code></td>
+                <td>{% if item.mode==1 %}<a href="{{ item.img }}" target="_blank"><img src="{{ item.img }}" border="0" class="thumb" /></a>{% else %}{{ item.txt }}{% endif %}</td>
+                <td>{{ item.to_url|url_link|safe }}</td>
+                <td>{{ item.remark }}</td>
+                <td><a href="{{ url_for('analytics.content_edit',content_id=item.id) }}"><i class="icon-edit"></i></a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination) }}
+{% endblock %}

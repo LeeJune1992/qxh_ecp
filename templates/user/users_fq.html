@@ -1,0 +1,398 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors,order_status,order_status_link,set_default_value with context %}
+{% set category='user' %}
+{% set allowed_admin='admin' in show_queries %}
+{% block title %}客户管理{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/select2/select2.css') }}">
+    <style type="text/css">
+        .table th,.table td{
+            text-align: center;
+        }
+
+        .table td{
+            cursor: pointer;
+        }
+
+        .highlight{
+            background-color: #faf2cc;
+        }
+{#        table td{#}
+{#            padding: 0;#}
+{#            margin: 0;#}
+{#        }#}
+    </style>
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+
+    <script type="text/javascript">
+    $(function(){
+        $('.table').on('click', 'tbody tr td', function(event) {
+            //$(this).addClass('highlight').siblings().removeClass('highlight');
+            var attr = $(this).attr('unallowed-click');
+            if (typeof attr=='undefined'){
+                window.location.href=$(this).parent().data('link-url');
+                return false;
+            }
+        });
+
+        $('.timepicker').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            autoclose: true,
+            todayBtn: true
+        });
+
+        {% if 'op' in show_queries %}
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'归属员工'
+        });
+        {% endif %}
+
+        $('#per_page').select2({
+            width:'120px',
+            placeholder:'每页条数'
+        });
+        {% if 'user_type' in show_queries %}
+        $('#user_type').select2({
+            width:'100px',
+            placeholder:'客户类型'
+        });
+        {% endif %}
+
+        {% if 'user_origin' in show_queries %}
+            $('#user_origin').select2({
+                width:'100px',
+                placeholder:'客户来源'
+            });
+        {% endif %}
+
+        {% if 'show_assign' in show_queries %}
+            $('#is_assigned').select2({
+                width:'100px',
+                placeholder:'是否分配',
+                allowClear:true
+            });
+        {% endif %}
+
+        {% if 'show_abandon' in show_queries %}
+            $('#is_abandon').select2({
+                width:'110px',
+                placeholder:'是否放弃',
+                allowClear:true
+            });
+        {% endif %}
+
+        $('#intent_level').select2({
+            width:'100px',
+            placeholder:'意向等级',
+            allowClear:true
+        });
+
+        {% if show_label %}
+        $('#label_id').select2({
+            width:'100px',
+            placeholder:'客户标签',
+            allowClear:true
+        });
+        {% endif %}
+
+        $('#sort_name').select2({
+            width:'120px',
+            placeholder:'排序规则'
+        });
+
+        $('#sort_sc').select2({
+            width:'80px',
+            placeholder:'顺序'
+        });
+
+        {% if allowed_admin %}
+        var toggle_admin_panel = function(){
+            if ($('input[name="sel_ids"]').filter(':checked').length>0){
+                $('#admin-panel').show();
+            }
+            else{
+                $('#admin-panel').hide();
+            }
+        };
+
+        $('input[name="sel_ids"]').click(function(){
+            toggle_admin_panel();
+        });
+
+        $('#chk_all').click(function(){
+            $('input[name="sel_ids"]').prop('checked',$('#chk_all').is(':checked'));
+            toggle_admin_panel();
+        });
+
+        var selected_ids = function(){
+            var _ids = [];
+            $('input[name="sel_ids"]').filter(':checked').each(function() {
+                _ids.push($(this).val());
+            });
+            return _ids;
+        };
+
+        $('#giveupuserok').click(function(){
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要审核通过的客户');
+                return;
+            }
+            var confirm_text = '是否确认将选中的客户放弃？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            bootbox.confirm(confirm_text, function(result) {
+                if(result){
+					var req = $.ajax({
+						url: '{{ url_for('admin.giveup_user_ok') }}',
+						dataType: "json",
+						type: 'POST',
+						traditional: true,
+						data:{ids:JSON.stringify(sel_ids),remarks:$('#giveupuser_remark').val()}
+					});
+					req.done(function (data) {
+						if (data.result == true) {
+							window.location.reload(true);
+						}
+						else {
+							bootbox.alert("操作失败：" + data.error);
+						}
+					});
+					req.fail(function (request, status, error) {
+						bootbox.alert('发生错误:' + error);
+					});
+				}
+            });
+            return false;
+        });
+        $('#giveupuserno').click(function(){
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要审核不通过的客户');
+                return;
+            }
+            var confirm_text = '是否确认将选中的客户放弃审核不通过？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            bootbox.confirm(confirm_text, function(result) {
+                if(result){
+					var req = $.ajax({
+						url: '{{ url_for('admin.giveup_user_no') }}',
+						dataType: "json",
+						type: 'POST',
+						traditional: true,
+						data:{ids:JSON.stringify(sel_ids),remarks:$('#giveupuser_remark').val()}
+					});
+					req.done(function (data) {
+						if (data.result == true) {
+							window.location.reload(true);
+						}
+						else {
+							bootbox.alert("操作失败：" + data.error);
+						}
+					});
+					req.fail(function (request, status, error) {
+						bootbox.alert('发生错误:' + error);
+					});
+				}
+            });
+            return false;
+        });
+        {% endif %}
+
+    });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <form action="" method="get" class="form-search inline well well-small">
+        {% if 'op' in show_queries %}
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+        {% if 'user_type' in show_queries %}
+        <select id="user_type" name="user_type" class="select2" style="width: 120px">
+            <option></option>
+            <option value="">所有客户</option>
+            {% set user_type = request.args.get('user_type',0)|int %}
+            {%- for k,v in config['USER_TYPES'].iteritems() -%}
+                <option value="{{ k }}" {% if k==user_type %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+        {% if show_label %}
+            <select id="label_id" name="label_id" class="select2" style="width: 120px">
+                <option></option>
+                {% set label_id = request.args.get('label_id',0)|int %}
+                {%- for k,v in config['USER_LABEL_IDS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==label_id %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+        {% endif %}
+        {% if 'show_assign' in show_queries %}
+        <select id="is_assigned" name="is_assigned" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_assigned = request.args.get('is_assigned',0)|int %}
+            {%- for k,v in [(1,'未分配'),(2,'已分配'),] -%}
+                <option value="{{ k }}" {% if k==is_assigned %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+
+        {% if 'user_origin' in show_queries %}
+            <select id="user_origin" name="user_origin" class="select2" style="width: 120px">
+                <option></option>
+                <option value="">所有来源</option>
+                {% set user_type = request.args.get('user_origin',0)|int %}
+                {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==user_type %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+        {% endif %}
+        <select id="intent_level" name="intent_level" class="select2">
+            <option></option>
+            {% set intent_level = request.args.get('intent_level','') %}
+            {%- for k in config['USER_INTENT_LEVELS'] -%}
+                <option value="{{ k }}" {% if k==intent_level %}selected="selected"{% endif %}>{{ k }}</option>
+            {%- endfor -%}
+        </select>
+        {% if 'username' in show_queries %}
+        <input type="text" class="input-small" name="name" placeholder="客户名称" {{ set_default_value('name') }}>
+        {% endif %}
+        {% if 'phone' in show_queries %}
+        <input type="text" class="input-small" name="phone" placeholder="电话号码" {{ set_default_value('phone') }}>
+        {% endif %}
+
+
+        <select id="per_page" name="per_page" class="select2">
+            <option></option>
+            {% set per_page = request.args.get('per_page',0)|int %}
+            {%- for k in (10,20,50,100,500) -%}
+                <option value="{{ k }}" {% if k==per_page %}selected="selected"{% endif %}>每页{{ k }}条</option>
+            {%- endfor -%}
+        </select>
+        <select id="sort_name" name="sort_name" class="select2" style="width: 120px">
+            <option></option>
+            {% set sort_name = request.args.get('sort_name','') %}
+            {%- for k,v in config['USER_SORT_NAMES'] -%}
+                <option value="{{ k }}" {% if k==sort_name %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <select id="sort_sc" name="sort_sc" class="select2" style="width: 120px">
+            <option></option>
+            {% set sort_sc = request.args.get('sort_sc',0)|int %}
+            {%- for k,v in config['SORT_SCS'] -%}
+                <option value="{{ k }}" {% if k==sort_sc %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+
+        <hr/>
+        <input type="text" class="input-small" name="batch_id" placeholder="批次编号" {{ set_default_value('batch_id') }}>
+        <input id="assign_start" class="timepicker" style="width: 120px" name="assign_start" type="text" value="{{ request.args['assign_start'] }}" placeholder="分配开始时间" />
+        <input id="assign_end" class="timepicker" style="width: 120px" name="assign_end" type="text" value="{{ request.args['assign_end'] }}" placeholder="分配结束时间" />
+        {% if 'show_abandon' in show_queries %}
+        <select id="is_abandon" name="is_abandon" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_abandon = request.args.get('is_abandon',0)|int %}
+            {%- for k,v in [(1,'已放弃'),(2,'未放弃'),] -%}
+                <option value="{{ k }}" {% if k==is_abandon %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+        <input type="text" class="input-small" name="user_remark" placeholder="客户备注" {{ set_default_value('user_remark') }}>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+
+
+    </form>
+    {% if allowed_admin %}
+        <div class="alert" id="admin-panel" style="display:none;margin-bottom: -3px;min-height: 30px">
+            {% if current_user.action('giveup_user_ok') or current_user.action('giveup_user_no') %}
+            <input type="text" class="input-small" id="giveupuser_remark" placeholder="备注" }}>
+            {% endif %}
+            {% if current_user.action('giveup_user_ok') %}
+            <button class="btn btn-primary" id="giveupuserok">审核通过</button>
+            {% endif %}
+            {% if current_user.action('giveup_user_no') %}
+            <button class="btn btn-primary" id="giveupuserno">审核不通过</button>
+            {% endif %}
+        </div>
+    {% endif %}
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+        {% if allowed_admin %}
+            <th><input type="checkbox" id="chk_all" value="0"></th>
+        {% endif %}
+            <th>编号</th>
+            <th>客户姓名</th>
+            <th>放弃原因</th>
+            {% if show_label %}
+            <th>标签</th>
+            {% endif %}
+            <th>手机号</th>
+            <th>座机</th>
+            <th>意向</th>
+            <th>创建日期</th>
+            <th>来源</th>
+            <th>客户类型</th>
+            <th>归属</th>
+            <th>分配时间</th>
+            <th>剩余时长</th>
+            <th>联系次数</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in pagination.items %}
+            {% set link_url = url_for('admin.user',user_id=user.user.user_id,token=user.user.user_token) %}
+            <tr data-link-url="{{ link_url }}">
+            {% if allowed_admin %}
+                <td style="text-align: center" unallowed-click="false"><input type="checkbox" id="sel_ids" name="sel_ids" value="{{ user.user.user_id }}"> </td>
+             {% endif %}
+                <td><a href="{{ link_url }}">{{ user.user.user_id }}</a></td>
+                <td>
+                    {% if user.user.is_abandon %}
+                    <strike>{{ user.user.name }}</strike>
+                    {% else %}
+                    {{ user.user.name }}
+                    {% endif %}
+                    {% if user.user.remark %}
+                        <code>{{ user.user.remark }}</code>
+                    {% endif %}
+                </td>
+                <td>{{ user.reason }}</td>
+                {% if show_label %}
+                <td>{% if user.user.label %}<code>{{ user.user.label }}</code>{% endif %}</td>
+                {% endif %}
+                <td>{{ user.user.phones|join('<br/>')|safe }}</td>
+                <td>{{ user.user.tels|join('<br/>')|safe }}</td>
+                <td>{{ user.user.intent_level }}</td>
+                <td>{{ user.user.join_time |format_date}}</td>
+                <td>{{ config['USER_ORIGINS'][user.user.origin] }}</td>
+                <td><code {% if user.user.user_type==2 %}style="color:darkcyan"{% elif user.user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.user.type_name }}</code></td>
+                <td>
+                    {{ user.user.assign_operator.nickname if user.user.assign_operator_id else '' }}
+                </td>
+                <td>{{ user.user.assign_time }}</td>
+                <td>{{ user.user.assign_remain_info }}</td>
+
+                <td>{{ user.user.dialog_times }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="alert pull-left">客户数：{{ pagination.total }}</div>
+
+    {{ render_pagination(pagination) }}
+{% endblock %}

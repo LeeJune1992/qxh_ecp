@@ -1,0 +1,6 @@
+
+<table>
+{% for user in pagination %}
+<tr><td>{{ user.sku.name }}</td><td>{{ user.order_id }}</td><td>{{ user.quantity }}</td><td>{% if user.order.express_id %}{{ config['EXPRESS_CONFIG'][user.order.express_id]['name'] }}{% endif %}</td></tr>
+{% endfor %}
+</table>

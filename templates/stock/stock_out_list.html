@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors,set_default_value with context %}
+{% set category='stock' %}
+{% block title %}出库查询{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+            $('select').select2({
+                width:'120px'
+            });
+
+            $('#store_id').select2({
+                width:'100px',
+                placeholder:'库房',
+                allowClear:true
+            });
+
+            $('.timepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                language:'zh-CN'});
+
+            $('#c').select2({
+                width:'140px',
+                placeholder:'出库类型',
+                allowClear:true
+            });
+
+            $('#status').select2({
+                width:'140px',
+                placeholder:'当前状态',
+                allowClear:true
+            });
+
+            $('a[id=del-stock]').on('click',function(e){
+                var stock_id = parseInt($(this).data('stock_id'));
+                var req = $.ajax({
+                    url: '{{ url_for('admin.stock_delete') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    data: {type:'OUT',stock_id:stock_id}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                return false;
+            });
+
+            $('a[data-confirm]').on('click',function(e){
+                var confirm = parseInt($(this).data('confirm'));
+                var stock_id = parseInt($(this).data('stock_id'));
+                bootbox.confirm('请确认如下操作：','取消',(confirm)?'审批通过':'打回', function(result) {
+                    if (result!=true){
+                        return;
+                    }
+
+                    var req = $.ajax({
+                        url: '{{ url_for('admin.stock_out_approval') }}',
+                        dataType: "json",
+                        type: 'POST',
+                        data: {confirm: confirm,stock_id:stock_id}
+                    });
+                    req.done(function (data) {
+                        if (data.result == true) {
+                            window.location.reload(true);
+                        }
+                        else {
+                            bootbox.alert("操作失败：" + data.error);
+                        }
+                    });
+                    req.fail(function (request, status, error) {
+                        bootbox.alert('发生错误:' + error);
+                    });
+                    return false;
+                });
+                return false;
+            });
+        });
+
+    </script>
+{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+     .table th,
+     .table td {
+         text-align: center;
+         vertical-align: middle;
+         font-size: 12px;
+     }
+    </style>
+{% endblock %}
+{% block main %}
+    <form action="" method="get" class="form-search inline well well-small">
+        <input type="text" name="sku_id" class="input-small" placeholder="商品编码" {{ set_default_value('sku_id') }}>
+        <input type="text" name="name" class="input-small" placeholder="商品名称" {{ set_default_value('name') }}>
+        <select id="store_id" name="store_id" class="select2">
+            <option></option>
+            {% set sel_id = request.args.get('store_id',0)|int %}
+            {%- for store_id,store_name in config['STORES'].iteritems() -%}
+                <option value="{{ store_id }}" {% if store_id==sel_id %}selected="selected"{% endif %}>{{ store_name }}</option>
+            {%- endfor -%}
+        </select>
+
+        <select id="c" name="c" class="select2">
+            <option></option>
+            {% set sel_id = request.args.get('c',0)|int %}
+            {%- for k,v in config['STOCK_OUT_CATEGORIES'].iteritems() -%}
+                <option value="{{ k }}" {% if k==sel_id %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+
+        <select id="status" name="status" class="select2">
+            <option></option>
+            {% set sel_id = request.args.get('status',0)|int %}
+            {%- for k,v in config['STOCK_STATUS'].iteritems() -%}
+                <option value="{{ k }}" {% if k==sel_id %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" name="start_date" class="timepicker input input-small" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker input input-small" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+    </form>
+
+    <table class="table table-bordered table-hover table-condensed">
+        <thead>
+        <tr class="table-condensed">
+            <th>商品编码</th>
+            <th style="min-width: 140px">商品名称</th>
+            <th>订单号</th>
+            <th style="min-width: 60px">库房</th>
+            <th>类型</th>
+            <th>出库数量</th>
+            <th>操作员</th>
+            <th>审批人</th>
+            <th>生效时间</th>
+            <th>状态</th>
+            <th>备注</th>
+            <th style="text-align: center;width:120px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% set allowed_edit = current_user.action('edit_stock_out') %}
+        {% for stock in pagination.items %}
+            <tr {% if stock.status==1 %}class="error"{% elif stock.status==2 %}class="warning"{% endif %}>
+                <td><a href="{{ url_for(request.endpoint,sku_id=stock.sku.id) }}">{{ stock.sku.id }}</a></td>
+                <td>{{ stock.sku.name }}</td>
+                <td>{% if stock.order_id %}<a href="{{ url_for('admin.order_detail',order_id=stock.order_id) }}">{{ stock.order_id }}</a>{% endif %}</td>
+                <td>{{ config['STORES'][stock.store_id] }}</td>
+                <td>{{ stock.c_name|default('',true) }}</td>
+
+                <td>{{ stock.quantity }}</td>
+                <td>{{ stock.operator.nickname }}</td>
+                <td>{% if stock.approver_id %}<code>{{ stock.approver.nickname }}</code>{% else %}-{% endif %}</td>
+                <td>{% if stock.status==9 %}{{ stock.valid_time|format_date }}{% endif %}</td>
+                <td>
+                    {{ stock.status_name }}
+                </td>
+                <td>{{ stock.remark|default('-',true) }}</td>
+
+                <td style="text-align: center">
+                    {% if stock.status in (1,2,) and allowed_edit %}
+                    <a href="{{ url_for('admin.edit_stock_out',stock_id=stock.id) }}" title="修改" class="btn btn-mini">修改</a>
+                    {% endif %}
+                    {% if stock.status==1 %}
+                        <a href="javascript:void(0);" title="删除" class="btn btn-mini btn-danger" id="del-stock" data-stock_id="{{ stock.id }}">删除</a>
+                    {% endif %}
+                    {% if stock.status==2 %}
+                    <a href="javascript:void(0);" class="btn btn-success btn-mini" data-stock_id="{{ stock.id }}" data-confirm="1">通过</a>
+                    <a href="javascript:void(0);" class="btn btn-warning btn-mini" data-stock_id="{{ stock.id }}" data-confirm="0">拒绝</a>
+                    {% endif %}
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(pagination) }}
+
+{% endblock %}

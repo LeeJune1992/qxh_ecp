@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% set category='admin' %}
+{% block title %}权限管理{% endblock %}
+{% block css %}
+    {{ super() }}
+    <style type="text/css">
+    dl,dt,dd{
+        margin: 2px;
+        padding: 0;
+    }
+    code{
+        background-color: #fff;
+    }
+    </style>
+{% endblock %}
+{% block main %}
+    <a href="{{ url_for('admin.manage_role') }}" class="btn btn-success"><i class="icon-plus icon-white"></i> 新增角色</a>
+<hr/>
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            <th>角色名</th>
+            <th>权限列表</th>
+            <th style="text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for role_id,role_name,module_endpoints in roles %}
+            <tr>
+            <td>{{ role_name }}</td>
+            <td>
+
+                {% for module in module_endpoints.itervalues() %}
+                <dl>
+                <dt>{{ module['module_name'] }}</dt>
+                <dd>
+                    {% for endpoint_name in module['endpoints'] %}
+                        <code>{{ endpoint_name }}</code>
+                    {% endfor %}
+                </dd>
+                </dl>
+                {% endfor %}
+            </td>
+            <td style="text-align: center">
+                <a href="{{ url_for('admin.manage_role',role_id=role_id) }}"><i class="icon-pencil icon-black"></i></a>
+            </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

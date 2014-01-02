@@ -1,0 +1,56 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <div class="alert alert-success">
+        新进会员总数：<strong>{{ total_new_users }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;放弃客户总数：<strong>{{ total_giveup_users }}</strong>
+    </div>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span8">
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+                <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>新进会员数</th>
+                    <th>放弃客户数</th>
+                    <th>会员客户总数</th>
+                    <th>活跃客户数</th>
+                    <th>沉默客户数</th>
+                    <th>会员推荐数</th>
+                    <th>市级客户数</th>
+                    <th>县级客户数</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}<a href="{{ url_for('admin.sale_report_user_list',list_date=row[0],list_type=1) }}" target="_blank">查看详细</a></td>
+                        <td>{{ row[5] }}<a href="{{ url_for('admin.sale_report_user_list',list_date=row[0],list_type=0) }}" target="_blank">查看详细</a></td>
+                        <td>{{ row[6] }}</td>
+                        <td>{{ row[7] }}</td>
+                        <td>{{ row[8] }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+{% endblock %}

@@ -1,0 +1,870 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors,order_status,order_status_link,set_default_value with context %}
+{% set category='order' %}
+{% set allowed_change_order_op = current_user.action('change_order_op') and ops %}
+{% set query_order_status = request.args.get('order_status',0)|int %}
+{% set allowed_print = not request.args.has_key('history_status') and query_order_status==40 %}
+{% set display_checkbox = allowed_change_order_op or allowed_print %}
+
+{% block title %}订单查询{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+
+    <style type="text/css">
+        .visited{
+            color: brown;
+            text-decoration: line-through;
+        }
+
+        .table tr th,
+        .table tr td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-item tr td{
+            text-align: left;
+        }
+
+        .table-item tr th{
+            background-color: #efefef;
+        }
+
+        #return-items input{
+            width: 30px;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .form-search input[type="input"]{
+            width: 140px;
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+    <script src="{{ url_for('static', filename='js/jquery.base64.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/base64.js') }}"></script>
+
+    <script type="text/javascript">
+    $(function () {
+        var all_express = JSON.parse('{{ config['EXPRESS_CONFIG']|tojson|safe }}');
+        $('select').select2({
+            width:'145px'
+        });
+
+        $('#op').select2({
+            placeholder:'选择员工',
+            allowClear:true,
+            width:'120px'
+        });
+        $('#to_operator_id').select2({
+            placeholder:'转派员工',
+            allowClear:true,
+            width:'120px'
+        });
+
+        $('#order_express_id').select2({
+            placeholder:'快递公司',
+            allowClear:true,
+            width:'120px'
+        });
+
+        $('#payment_type').select2({
+            placeholder:'付款方式',
+            allowClear:true,
+            width:'110px'
+        });
+
+        $('#express_id').select2({
+            placeholder:'快递公司',
+            allowClear:true,
+            width:'120px'
+        });
+
+
+        $('.timepicker').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            autoclose: true,
+            todayBtn: true
+        });
+
+        $('body').data({'picker-items':{}});
+        $('a#picker').on('click',function(){
+            $('#pickerItems').modal('show');
+            var order_id = $(this).data('order_id');
+            $('#pickerItems input').attr('order_id',order_id);
+            $('#pickerItems button').attr('order_id',order_id);
+            //picker_items.clear();
+            $('body').data({'picker-items':{}});
+            var picker_items = $('body').data('picker-items');
+            var rows = $(this).closest('tr').find('table.table-item > tbody >tr');
+            rows.each(function(){
+                var id = $(this).data('item_id');
+                var quantity = parseInt($(this).data('quantity'));
+                var name = $(this).data('item_name');
+                var code = $(this).data('code');
+                var unit = $(this).data('unit');
+                picker_items[id]={'quantity':quantity,'name':name,'code':code,'unit':unit,'num':0};
+
+            });
+            pickerHandler.refresh();
+            return false;
+        });
+
+        $('#pickerItems').on('shown', function () {
+            $('#pickerItems input').focus();
+        });
+
+        var pickerHandler = {
+            refresh:function(){
+                var items = $('body').data('picker-items');
+                var $sel = $('#picker-items');
+                if (!$.isEmptyObject(items)) {
+                    var complete = true;
+                    $sel.html('<table id="display-picker-items" class="table table-condensed table-bordered"><thead><tr><th class="span3">商品</th><th style="text-align:center">总数量</th><th style="text-align:center">已拣数量</th></tr></thead></table>');
+                    for (var i in items) {
+                        var item = items[i];
+                        var _cls = '';
+                        if (item.quantity!=item.num){
+                            complete = false;
+                        }
+                        else{
+                            _cls = 'success';
+                        }
+
+                        $('<tr class="'+_cls+'"><td>' + item.name + "</td><td style=\"text-align:center\"><strong>" + item.quantity+'</strong> '+item.unit + "</td><td style=\"text-align:center\">" + item.num + '</td></tr>').appendTo($('table#display-picker-items'));
+                    }
+
+                    if(complete){
+                        var req = $.ajax({
+                            url: '{{ url_for('admin.update_order_picker_status') }}',
+                            dataType: "json",
+                            type: 'POST',
+                            data: {order_id:$('#pickerItems button').attr('order_id')}
+                        });
+                        req.done(function (data) {
+                            if (data.result == true) {
+                                window.location.reload(true);
+                            }
+                            else {
+                                bootbox.alert("操作失败：" + data.error);
+                            }
+                        });
+                        req.fail(function (request, status, error) {
+                            bootbox.alert('发生错误:' + error);
+                        });
+                    }
+
+                }
+                else {
+                    $sel.empty();
+                }
+            }
+        };
+
+        $('#picker_code').keydown(function(e){
+            if (e.keyCode == 13) { // barcode scanned!
+                var code = $(this).val();
+                if (code != '' && code != null){
+                    var items = $('body').data('picker-items');
+                    for (var i in items) {
+                        var item = items[i];
+                        if (item.code==code){
+                            item.num += 1;
+                            pickerHandler.refresh();
+                            break;
+                        }
+                    }
+                }
+                $(this).val(null);
+                $(this).focus();
+                return false; // block form from being submitted yet
+            }
+        });
+
+
+        $('#order_express_number').keydown(function(e){
+            if (e.keyCode == 13) { // barcode scanned!
+                $('#order_express_number').focus();
+                return false; // block form from being submitted yet
+            }
+        });
+
+        var print_express_handler = function(o){
+
+            //alert($.base64({data:"地址地址"}));
+            //地市,区镇,联系地址,邮政编码,联系人,手机,电话,传真,备注,金额,款项用途
+            //print_params = '0,'+$(this).data('express_name')+
+            var ship_to = o.data('ship_to');
+            if (o.data('express_name')=='邮政快递'){
+                ship_to += '（收）';
+            }
+
+            var print_params = [
+                '0',//调用模式
+                o.data('express_name'),//单据名称
+                '1',//打印完成退出(0:不退出,1：退出)
+                '',//单位名称
+                '',//单位简称
+                '',//开户银行
+                '',//帐号
+                '中国',//国家
+                o.data('province'),//省份
+                o.data('city'),//地市
+                o.data('district'),//区镇
+                o.data('address').replace(',','，'),//联系地址
+                o.data('postcode'),//邮政编码
+                ship_to,//联系人
+                o.data('phone'),//手机
+                o.data('tel'),//电话
+                '',//传真
+                o.data('remark').replace(',','，'),//备注
+                o.data('fee'),//金额
+                ''//款项用途
+            ];
+            //var path = $.base64({data:print_params.join(',')});
+            //window.open('siwuprinter://'+path, "print_express");
+           var shell = new ActiveXObject('shell.application');
+            shell.ShellExecute("SIWUprinter.exe", print_params.join(','), "", "open", 1);
+            return false;
+        };
+
+        $('a#express-print').on('click',function(){
+            var target = $(this);
+            if (target.hasClass('visited')){
+                print_express_handler(target);
+            }
+            else{
+                update_order_flag($(this).data('order_id'),2,function(){
+                    target.addClass('visited');
+                    print_express_handler(target);
+                });
+            }
+            return false;
+        });
+
+        $('a#invoice-print').on('click',function(){
+            var target = $(this);
+            if (target.hasClass('visited')){
+                window.open(target.attr('href'), "print_invoice");
+            }
+            else{
+                update_order_flag($(this).data('order_id'),1,function(){
+                    target.addClass('visited');
+                    window.open(target.attr('href'), "print_invoice");
+                });
+            }
+            return false;
+        });
+
+        $(".popover-link").popover({
+            html: 'true',
+            placement: 'right',
+            title: function () {
+                return '<strong>' + $(this).attr('address') + '</strong>';
+            },
+            content: function () {
+                return '<span style="color:red;font-weight:bold;font-size:14px">' + $(this).attr('ship_to') + '</span><br/>电话：' + $(this).attr('phone') + '<br/>邮编：' + $(this).attr('postcode')+'<hr/>客户备注：'+$(this).attr('user_remark');
+            }
+        });
+
+        $(".created_info").popover({
+            html: 'true',
+            placement: 'right',
+            title: function () {
+                return '归属人：<strong>' + $(this).data('created_by') + '</strong>';
+            },
+            content: function () {
+                return '<span style="color:red;font-weight:bold;font-size:14px">' + $(this).data('team') + '</span>';
+            }
+        });
+
+        var update_store_express = function(){
+            var store_id = parseInt($('#store_id').val());
+            var express_select = $('#order_express_id');
+            express_select.empty();
+            express_select.prepend('<option></option>');
+            for (var i in all_express){
+                _express = all_express[i];
+                //if (_express.stores.indexOf(store_id)>-1){
+                if ($.inArray(store_id,_express.stores)>-1){
+                    express_select.prepend('<option value="'+i+'" data-area_url="'+_express.area_url+'">'+_express.name+'</option>');
+                }
+            }
+            express_select.val('').change();
+        };
+
+        $('#store_id').on('change',function(){
+            update_store_express();
+        });
+
+
+        $('#order_express_id').on('change',function(){
+            var $selected = $('#order_express_id option:selected');
+            if ($selected.val()!=''){
+                var area_url = $selected.data('area_url');
+                $('#express_area_url').empty();
+                if(area_url!=''){
+                    $('#express_area_url').html('<a href="'+area_url+'" target="_blank">配送范围查询</a>');
+                }
+            }
+        });
+
+        //订单审核提示框
+        $('a#operate').on('click',function (e) {
+            $('#remark').val(null);
+            var $btn = $('#operate_order');
+            var to_status = parseInt($(this).attr('status'));
+            var from_status = parseInt($(this).attr('from_status'));
+            var flag = parseInt($(this).attr('flag'));
+
+            if (flag==2){
+                $('#return_item_info').html('<table class="table table-condensed" id="return-items"><thead><tr><th class="span3">商品</th><th style="text-align:center">总数</th><th style="text-align:center">入库数</th><th style="text-align:center">报损数</th></tr></thead><tbody></tbody></table>');
+                var rows = $(this).closest('tr').find('table.table-item > tbody >tr');
+                rows.each(function(){
+                    $('<tr style="background-color:#fcfcfc" data-quantity="'+$(this).data('quantity')+'" data-id="'+$(this).data('item_id')+'"><td>' + $(this).data('item_name') + '</td><td style=\"text-align:center\"><strong>' + $(this).data('quantity')+$(this).data('unit')+ '</strong></td><td style=\"text-align:center\"><input type="text" class="input input-mini" value="'+$(this).data('quantity')+'" /></td><td><input type="text" class="input input-mini" value="0"/></td></tr>').appendTo($('table#return-items > tbody'));
+                });
+                //$('<a class="btn btn-warning" href="/stock/losses/add?link_order_id='+$(this).attr('order_id')+'" target="_blank">报损登记</a>').appendTo($('#return_item_info'));
+                $('#return_item_info').show();
+            }
+            else{
+                $('#return_item_info').hide();
+            }
+
+            if (from_status == 40 && to_status == 4) {//确认拣货
+                $('#express_info').show();
+                var express_id = $(this).attr('express_id');
+                $('#store_id').val($(this).attr('store_id')).change();
+                $('#order_express_id').val(express_id).change();
+                $('#store_id').select2('disable');
+                $('#order_express_id').select2("disable");
+
+
+                if (express_id != '99'){
+                    $('#order_express_number').val($(this).attr('express_number'));
+                $('#order_express_number').show();
+                }else{
+                    $('#order_express_number').val('0');
+                    $('#order_express_number').hide();
+                }
+            }
+            else if (from_status == 2 && (to_status==3 || to_status==40)) {
+                $('#express_info').show();
+                $('#store_id').change();
+                $('#store_id').select2('enable');
+                $('#order_express_id').select2("enable");
+                $('#order_express_number').hide();
+            }
+            else {
+                $('#express_info').hide();
+            }
+
+            $btn.empty().text($(this).text());
+            $btn.data('order_id', $(this).attr('order_id'));
+            $btn.data('status', to_status);
+            $btn.data('from_status', from_status);
+            $btn.removeAttr('class');
+            $btn.addClass('btn');
+            $btn.addClass($(this).attr('css'));
+
+
+            $('#modalTitle').empty().html('请确认如下操作：<p style="color:#ccc;font-size:18px;margin-right:25px" class="pull-right">订单号：' + $(this).attr('order_id') + "</p>");
+            $('#operateModal').modal('show');
+
+            $('#operateModal').on('shown', function () {
+                if ($('#order_express_number').is(":visible")) {
+                    $('#order_express_number').focus();
+                }
+            })
+            return false;
+        });
+
+
+        //订单审核流程提交
+        $('#operate_order').on('click',function (e) {
+            e.preventDefault();
+
+            var order_id = $(this).data('order_id');
+            var from_status = parseInt($(this).data('from_status'));
+
+            var to_status = parseInt($(this).data('status'));
+            var remark = $('#remark').val();
+
+            var params = {status: to_status, remark: remark};
+
+            if ($('#return_item_info').is(":visible")) {
+                var $return_confirm_items = $('table#return-items > tbody > tr');
+                var $return_items = {};
+                var error_msg;
+                $return_confirm_items.each(function(){
+                    var item_id = parseInt($(this).data('id'));
+                    var quantity = parseInt($(this).data('quantity'));
+                    var in_num = parseInt($(this).find('input').eq(0).val());
+                    var loss_num = parseInt($(this).find('input').eq(1).val());
+                    if(isNaN(in_num)){in_num=0}
+                    if(isNaN(loss_num)){loss_num=0}
+                    $return_items[item_id] = {'in':in_num,'loss':loss_num};
+                    if (in_num<0 || loss_num<0){
+                        error_msg = '报损数或入库数不能小于0';
+                        return false;
+                    }
+
+                    if (loss_num>in_num){
+                        error_msg = '报损数量不允许大于入库数量！';
+                        return false;
+                    }
+
+                    if (in_num>quantity){
+                        error_msg = '报损数量大于发货数量';
+                        return false;
+                    }
+
+{#                    if (in_num+loss_num>quantity){#}
+{#                        error_msg = '报损数量 + 入库数量 > 商品总数量';#}
+{#                        return false;#}
+{#                    }#}
+
+                });
+
+                if (error_msg){
+                    alert(error_msg);
+                    return false;
+                }
+                params['return-items'] = JSON.stringify($return_items);
+            }
+
+            if (from_status == 40 && to_status == 4) {//确认拣货
+                var express_num = $('#order_express_number').val();
+                if (express_num == '') {
+                    alert('快递单号不允许为空!'+express_num);
+                    return false;
+                }
+                params['express_num'] = express_num;
+            }
+            else if (from_status == 2 && (to_status==3 || to_status==40)) {//内勤审核
+                var express_id = parseInt($('#order_express_id').val());
+                if (express_id == 0 || isNaN(express_id)) {
+                    alert('请选择配送的快递公司!');
+                    return false;
+                }
+                params['express_id'] = express_id;
+                params['store_id'] = parseInt($('#store_id').val());
+            }
+
+            var req = $.ajax({
+                url: '/order/manage/' + order_id,
+                dataType: "json",
+                type: 'POST',
+                data: params
+            });
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.reload(true);
+                }
+                else {
+                    bootbox.alert("操作失败：" + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert('发生错误:' + error,function(){
+                    $('#operateModal').modal('hide');
+                });
+            });
+
+            //window.location.reload(true);
+            return false;
+        });
+
+        {% if display_checkbox %}
+        var toggle_admin_panel = function(){
+            if ($('input[name="sel_ids"]').filter(':checked').length>0){
+                $('#admin-panel').show();
+            }
+            else{
+                $('#admin-panel').hide();
+            }
+        };
+
+        $('input[name="sel_ids"]').click(function(){
+            toggle_admin_panel();
+        });
+
+        $('#chk_all').click(function(){
+            $('input[name="sel_ids"]').prop('checked',$('#chk_all').is(':checked'));
+            toggle_admin_panel();
+        });
+
+        var selected_ids = function(){
+            var _ids = [];
+            $('input[name="sel_ids"]').filter(':checked').each(function() {
+                _ids.push($(this).val());
+            });
+            return _ids;
+        };
+
+        $('form[name="batch-print-invoices"]').submit(function(){
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要打印的订单');
+                return;
+            }
+
+            $('a#invoice-print').each(function(){
+                if(!$(this).hasClass('visited')){
+                    var _id = String($(this).data('order_id'));
+                    if ($.inArray(_id,sel_ids)>-1){
+                        $(this).addClass('visited');
+                    }
+                }
+            });
+
+            $('#print_ids').val(JSON.stringify(sel_ids));
+            return true;
+        });
+
+        $('#to_operator_id').on('change',function(){
+            var to_operator_id = parseInt($('#to_operator_id').val());
+            if (to_operator_id == 0|| isNaN(to_operator_id)){
+                return;
+            }
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要变更归属的订单');
+                return;
+            }
+            var confirm_text = '是否确认将选中的<font color="blue"> 订单归属 </font>变更为员工 <font color="red">'+$('#to_operator_id option:selected').text()+'</font>？';
+            bootbox.confirm(confirm_text, function(result) {
+                if (result!=true){
+                    $('#to_operator_id').select2('val','');
+                    return;
+                }
+
+                var req = $.ajax({
+                    url: '{{ url_for('admin.change_order_op') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    traditional: true,
+                    data:{ids:JSON.stringify(sel_ids),op_id:to_operator_id}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                req.always(function(){
+                    $('#to_operator_id').select2('val','');
+                });
+            });
+            return false;
+        });
+        {% endif %}
+    });
+    </script>
+{% endblock %}
+
+{% block main %}
+    {% if show_query %}
+        <form action="" method="get" class="form-search inline well well-small">
+            {% if ops %}
+            <select id="op" name="op">
+            <option></option>
+            {% set sel_op_id = request.args.get('op',0)|int %}
+            {% for op_id,op_name in ops %}
+            <option value="{{ op_id }}" {% if op_id==sel_op_id %}selected="selected"{% endif %}>{{ op_name }}</option>
+            {% endfor %}
+            </select>
+            {% endif %}
+            <select id="payment_type" name="payment_type">
+                <option></option>
+                {% set payment_type = request.args.get('payment_type',0)|int %}
+                {%- for k,v in config['ORDER_PAYMENTS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==payment_type %}selected{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+            <input type="text" class="input-medium" name="order_id"
+                   placeholder="订单号" {{ set_default_value('order_id') }}>
+            <input type="text" name="name" style="width: 110px" placeholder="客户名称" {{ set_default_value('name') }}>
+            <input type="text" name="phone" style="width: 110px" placeholder="电话号码" {{ set_default_value('phone') }}>
+            <select id="express_id" name="express_id" class="select2" style="width: 120px">
+                <option></option>
+                {% set express_id = request.args.get('express_id',0)|int %}
+                {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
+                {%- endfor -%}
+            </select>
+            <input type="text" class="input-medium" name="express_number"
+                   placeholder="快递单号" {{ set_default_value('express_number') }}>
+            <p style="margin-top: 8px">
+            <label class="checkbox">
+                <input type="checkbox" value="1" id="history_status" name="history_status" {% if request.args.has_key('history_status') %}checked="checked"{% endif %}>历史状态
+            </label>
+            <select id="order_status" name="order_status" class="select2" style="width: 140px">
+                {%- for k,v in config['ORDER_STATUS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==query_order_status %}selected{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+            <input id="start_date" name="start_date" type="text" class="timepicker" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+            <input id="end_date" name="end_date" type="text" class="timepicker" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+
+            <select id="per_page" name="per_page" class="select2">
+                <option></option>
+                {% set per_page = request.args.get('per_page',0)|int %}
+                {%- for k in (10,20,50,100) -%}
+                    <option value="{{ k }}" {% if k==per_page %}selected="selected"{% endif %}>每页{{ k }}条</option>
+                {%- endfor -%}
+            </select>
+            <button type="submit" class="btn btn-primary"><i
+                    class="icon-search icon-white"></i>
+                查询
+            </button>
+            </p>
+        </form>
+    {% endif %}
+
+
+    <div id="pickerItems" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <input name="picker_code" placeholder="扫描商品条码" id="picker_code" type="text" order_id=""/>
+        </div>
+        <div class="modal-body">
+            <div id="picker-items"></div>
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-danger" order_id="" id="confirm-picker">完成验货</button>
+        </div>
+    </div>
+
+    <div id="operateModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true" style="margin-top: -50px">
+
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <h4 id="modalTitle"></h4>
+        </div>
+        <div class="modal-body" style="max-height: 310px">
+            <div id="return_item_info"></div>
+            <div id="express_info" style="display: none;margin-bottom: 10px">
+                <select id="store_id" name="store_id" class="select2" style="width: 50px">
+                    {%- for store_id,name in config['STORES'].iteritems() -%}
+                        <option value="{{ store_id }}">{{ name }}</option>
+                    {%- endfor -%}
+                </select>
+                <select id="order_express_id" name="order_express_id" class="select2" style="width: 120px">
+                    <option></option>
+                </select>
+                <input name="order_express_number" placeholder="快递单号" id="order_express_number" type="text"
+                       style="margin-left: 20px"/>
+                <span id="express_area_url" style="padding-left: 10px"></span>
+            </div>
+            <textarea class="span12" style="height: 60px" id="remark" name="remark" placeholder="备注信息"></textarea>
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-success" data-order_id="" data-from_status="" data-status=""
+                    id="operate_order"></button>
+        </div>
+    </div>
+
+    {% if display_checkbox %}
+        <div class="alert" id="admin-panel" style="display:none;margin-bottom: -3px;min-height: 30px">
+            {% if allowed_change_order_op %}
+            <select id="to_operator_id" name="to_operator_id">
+                <option></option>
+                {% for op_id,op_name in ops %}
+                    <option value="{{ op_id }}">{{ op_name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            {% if allowed_print %}
+            <form name="batch-print-invoices" method="POST" action="{{ url_for('admin.batch_print_invoices') }}" target="print_invoice" class="pull-right">
+                <input type="hidden" name="print_ids" id="print_ids"/>
+                <button type="submit" name="batch-print" class="btn btn-info">批量打印发货单</button>
+            </form>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <table class="table table-bordered table-condensed table-hover">
+        <thead>
+        <tr>
+            {% if display_checkbox %}
+            <th><input type="checkbox" id="chk_all" value="0"></th>
+            {% endif %}
+            <th>编号</th>
+            <th>订单号</th>
+            <th>客户</th>
+            <th>日期</th>
+            <th>收货信息</th>
+            <th>订购商品</th>
+            <th>总价</th>
+            <th>折扣</th>
+            <th>应付</th>
+{#            <th>订单类型</th>#}
+            <th>指派给</th>
+            <th>付款方式</th>
+            <th>状态</th>
+            <th>快递公司</th>
+
+            <th style="width:85px;max-width: 160px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order in pagination.items %}
+            <tr{% if order.order_type>=100 %} class="warning"{% endif %}>
+                {% if display_checkbox %}
+                    <td style="text-align: center">
+                        {% if allowed_change_order_op or (allowed_print and order.status==40) %}
+                        <input type="checkbox" id="sel_ids" name="sel_ids" value="{{ order.order_id }}">
+                        {% endif %}
+                    </td>
+                {% endif %}
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('admin.order_detail',order_id=order.order_id) }}">{{ order.order_id }}</a></td>
+                <td><a
+                        href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.username }}</a></td>
+                <td>{{ order.created|format_date }}</td>
+                <td>
+                    <a href="javascript:void(0)" class="popover-link"
+                       address="{{ order.shipping_address.format_address }}"
+                       user_remark="{{ order.user_remark|default('',true) }}"
+                       ship_to="{{ order.shipping_address.ship_to }}" phone="{{ order.shipping_address.phone|hide_phone }}"
+                       postcode="{{ order.shipping_address.postcode }}" rel="popover"><i class="icon-search"></i></a>
+                </td>
+                <td>
+                    <p>
+                    <table class='table-item table table-bordered'>
+                <thead><tr><th>商品</th><th>数量</th><th>金额</th>{% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<th>入库数</th><th>报损数</th>{% endif %}</tr></thead>
+                <tbody>
+                        {% for order_item in order.order_items %}
+                            <tr data-item_id="{{ order_item.id }}" data-unit="{{ order_item.unit|default('',true) }}" data-item_name="{{ order_item.name }}" data-quantity="{{ order_item.quantity }}" data-code="{{ order_item.code }}">
+                                <td><span>{{ order_item.name }}</span>{% if order_item.pkg_name %} <code>{{ order_item.pkg_name }}</code>{% endif %}</td>
+                                <td><strong>{{ order_item.quantity }}</strong>{{ order_item.unit|default('',true) }}</td>
+                                <td>{{ order_item.fee }}</td>
+                                {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td>{{ order_item.in_quantity }}</td><td>{{ order_item.loss_quantity }}</td>{% endif %}
+                            </tr>
+                        {% endfor %}
+                </tbody>
+                    </table>
+                    </p>
+                </td>
+                <td>{{ order.item_fee }}</td>
+                <td>
+                    {{ order.discount_fee|default('-',true) }}
+{#                    {{ config['DISCOUNT_TYPES'][order.discount_type] }}{% if order.discount_fee>0 %}<br/>#}
+{#                    <span class="label label-success">{{ order.discount_fee }}#}
+{#                    </span>{% endif %}#}
+                </td>
+                <td><span class="">{{ order.actual_fee }}</span></td>
+
+{#                <td>{{ config['ORDER_TYPES'][order.order_type] }}</td>#}
+                <td style="width: 40px">
+                    {% if order.assign_operator_id %}
+                    <abbr title="{{ order.assign_operator.username }}">{{ order.assign_operator.nickname }}</abbr>
+                        {% else %}
+                        -
+                    {% endif %}
+                    <br/>
+                    <a href="javascript:void(0);" class="created_info"
+                       data-created_by="{{ order.publisher.nickname }}"
+                       data-team="{{ order.publisher.team_fullname }}"
+                       ><i class="icon-calendar"></i></a>
+                </td>
+                <td><span
+                        class="block {% if order.payment_type==2 %}label{% else %}{% endif %}">{{ order.payment_type_name }}</span>
+                </td>
+                <td>{{ order_status(order.status) }}</td>
+                <td>{% if order.express_id %}{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}{% endif %}
+                    {% if order.express_number and order.express_id != 99 %}
+                        <br/>
+                        {% if order.express_id in (3,7,) %}
+                            <a href="http://www.kuaidi100.com/all/feihukuaidi.shtml?nu={{ order.express_number }}" target="_blank" title="点击查询快递详情">{{ order.express_number }}</a>
+                        {% else %}
+                            <a href="http://www.kuaidi100.com/chaxun?com={{ config['EXPRESS_CONFIG'][order.express_id]['code'] }}&nu={{ order.express_number }}" target="_blank" title="点击查询快递详情">{{ order.express_number }}</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                <td style="padding-top: 10px;padding-bottom: 10px">
+                    {% if order.is_authorize(current_user) %}
+                        {% if order.status in config['ORDER_ALLOWED_EDIT_STATUS'] %}
+                            <a href="{{ url_for('admin.edit_order',order_id=order.order_id) }}"
+                               class="btn btn-small btn-block" title="修改订单"><i
+                                    class="icon-edit"></i> 订单修改</a>
+                        {% endif %}
+
+                        {% if order.status in config['ORDER_ALLOWED_ADDRESS_STATUS'] %}
+                            <a href="{{ url_for('admin.update_address',address_id=order.shipping_address.id,user_id=order.user_id) }}"
+                               class="btn btn-small btn-block" title="修改地址"><i class="icon-edit"></i>
+                                地址修改</a>
+                        {% endif %}
+
+                        {% if order.status==40 and order.store_id==1 %}
+{#                            {% if not order.is_picker %}#}
+{#                                <a href="javascript:void(0)" class="btn btn-small btn-block" title="验货" data-order_id="{{ order.order_id }}" id="picker">验货</a>#}
+{#                            {% endif %}#}
+                            <a href="{{ url_for('admin.print_order_invoices',order_id=order.order_id) }}"
+                               class="btn btn-small btn-block {% if order.is_print_invoice %}visited{% endif %}" title="发货单打印" target="print_invoice" data-order_id="{{ order.order_id }}" id="invoice-print">
+                                发货单打印</a>
+
+                            {% if order.express_id!=99 %}
+                                <a href="javascript:void(0)" id="express-print" class="btn btn-small btn-block {% if order.is_print_express %}visited{% endif %}" title="快递单打印"
+                                   data-order_id="{{ order.order_id }}"
+                                   data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+                                   data-express_num="{{ order.express_num }}"
+                                   data-ship_to="{{ order.shipping_address.ship_to }}"
+                                   data-address="{{ order.shipping_address.format_address }}"
+                                   data-province="{{ order.shipping_address.province|format_address }}"
+                                   data-city="{{ order.shipping_address.city|format_address }}"
+                                   data-district="{{ order.shipping_address.district|format_address }}"
+                                   data-phone="{{ order.shipping_address.phone }}"
+                                   data-tel="{{ order.shipping_address.tel|default('',true) }}"
+                                   data-remark="{{ order.user_remark|default('',true) }}"
+                                   data-postcode="{{ order.shipping_address.postcode|default('',true) }}"
+                                   data-fee="{{order.actual_fee if order.payment_type==1 else 0 }}">快递单打印</a>
+                            {% endif %}
+
+                        {% endif %}
+
+                        {% if order.status in config['ORDER_ALLOWED_RETRAN_STATUS'] %}
+                            <a href="{{ url_for('admin.add_order',link_order_id=order.order_id) }}"
+                               class="btn btn-small btn-primary btn-block" title="创建订单" target="_blank">
+                                创建订单</a>
+                        {% endif %}
+
+
+                        {% if config['ORDER_OPROVRAL_CONFIG'].has_key(order.status) -%}
+                            {%- for name,_css,to_status,payment_type,flag in config['ORDER_OPROVRAL_CONFIG'][order.status] -%}
+                                {% if compare_bitwise(payment_type,order.payment_type) %}
+                                    <a href="javascript:void(0)" class="btn btn-block btn-small {{ _css }}"
+                                       from_status="{{ order.status }}"
+                                       status="{{ to_status }}" order_id="{{ order.order_id }}" id="operate"
+                                       css="{{ _css }}" express_number="{{ order.express_number|default('',true) }}" store_id="{{ order.store_id }}" express_id="{{ order.express_id }}" flag="{{ flag }}">{{ name }}</a>
+                                {% endif %}
+                            {%- endfor -%}
+                        {%- endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="alert alert-info pull-left" style="font-size: 12px">
+        总计金额：<strong>{{ pagination.items|sum(attribute='item_fee') }}元</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;应付金额：<strong>{{ pagination.items|sum(attribute='actual_fee') }}元</strong>
+    </div>
+
+    {{ render_pagination(pagination) }}
+{% endblock %}

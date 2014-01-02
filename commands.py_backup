@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+import os.path
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+from optparse import OptionParser
+
+from app import create_app
+from extensions import db
+app = create_app()
+db.app = app
+
+from core.models import *
+
+def color(text,color,bold=True):
+    if color=='green':
+        return '\x1b[32%sm%s\x1b[0m'%(';%s'%int(bold) if bold else '',text)
+    elif color=='blue':
+        return '\x1b[34%sm%s\x1b[0m'%(';%s'%int(bold) if bold else '',text)
+    elif color=='red':
+        return '\x1b[31%sm%s\x1b[0m'%(';%s'%int(bold) if bold else '',text)
+    elif color=='yellow':
+        return '\x1b[33%sm%s\x1b[0m'%(';%s'%int(bold) if bold else '',text)
+    elif color=='gray':
+        return '\x1b[35%sm%s\x1b[0m'%(';%s'%int(bold) if bold else '',text)
+    return text
+
+def get_usage():
+    usage = """
+  python %prog  action
+
+  action:
+       create_tables    创建数据表
+       drop_tables      丢弃数据表
+       recreate_tables  重建数据表
+       init_address     初始化地址表
+       init_data        初始化数据
+
+
+"""
+    return usage
+
+def confirm(txt):
+    if raw_input('%s %s:'%(color(txt,'yellow'),color('(y/n)','red'))).lower()<>'y':
+        print 'aborted.'
+        sys.exit(0)
+
+import contextlib
+def init_data():
+    from address import ADDRESS_SQL
+    _conn = db.engine.raw_connection()
+    try:
+        cursor = _conn.cursor()
+        cursor.execute('set FOREIGN_KEY_CHECKS = 0')
+        cursor.execute('COMMIT')
+        #cursor.execute('TRUNCATE `role`')
+        cursor.execute('TRUNCATE `operator`')
+        cursor.execute('TRUNCATE `china_address`')
+        cursor.execute(ADDRESS_SQL)
+        cursor.execute('COMMIT')
+        cursor.execute('set FOREIGN_KEY_CHECKS = 1')
+        cursor.execute('COMMIT')
+
+        # role = Role()
+        # role.name = u'系统管理员'
+        # db.session.add(role)
+        # db.session.flush()
+
+        op = Operator()
+        op.nickname = u'管理员'
+        op.username = 'admin'
+        op.password = 'admin'
+        op.is_admin = True
+        op.role_id = 0
+        db.session.add(op)
+        db.session.commit()
+    finally:
+        _conn.close()
+
+
+def execute_from_command_line(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    parser = OptionParser(usage=get_usage())
+    options, args = parser.parse_args(argv[1:])
+
+    if len(args) == 0:
+        parser.print_help()
+        sys.exit(0)
+
+    action = args[0]
+    if action == 'create_tables':
+        db.create_all(app=app)
+        print 'Tables has been created.'
+
+    elif action == 'drop_tables':
+        db.drop_all(app=app)
+        print 'Tables has been dropped.'
+
+    elif action == 'recreate_tables':
+        confirm('Are you confirm to re-create tables?')
+        db.drop_all(app=app)
+        db.create_all(app=app)
+        print 'Tables has been recreated.'
+
+    elif action == 'init_data':
+        init_data()
+        print 'init data success.'
+
+    else:
+        parser.print_help()
+
+
+if __name__ == '__main__':
+    execute_from_command_line()

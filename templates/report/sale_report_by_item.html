@@ -1,0 +1,71 @@
+{% extends "report/sale_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+    $(function(){
+        $('select').select2({
+            width:'150px'
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="depart" name="depart">
+            {% set depart = request.args.get('depart','') %}
+            <option value="" {% if not depart %}selected{% endif %}>所有部门</option>
+            {%- for k,d in config['DEPARTMENTS'].iteritems() -%}
+                <option value="{{ k }}" {% if k==depart %}selected{% endif %}>{{ d }}</option>
+            {%- endfor -%}
+        </select>
+        <input id="start_date" class="timepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" class="timepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>产品类型</th>
+            <th>销售数量</th>
+            <th>销售额</th>
+            <th>产品名称</th>
+            <th>销售数量</th>
+            <th>销售额</th>
+            <th>均价</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+            <tr>
+                <td rowspan="{{ d.num + 1 }}">{{ d.category_name }}</td>
+                <td rowspan="{{ d.num + 1 }}">{{ d.quantity }}</td>
+                <td rowspan="{{ d.num + 1 }}">{{ '%.2f'|format(d.fee) }}</td>
+                <td colspan="4" style="background-color: #f7f7f7;height:0px;padding: 0;margin:0;border-width: 0"></td>
+            </tr>
+            {% for item in d['items'] %}
+                <tr>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ '%.2f'|format(item.fee) }}</td>
+                <td>{% if item.fee>0 %}{{ '%.2f'|format((item.fee|float)/(item.quantity|float)) }}{% else %}0{% endif %}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="alert alert-success">
+        销售数量：<strong>{{ data|sum(attribute='quantity') }}</strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;销售额：<strong>{{ '%.2f'|format(data|sum(attribute='fee')) }}元</strong>
+    </div>
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

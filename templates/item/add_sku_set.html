@@ -1,0 +1,289 @@
+{% extends "layout.html" %}
+{% set category='item' %}
+{% block title %}套餐录入{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .form-horizontal .control-group {
+            margin-bottom: 12px;
+        }
+
+        .delete {
+            font-weight: bold;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .bigdrop.select2-container .select2-results {
+            max-height: 300px;
+        }
+
+        .bigdrop .select2-results {
+            max-height: 300px;
+        }
+
+        .c1 {
+            background-color: #f2dede;
+            padding-left: 5px;
+            padding-top: 4px;
+            margin-bottom: 5px;
+            max-width: 450px;
+            border: 1px dashed #aaa;
+            font-size: 12px;
+        }
+
+        #display-items tbody tr{
+            background-color: #f7f7f7;
+        }
+
+        #display-items tr td{
+            vertical-align: middle;
+        }
+
+        #display-items input{
+            text-align: center;
+            width: 40px;
+        }
+    </style>
+
+{%- endblock %}
+{% block js -%}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+    <script type="text/javascript">
+    $(function () {
+        function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html('发生错误：'+err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        };
+
+        $('body').data({'items': {}});
+        $('select.select2').select2({
+            width:'280px'
+        });
+
+        /*   提交订单   */
+        $('form').submit(function () {
+            var add_btn = $('button[type="submit"]');
+            var items = $('body').data('items');
+            if ($.isEmptyObject(items)) {
+                bootbox.alert('尚未添加任何商品！');
+                return false;
+            }
+            var name = $('#name').val();
+            if (name=='' || name==null) {
+                bootbox.alert('套餐名称不可为空！',function(){
+                    $('#name').focus();
+                });
+                return false;
+            }
+
+            var price = parseFloat($('#price').val());
+            if (isNaN(price) || price<=0) {
+                bootbox.alert('价格必须大于0！',function(){
+                    $('#price').focus();
+                });
+                return false;
+            }
+
+            //alert($(this).serialize());
+            add_btn.attr('disabled', true);
+            add_btn.text('提交中...');
+
+            var add_sku_set = $.ajax({
+                url: "{{ request.path }}",
+                dataType: 'json',
+                type: 'POST',
+                data: {items:JSON.stringify(items),name:name,price:price}});
+            add_sku_set.done(function (data) {
+                if (data.result == true) {
+                    bootbox.alert('添加套餐成功',function(){
+                        window.location.replace('{{ url_for('admin.sku_set_manage') }}');
+                    });
+                    return false;
+                }
+                else {
+                    show_err(data.error);
+                }
+            });
+            add_sku_set.fail(function (request, status, error) {
+                show_err(error);
+            });
+            add_sku_set.always(function () {
+                add_btn.attr('disabled', false);
+                add_btn.text('新建套餐');
+            });
+            return false;
+        });
+
+        $('#unit').text($('#item option:selected').attr('unit'));
+        $('#item').change(function(){
+            $('#unit').text($('#item option:selected').attr('unit'));
+        });
+
+        /*  商品  */
+        var order = {
+            update_fee:function(){
+                var discount_fee = 0;
+                var items = $('body').data('items');
+                for (var i in items) {
+                    discount_fee += items[i].discount_price * items[i].quantity;
+                }
+                $('#price').val(discount_fee);
+            },
+            refresh: function () {
+                var items = $('body').data('items');
+                var $sel = $('#selected-items');
+                var total_fee = 0;
+                if (!$.isEmptyObject(items)) {
+                    $sel.html('<table id="display-items" class="table table-condensed"><thead><tr><th class="span3">商品</th><th style="text-align:center">数量</th><th style="text-align:center">单价</th><th>套餐价</th><th></th></tr></thead></table>');
+                    for (var i in items) {
+                        total_fee += items[i].price * items[i].quantity;
+                        $("<tr><td>" + items[i].name + "</td><td style=\"text-align:center\"><code>" + items[i].quantity + "</code></td><td style=\"text-align:center\">" + items[i].price + '</td><td><input type="text" value="'+items[i].discount_price+'" data-id="'+i+'"/></td><td><a href="#" id="del-' + i + '">&times;</a></td></tr>').appendTo($('table#display-items'));
+                        //$("a#del-"+i).click(function(){order.del});
+                        $("a#del-" + i).bind('click', {'id': i}, order.del);
+                        $("a#del-" + i).addClass('delete');
+                    }
+
+                    $('#display-items input').blur(function(){
+                        var discount_fee = parseFloat($(this).val());
+
+                        if (isNaN(discount_fee) || discount_fee<0){
+                            alert('价格输入错误');
+                            $(this).focus();
+                            return false;
+                        }
+                        var _id = parseFloat($(this).data('id'));
+                        var items = $('body').data('items');
+                        if (items[_id] != null && items[_id].discount_price != discount_fee){
+                            $(this).val(discount_fee);
+                            items[_id].discount_price = discount_fee;
+                            order.update_fee();
+                        }
+
+                        return false;
+                    });
+                    //$sel.append('</table>');
+                    $('#fee').show();
+                    $('#fee').text("商品总价：￥" + total_fee);
+                }
+                else {
+                    $sel.html('<span class="alert alert-warning span12">尚未选择任何商品</span>');
+                    $('#fee').hide();
+                }
+                $('input#total_fee').val(total_fee);
+                order.update_fee();
+            },
+            del: function (event) {
+                data = event.data;
+                var items = $('body').data('items');
+                if (items[data.id] != null) {
+                    delete items[data.id];
+                    order.refresh();
+                }
+            },
+            add: function (e) {
+                var items = $('body').data('items');
+                var quantity = parseInt($('input[name=quantity]').val());
+                if (isNaN(quantity) || quantity <= 0) {
+                    bootbox.alert('商品数量不正确');
+                    return false;
+                }
+                ;
+                var id = $('#item').val();
+                if (items[id] == null) {
+                    var price = parseFloat($('#item option:selected').attr('price'));
+                    items[id] = {'name': $('#item option:selected').text(),'discount_price':price, 'price':price , 'quantity': quantity};
+                }
+                else {
+                    items[id].quantity += quantity;
+                }
+                order.refresh();
+            }
+        }
+        $('#add-item').on('click',order.add);
+        order.refresh();
+    });
+    </script>
+{%- endblock %}
+
+{%- block main -%}
+    <form id="add-order" class="form-horizontal dl-horizontal" method="post" action="{{ request.path }}">
+    <fieldset>
+    <legend class="lead">新建套餐</legend>
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+
+        <div class="control-group">
+            <label class="control-label">套餐名称</label>
+
+            <div class="controls">
+                <input type="text" id="name" name="name" class="input" style="width: 205px">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="item">选择商品</label>
+
+            <div class="controls">
+                <select id="item" name="item" class="select2" style="width: 220px">
+                    {%- for item in items -%}
+                        <option value="{{ item.id }}" price="{{ item.actual_price }}"
+                                quantity="{{ item.actual_quantity }}" unit="{{ item.unit }}">{{ item.name }}</option>
+                    {%- endfor -%}
+                </select>
+
+                <div class="input-append" style="margin-left: 15px">
+                    <input class="input-mini" id="quantity" name="quantity" type="text" value="1">
+                    <span class="add-on" id="unit">件</span>
+                </div>
+                <a class="btn btn-warning" id="add-item" style="margin-left: 20px">添加商品</a>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-bottom: 0">
+            <label class="control-label">已选商品</label>
+
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span7" id="selected-items"></div>
+                </div>
+                <p id="fee" class="alert alert-warning" style="font-size: 14px;width: 140px;font-weight: bold"></p>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="price">套餐价</label>
+            <div class="controls">
+                <div class="input-append">
+                    <input class="input-mini" id="price" name="price" type="text" placeholder="金额" readonly="readonly">
+                    <span class="add-on">元</span>
+                </div>
+            </div>
+        </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">新建套餐</button>
+    </div>
+
+    </fieldset>
+    </form>
+{%- endblock -%}
