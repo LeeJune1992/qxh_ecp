@@ -6,8 +6,8 @@
     {{ super() }}
 	<style type="text/css">
 		.clearboth{ clear:both;}
-		.jleft{width:300px; padding:10px; float:left;}
-		.jright{width:300px; float:left;}
+		.jleft{width:200px; padding:10px; float:left;}
+		.jright{width:700px; float:left;}
 		.pl{padding-left:10px;}
 		.pl a{display:block;}
 	</style>
@@ -16,11 +16,11 @@
 		var req = $.ajax({
 			url: '/knowledge/get/' + id,
 			dataType: "json",
-			type: 'POST'
+			type: 'GET'
 		});
 		req.done(function (data) {
 			if (data.result == true) {
-				$("#knowledge").html(data.knowledge.content);
+				$("#knowledge").html(data.knowledge);
 				//window.location.reload(true);
 			}
 			else {
@@ -74,6 +74,11 @@
 {% endblock %}
 
 {% block main %}
+    <div class="clearboth"></div>
+    <form action="{{ request.path }}" method="get" class="form-search inline well">
+        <input type="text" name="q" value="{{ request.args['q'] }}" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+    </form>
 	<div class="jleft">
     	<div class="pitem" id="item1" onclick="change(1);">afsd</div>
         <div class="pl" id="pl1">
@@ -83,12 +88,7 @@
     </div>
 	<div class="jright" id="knowledge">
     </div>
-    <div class="clearboth"></div>
-    <form action="{{ request.path }}" method="get" class="form-search inline well">
-        <input type="text" name="q" value="{{ request.args['q'] }}" />
-        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
-    </form>
-                {% for news in news_list %}
+                {% for news in news_lis1t %}
                 <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#news"
                        href="#news-{{ news.id }}">

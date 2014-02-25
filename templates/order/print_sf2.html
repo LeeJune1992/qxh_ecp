@@ -1,0 +1,2516 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html class="html">
+	<head>
+		<META http-equiv="X-UA-Compatible" content="edge" />
+		<META HTTP-EQUIV="Pragma" CONTENT="no-cache">   
+  		<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">   
+  		<META HTTP-EQUIV="Expires" CONTENT="0">    
+		<title>打印运单</title>
+		
+	</head>
+	<body>
+		<!-- ===================================A4打印================================================================ -->
+	<div id="a4_template" class="hidden">
+				<style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				table{border-collapse:collapse;border-spacing:0}
+				fieldset,img{border:0}
+				address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}
+				li{list-style:none}
+				caption,th{text-align:left}
+				q:before,q:after{content:""}
+				input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit}
+				*:focus{outline:none}
+				
+				img{vertical-align:top;}
+				html{height:100%;overflow-y:scroll;}
+				body{font: 12px/1.5 tahoma,arial,宋体;}
+				em,i{font-style:normal;}
+				/* 重置超链接元素 */ 
+				a { text-decoration: none; color:inherit;}
+				a:hover {text-decoration:underline;}
+				h4, .f14{font-size:14px;}
+				.f12{font-size:12px ;}
+				.f16{font-size:16px;}
+				.f18{font-size:18px;}
+				.f24{font-size:24px;}
+				.f13{font-size:13px;}
+				.clear{clear:both;}
+				.b, .bold{font-weight:bold;}
+				.i, .italic{font-style:italic;}
+				.pointer, .hand{cursor:pointer;}
+				.hidden{}
+				.g_bg{background:url(../images/body_bg.png) 105px 0 repeat-x #f1f3f5;}
+				.underline{text-decoration:underline}
+				
+				/***浮动 对齐***/
+				.fl{float:left;}
+				.fr{float:right;}
+				.tl{text-align:left;}
+				.tc{text-align:center;}
+				.tr{text-align:right;}
+				.vt{vertical-align:top;}
+				.vm{vertical-align:middle;}
+				.vb{vertical-align:bottom;}
+				
+				.m_b10{margin-bottom:10px;}
+				.p_t10{padding-top:10px;}
+				.p_b10{padding-bottom:10px;}
+				
+				/*文本行高*/
+				.lh28{line-height:28px;}
+				
+				.h26{height:26px;}
+				.lh26{line-height:26px;}
+				
+				.h52{height:52px;}
+				.lh52{line-height:52px;}
+				
+				.h16{height:16px;}
+				.lh16{line-height:16px;}
+				
+				.h18{height:18px;}
+				.lh18{line-height:18px;}
+				
+				.h19{height:19px;}
+				.lh19{line-height:19px;}
+				
+				.h17{height:17px;}
+				.lh17{height:17px;}
+				.lh40{line-height:40px;}
+				
+				.h70{height:70px;}
+				.h45{height:45px;}
+				.h48{height:48px;}
+				.h40{height:40px;}
+				.h50{height:50px;}
+				.h60{height:60px;}
+				.lh70{line-height:70px;}
+				
+				/*各种宽度 w+number->width:number*/
+				.w90{width:90px;}
+				.w115{width:115px;}
+				.w132{width:132px;}
+				.w175{width:175px;}
+				.w205{width:205px;}
+				/* 各种边距 ml+num->margin-left; pl+num->padding-left*/
+				.mr5{margin-right:5px;}
+				.mr20{margin-right:20px;}
+				.ml5{margin-left:5px;}
+				.ml8{margin-left:8px;}
+				.mb5{margin-bottom:5px;}
+				.mb2{margin-bottom:2px;}
+				.mt3{margin-top:3px;}
+				.mt5{margin-top:5px;}
+				.mt35{margin-top:35px;}
+				.mt10{margin-top:10px;}
+				.mt45{margin-top:45px;}
+				.pl5{padding-left:5px;}
+				.pb5{padding-bottom:5px;}
+				.pb20{padding-bottom:20px;}
+				.pt5{padding-top:5px;}
+				.pt10{padding-top:10px;}
+				
+				/**各种颜色**/
+				.red{color:#dc0000;}
+				.blue,.blue a, .blue a:hover{color:#1360bf;}
+				.gray{color:#999;}
+				
+				#container{min-height:500px;background:#fff;color:#666666;border-top:1px solid #8d8d8d;padding-bottom:20px;background:url(../images/container_bg.png) 0 0 repeat-x #fff;}
+				
+				#g_footer{background:#676767; height:25px; line-height:25px; color:#b6b5b5;}
+				
+				/***可共用样式***/
+				
+				.isInsurance_box, .codFlag_box{height:25px;width:230px;vertical-align:middle;}
+				
+				#new_user_view{position:fixed; _position:absolute; left:0; top :0; width:100%; height:21px; line-height:21px; background:#fff; border: 1px solid #d0d0d0; text-align:center;}
+				.nv_close{float:right; margin:2px 5px 0 0; color:#c00;}
+				
+				.ui-widget-overlay{z-index:1000}
+				.x-mask-loading{position:absolute;z-index:1001;}
+				
+				.i_item_opt{width:116px;}
+				.u_item_opts{width:100%;}
+				
+				
+				/***电子运单***/
+				.brd{border:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+				
+				.h26{height:26px;}
+				.h28{height:28px;}
+				.lh26{line-height:26px;}
+				.lh28{line-height:28px;}
+				
+				.brd_l_n{border-left:none;}
+				.brd_r_n{border-right:none;}
+				.brd_b_n{border-bottom:none;}
+				
+				.waybill_cnt{width:656px;margin:0 auto;height:auto;}
+				.a5_waybill_cnt{width:480px;height:auto;}
+				
+				.waybill_logo{height:112px;width:236px;text-align:center;}
+				.a5_waybill_logo{height:62px;width:186px;text-align:center;}
+				
+				.bar_code{width:419px;}
+				.wb_sender,.wb_reviver{width:752px;}
+				.a5_wb_sender,.a5_wb_reviver{width:295px;}
+				
+				.wb_old_post,.wb_target{width:213px;}
+				.wb_reviver,.wb_target{height:100px;}
+				.fact_info_hd{height:28px;width:16.5%;}
+				.a5_fact_info_hd{height:28px;}
+				
+				.fact_info_cnt{height:56px;line-height:56px;}
+				.pay_type{width:329px;height:56px;}
+				.a5_pay_type{width:329px;height:40px;}
+				
+				.sign_name{width:178px;height:56px;}
+				.a5_sign_name{width:116px;height:40px;}
+				
+				.reciver{width:150px;height:56px;}
+				.a5_reciver{width:96px;height:40px;}
+				
+				.append_service{width:328px;height:170px;}
+				.append_info{width:328px;height:170px;}
+				.reciver_sign , .sr_person{height:56px;}
+				.total_cost{width:474px;}
+				.down_cnt{width:758px;margin:0 auto;color:#FF00FF;margin-bottom:20px;}
+				.printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:624px;}
+				.a5_printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:333px;}
+				
+				/*** 背胶运单 ***/
+				.html{height:502px;}
+				.adhesive_logo{width:130px;height:52px;}
+				.adh_bar_code{width:230px;}
+				.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.adh_append_service , .adh_append_info{width:328px;}
+				.dash_line{border-top:1px dashed #000000;height:1px;margin:1px 0px;width:358px;}
+				.wb_sender2{width:269px;}
+				.pay_type_ul{height:42px;}
+				.adh_reviver{width:255px;}
+				.adh_target{width:104px;}
+				.adh_info_hd , .adh_info_cnt{height:14px;width:16.5%;}
+				.adh_sign_name{width:178px;}
+				.adh_reciver{width:150px;}
+				.pay_type_li{height:18px;line-height:18px;}
+				.adh_appd_service{width:807px;}
+				.reciver_info_ul{height:40px;}
+				.reciver_info_li{height:20px;}
+				.adh_bold{font-weight:bold;}
+				.target_font{display:inline-block;font-size:34px;font-weight:bold;}
+				.a5_target_font{display:inline-block;font-size:30px;font-weight:bold;}
+				
+				.adh_pay_type{height:38px;width:401px;}
+				.second_hd{width:179px;}
+				.wb_sender_info2{width:268px;}
+				.consign_info{height:40px;}
+				.adh_wb_sender_li,.adh_sender_info{height:36px;}
+				.adh_wb_sender,.adh_wb_sender_li,.consign_info{width:249px;overflow:hidden;}
+				.adh_sender_info{width:222px;overflow:hidden;}
+				.logisticsNo_bar{letter-spacing:3px;padding-left:55px;}
+				.adh_btn{width:570px;text-align:right;}
+				
+				
+				/****************A5**********************/
+				.a5_sender{width:356px;height:40px;overflow:hidden;}
+				.a5_wb_old_post, .a5_wb_target{width:213px;}
+				.transalteClsIE{filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3)}
+				.transalteClsNOTIE{-moz-transform:-90deg;-webkit-transform:-90deg}
+				/****************A5**********************/
+				.a5_body_print{margin-top : -69px;}
+				.a5_body_print_ie{margin-left : -140px;}
+				
+				.line1{width:297px;overflow:hidden;height:21px}
+				.line2{width:297px;overflow:hidden;height:42px}
+				.line3{width:297px;overflow:hidden;height:63px}
+				.line4{width:297px;overflow:hidden;height:84px}
+		</style>
+		<div class="a5_waybill_cnt brd prelative print_mt20 {transalteCls}">
+				<table>
+					<tbody><tr>
+						<td class="a5_waybill_logo brd_r brd_b">
+							<!-- img src="/static/images/awd_logo_A5.png"-->
+							{A5Logo}
+						</td>
+						<td class="bar_code brd_b">
+							 <div class="a5_printIndex" style="margin-left:100px;">{printNo}</div>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_sender brd_r">
+							<ul>
+								<li class="h24 lh24 ml5 a5_sender adh_wb_sender_shipperInfo1">
+									<span class="adh_bold f14">寄方 : </span>
+									<span class="ml5 f14 show">{a5_shipperInfo_1}</span>
+									<span class="hidden">{shipperInfo}</span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_old_post">
+							<ul>
+								<li class="f14 ml5"><span class="adh_bold">原寄地 : </span></li>
+								<li class="h26 lh26 tc mb5"><span class="a5_target_font shipperAddressCode1">{shipperAddressCode}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_reviver brd_r brd_t">
+							<ul>
+								<li class="h24 lh24 ml5 a5_sender">
+									<span class="adh_bold f14">收方 : </span>
+									<span class="ml5 f14 adh_wb_sender_receiver1" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;{receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</span>
+									<!-- 
+									<span class="ml5 f14">{receiverName}</span>
+									<span class="ml5 f14">{receiverPhone}</span>
+									<span class="ml5 f14">{receiverFullAddress}</span>
+									 -->
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_target brd_t">
+							<ul>
+								<li class="f14 ml5"><span class="adh_bold">目的地 : </span></li>
+								<li class="h26 lh26 tc mb5"><span class="a5_target_font receiverAddressCode1">{receiverAddressCode}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_reviver brd_r brd_t">
+							<ul>
+								<li class="ml5 a5_sender">
+									<span class="adh_bold f14">托寄物内容 : </span>
+									<span class="ml5 f14 signGoodsName">{goodsName}</span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_target brd_t">
+							<ul>
+								<li class="h24 lh24 ml5">
+									<span class="adh_bold f14">业务类型 : </span>
+								</li>
+								<li class="h24 lh24 ml5">
+									<span class="ml5 f14 signExpressType">{expressType}</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts">
+					<tbody><tr>
+						<td class="a5_fact_info_hd tc brd brd_l_n f14 adh_bold">件数</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">托寄物数量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">实际重量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">计费重量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">费用</td>
+						<td class="a5_fact_info_hd tc brd brd_r_n f14 adh_bold">费用合计</td>
+					</tr>
+					<tr>
+						<td class="h28 lh28 tc brd brd_l_n brd_b_n">1</td>
+						<td class="h28 lh28 tc brd brd_b_n">{goodsNum}</td>
+						<td class="h28 lh28 tc brd brd_b_n">&nbsp;</td>
+						<td class="h28 lh28 tc brd brd_b_n signPackWeight">{packWeight}</td>
+						<td class="h28 lh28 tc brd brd_b_n"><span class="orderAmount hidden">{orderAmount}</span></td>
+						<td class="h28 lh28 tc brd brd_r_n brd_b_n signTotalMoney">&nbsp;</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td class="a5_pay_type brd_t brd_r">
+							<ul>
+								<li>
+									<span class="f14 adh_bold ml5">付款方式 : <span class="signExpressPayMethod">{expressPayMethod}</span></span>
+									
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">月结卡号 : <span class="{payCustNumber}">{payCustId}</span></span>
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">第三方地区 : </span>
+									<span></span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_sign_name brd_t brd_r">
+							<ul>
+								<li><span class="f14 adh_bold ml5">寄方签名 : </span></li>
+								<li style="width:108px;overflow:hidden;"><span class="f14 ml5">{defaultShipperName}</span></li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_reciver brd_t">
+							<ul>
+								<li><span class="f14 adh_bold ml5">收件员 : </span></li>
+								<li><span class="f14 ml5">{pickUpNo}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="append_service brd_t brd_r" style="height:134px;width:302px;">
+							<ul style="width: 302px;">
+								<li class="h16 lh16 ml5">
+									<span class="adh_bold f14">附加服务:</span>
+									<span class="isInsurance f14 signOtherService">{isInsurance}&nbsp;&nbsp;{serviceType}</span>
+								</li>
+								<li class="ml5 signOtherService" id="a5_additional_service">
+									<div class="{insuranceAmount_dd} f14">声明价值:&nbsp;<span class="insuranceAmount">{insuranceAmount}</span></div><!-- class="{insuranceAmount_hid}" -->
+                                    <div class="{codAmount_dd} f14">代收货款:&nbsp;<span class="codAmount">{codAmount}</span></div><!-- class="{codAmount_hid}" -->
+                                    <div class="{returnLogisticsNo_dd} f14">签单返还:&nbsp;<span class="returnLogisticsNo">{returnLogisticsNo}</span></div>
+									<div class="{packAmount_dd} f14">其他费用:&nbsp;<span class="packAmount">{packAmount}</span></div>
+									<div class="{tradeNo_dd} f14">订单编号:&nbsp;<span class="tradeNo">{tradeNo}</span></div>
+									<div class="{goodsProps_style} f14">销售属性:&nbsp;{goodsProps}</div> <!-- {goodsProps} -->
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="append_info brd_t" style="height:134px;">
+							<table class="u_item_opts">
+								<tbody><tr>
+									<td class="h24 lh24" colspan="2">
+										<span class="f14 adh_bold">&nbsp;&nbsp;寄件日期:{shipperDate}</span>
+										<span></span>
+									</td>
+								</tr>
+								<tr>
+									<td valign="top" class="h40 lh40 brd_t brd_r">
+										<ul>
+											<li><span class="f14 adh_bold ml5">收方签名: </span></li>
+											<li><span class="f14 ml5"></span></li>
+										</ul>
+									</td>
+									<td valign="top" class="h40 lh40 brd_t">
+										<ul>
+											<li><span class="f14 adh_bold ml5">派件员: </span></li>
+											<li><span class="f14 ml5"></span></li>
+										</ul>
+									</td>
+								</tr>
+								<tr><td class="h24 lh24 brd_t" colspan="2">
+										<span class="f14 adh_bold">&nbsp;&nbsp;派件日期:&nbsp;</span>
+										<span></span>
+									</td>
+								</tr>
+								<tr><td valign="top" class="h24 lh24 brd_t" colspan="2">
+										<ul>
+											<li class="h24 lh24 ml5" style="overflow:hidden;height:40px;">
+												<span class="f14 adh_bold">备注栏 :</span>
+												<span class="f14">{sellerMessageAndBuyerMessage}</span>
+											</li>
+										</ul>
+									</td>
+								</tr>
+							</tbody></table>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr><td class="brd_t brd_b"><img  src="/static/images/a5_div_line.png"></td></tr>
+				</tbody></table>
+				
+				<!-- ===============================================其他运单================================================== -->
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" colspan="2" class="a5_wb_sender">
+							<ul>
+								<li class="ml5 a5_sender adh_wb_sender_shipperInfo2" style="width:474px;height:44px">
+									<span class="adh_bold f14">寄方 : </span>
+									<span class="f14 ml5 show">{a5_shipperInfo_2}</span>
+									<span class="hidden">{shipperInfo}</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" colspan="2" class="a5_wb_reviver brd_t">
+							<ul>
+								<li class="ml5 a5_sender" style="width:474px;height:44px">
+									<span class="adh_bold f14">收方 : </span>
+									<span class="f14 ml5 adh_wb_sender_receiver2" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;{receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" class="total_cost brd_t brd_r"></td>
+						<td class="brd_t" style="width:360px;height:60px;">
+							<ul>
+								<li>
+									<span class="f14 adh_bold ml5">费用合计 : </span>
+									<span class="signTotalMoney f12"></span>
+									<span class="orderAmount hidden">{orderAmount}</span>
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">付款方式 : <span class="signExpressPayMethod">{expressPayMethod}</span></span>
+									<span></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+			</tbody>
+		</table>
+		<!-- ===============================================其他运单================================================== -->
+		
+		<!-- ===============================================安心购运单================================================== -->
+		<table class="u_item_opts axg_trade_order hidden">
+			<tbody><tr>
+					<td class="a5_waybill_logo brd_r brd_b"><img src="/static/images/awd_logo_ad.png?a=555"></td>
+					<td class="bar_code brd_b"></td>
+				</tr>
+			</tbody>
+		</table>
+		
+		
+		<table class="u_item_opts axg_trade_order hidden">
+			<tbody>
+					<tr>
+						<td valign="top" class="a5_wb_sender" colspan="2">
+								<div style="width:320px;height:44px;float:left;" class="ml5 a5_sender brd_r adh_wb_sender_shipperInfo3">
+									<span class="adh_bold f14">寄方 : </span>
+									<span class="f14 ml5 show">{a5_shipperInfo_2}</span>
+									<span class="hidden">{shipperInfo}</span>
+								</div>
+						</td>
+
+                        <td>
+    							<div style="width:150px;height:44px;float:left;">
+									<span class="f14 adh_bold ml5">费用合计 : </span>
+									<span class="signTotalMoney f12"></span>
+									<span class="orderAmount hidden">{orderAmount}</span>
+								</div>
+						</td>
+				</tr>
+			</tbody>
+	</table>
+				
+	<table class="u_item_opts axg_trade_order hidden">
+			<tbody>
+				<tr>
+					<td valign="top" colspan="2" class="a5_wb_reviver brd_t">
+						<div class="ml5 a5_sender brd_r" style="width:320px;height:44px;float:left;">
+							<span class="adh_bold f14">收方 : </span>
+							<span class="f14 ml5 adh_wb_sender_receiver3" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;{receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</span>
+						</div>
+					</td>
+					<td style="width:150px;height:44px;float:left;" class="brd_t">
+						<span class="f14 adh_bold ml5">付款方式 : <span class="signExpressPayMethod">{expressPayMethod}</span></span>
+					</td>
+				</tr>
+			</tbody>
+	</table>
+				
+	<!-- ===============================================安心购运单================================================== -->
+		
+	 </div>
+    </div>
+	<!-- ===================================A4打印================================================================ -->
+	
+	<!-- ===================================A5广告语================================================================== -->
+	
+	 <div id="a5_advertising_template" class="hidden">
+	 		    <style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.hidden{display:none;}
+				.brd{border:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+				.zhufu{float:left;height:132px;width:330px;line-height:26px;font-size:18px;font-weight:bold;text-align:center;margin-top:46px;}
+				.logo_txt{text-align:center;height:18px;line-height:18px;}				
+				.logo_top{width:128px;height:73px;float:left;}
+				.logo_bottom{width:128px;height:178px;float:left;}
+				.content{padding-left:6px;line-height:24px;padding-top:10px;}
+			</style>
+			<div class="adhesive_cnt brd" style="width:480px; height:673px;">
+				<div style="height:73px;" class="brd_b">
+					<div class="brd_r logo_top">
+						<img src="/static/images/axg_awd_logo.png?b=7777" style="margin-top: 14px;" />
+					</div>
+					<div style="float:left;">
+						<div class="logisticsNo_bar f12 hidden">{logisticsNo}</div>
+					</div>
+				</div>
+				
+				
+					
+						 
+					
+					
+					
+					
+				
+				
+				<!-- 可自定义安心购广告语 -->
+				
+					<div style="height:400px;overflow:hidden;">
+						<div class="content" style="padding-top:5px;overflow:hidden; height:246px;font-weight:bold;font-size:18px;font-family:'宋体';">						
+							
+								<div>温馨提示：</div>
+							
+								<div>1、您购买的商品已加入“顺丰安心购”7天保障服务</div>
+							
+								<div>2、请务必开箱验货，确认货品完好无损，签收付款</div>
+							
+								<div>3、签收之日起，支持7天无理由退货</div>
+							
+								<div>4、如有任何问题，可致电顺丰速运客服热线 4008 111 111</div>
+							
+								<div>.</div>
+							
+								<div>.</div>
+							
+								<div>>>  >>  >>  >>  请沿此处揭开，保留此联</div>
+							
+						</div>
+					</div>
+				
+				<!-- 可自定义安心购广告语 -->
+				
+				
+				 
+				<table style="width:100%;height:20px;">
+					<tbody><tr><td class="brd_t"></td></tr>
+					<tr><td></td></tr>
+					<tr><td class="brd_b"></td></tr>
+				</tbody></table>
+				
+				<div style="height:178px;float:left;width:100%;">
+					<div class="brd_r logo_bottom">
+						<img src="/static/images/awd_logo.png?c=76" style="margin-top:62px;padding-left:4px"/>
+					</div>
+					<div class="zhufu">
+					    <div>顺丰安心购,祝您购物无忧!</div>
+					    <div>{axgReceiverContact}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	<!-- ===================================a5广告语================================================================== -->
+	
+	
+	<!-- ===================================背胶打印================================================================ -->
+	 <div id="adhesive_template" class="hidden">
+	 		    <style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				table{border-collapse:collapse;border-spacing:0}
+				fieldset,img{border:0}
+				address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}
+				li{list-style:none}
+				caption,th{text-align:left}
+				q:before,q:after{content:""}
+				input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit}
+				*:focus{outline:none}
+				
+				img{vertical-align:top;}
+				html{height:100%;overflow-y:scroll;}
+				body{font: 12px/1.5 tahoma,arial,宋体;}
+				em,i{font-style:normal;}
+				/* 重置超链接元素 */ 
+				a { text-decoration: none; color:inherit;}
+				a:hover {text-decoration:underline;}
+				h4, .f14{font-size:14px;}
+				.f12{font-size:12px ;}
+				.f16{font-size:16px;}
+				.f18{font-size:18px;}
+				.f24{font-size:24px;}
+				.f13{font-size:13px;}
+				.clear{clear:both;}
+				.b, .bold{font-weight:bold;}
+				.i, .italic{font-style:italic;}
+				.pointer, .hand{cursor:pointer;}
+				.hidden{display:none;}
+				.g_bg{background:url(../images/body_bg.png) 105px 0 repeat-x #f1f3f5;}
+				.underline{text-decoration:underline}
+				
+				/***浮动 对齐***/
+				.fl{float:left;}
+				.fr{float:right;}
+				.tl{text-align:left;}
+				.tc{text-align:center;}
+				.tr{text-align:right;}
+				.vt{vertical-align:top;}
+				.vm{vertical-align:middle;}
+				.vb{vertical-align:bottom;}
+				
+				.m_b10{margin-bottom:10px;}
+				.p_t10{padding-top:10px;}
+				.p_b10{padding-bottom:10px;}
+				
+				/*文本行高*/
+				.lh28{line-height:28px;}
+				
+				.h26{height:26px;}
+				.lh26{line-height:26px;}
+				
+				.h52{height:52px;}
+				.lh52{line-height:52px;}
+				
+				.h16{height:16px;}
+				.lh16{line-height:16px;}
+				
+				.h18{height:18px;}
+				.lh18{line-height:18px;}
+				
+				.h19{height:19px;}
+				.lh19{line-height:19px;}
+				
+				.h17{height:17px;}
+				.lh17{height:17px;}
+				.lh40{line-height:40px;}
+				
+				.h70{height:70px;}
+				.h45{height:45px;}
+				.h48{height:48px;}
+				.h40{height:40px;}
+				.h50{height:50px;}
+				.h60{height:60px;}
+				.lh70{line-height:70px;}
+				
+				/*各种宽度 w+number->width:number*/
+				.w90{width:90px;}
+				.w115{width:115px;}
+				.w132{width:132px;}
+				.w175{width:175px;}
+				.w205{width:205px;}
+				/* 各种边距 ml+num->margin-left; pl+num->padding-left*/
+				.mr5{margin-right:5px;}
+				.mr20{margin-right:20px;}
+				.ml5{margin-left:5px;}
+				.ml8{margin-left:8px;}
+				.mb5{margin-bottom:5px;}
+				.mb2{margin-bottom:2px;}
+				.mt3{margin-top:3px;}
+				.mt5{margin-top:5px;}
+				.mt35{margin-top:35px;}
+				.mt10{margin-top:10px;}
+				.mt45{margin-top:45px;}
+				.pl5{padding-left:5px;}
+				.pb5{padding-bottom:5px;}
+				.pb20{padding-bottom:20px;}
+				.pt5{padding-top:5px;}
+				.pt10{padding-top:10px;}
+				
+				/**各种颜色**/
+				.red{color:#dc0000;}
+				.blue,.blue a, .blue a:hover{color:#1360bf;}
+				.gray{color:#999;}
+				
+				#container{min-height:500px;background:#fff;color:#666666;border-top:1px solid #8d8d8d;padding-bottom:20px;background:url(../images/container_bg.png) 0 0 repeat-x #fff;}
+				
+				#g_footer{background:#676767; height:25px; line-height:25px; color:#b6b5b5;}
+				
+				/***可共用样式***/
+				
+				.isInsurance_box, .codFlag_box{height:25px;width:230px;vertical-align:middle;}
+				
+				#new_user_view{position:fixed; _position:absolute; left:0; top :0; width:100%; height:21px; line-height:21px; background:#fff; border: 1px solid #d0d0d0; text-align:center;}
+				.nv_close{float:right; margin:2px 5px 0 0; color:#c00;}
+				
+				.ui-widget-overlay{z-index:1000}
+				.x-mask-loading{position:absolute;z-index:1001;}
+				
+				.i_item_opt{width:116px;}
+				.u_item_opts{width:100%;}
+				
+				
+				/***电子运单***/
+				.brd{border:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+				
+				.h26{height:26px;}
+				.h28{height:28px;}
+				.lh26{line-height:26px;}
+				.lh28{line-height:28px;}
+				
+				.brd_l_n{border-left:none;}
+				.brd_r_n{border-right:none;}
+				.brd_b_n{border-bottom:none;}
+				
+				.waybill_cnt{width:656px;margin:0 auto;height:auto;}
+				.a5_waybill_cnt{width:480px;margin:0 auto;height:auto;}
+				
+				.waybill_logo{height:112px;width:236px;text-align:center;}
+				.a5_waybill_logo{height:62px;width:236px;text-align:center;}
+				
+				.bar_code{width:419px;}
+				.wb_sender,.wb_reviver{width:752px;}
+				.a5_wb_sender,.a5_wb_reviver{width:295px;}
+				
+				.wb_old_post,.wb_target{width:213px;}
+				.wb_reviver,.wb_target{height:100px;}
+				.fact_info_hd{height:28px;width:16.5%;}
+				.a5_fact_info_hd{height:28px;}
+				
+				.fact_info_cnt{height:56px;line-height:56px;}
+				.pay_type{width:329px;height:56px;}
+				.a5_pay_type{width:329px;height:40px;}
+				
+				.sign_name{width:178px;height:56px;}
+				.a5_sign_name{width:116px;height:40px;}
+				
+				.reciver{width:150px;height:56px;}
+				.a5_reciver{width:96px;height:40px;}
+				
+				.append_service{width:328px;height:170px;}
+				.append_info{width:328px;height:170px;}
+				.reciver_sign , .sr_person{height:56px;}
+				.total_cost{width:474px;}
+				.down_cnt{width:758px;margin:0 auto;color:#FF00FF;margin-bottom:20px;}
+				.printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:624px;}
+				.a5_printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:333px;}
+				
+				/*** 背胶运单 ***/
+				.html{height:502px;}
+				.adhesive_logo{width:130px;height:56px;}
+				.adh_bar_code{width:230px;}
+				.adhesive_cnt , .adhesive_cnt_unIE10{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.adhesive_cnt_unIE10{width:364px;}
+				.adh_append_service , .adh_append_info{width:328px;}
+				.dash_line{border-top:1px dashed #000000;height:1px;margin:1px 0px;width:358px;}
+				.wb_sender2{width:269px;}
+				.pay_type_ul{height:42px;}
+				.adh_reviver{width:255px;}
+				.adh_target{width:104px;}
+				.adh_info_hd , .adh_info_cnt{height:14px;width:16.5%;}
+				.adh_sign_name{width:178px;}
+				.adh_reciver{width:150px;}
+				.pay_type_li{height:18px;line-height:18px;}
+				.adh_appd_service{width:807px;}
+				.reciver_info_ul{height:40px;}
+				.reciver_info_li{height:20px;}
+				.adh_bold{font-weight:bold;}
+				.target_font{display:inline-block;font-size:34px;font-weight:bold;}
+				.a5_target_font{display:inline-block;font-size:30px;font-weight:bold;}
+				
+				.adh_pay_type{height:38px;width:354px;}
+				.second_hd{width:179px;}
+				.wb_sender_info2{width:268px;}
+				.adh_wb_sender_li,.adh_sender_info{height:36px;}
+				.adh_wb_sender,.adh_wb_sender_li,.consign_info{width:249px;height:36px;overflow:hidden;}
+				.adh_sender_info{width:222px;overflow:hidden;}
+				.logisticsNo_bar{letter-spacing:3px;width:144px; float:left;text-align:center}
+				.adh_btn{width:570px;text-align:right;}
+				.wb_sender_last{width:355px;height:20px;overflow:hidden;}
+				.line1{width:190px;overflow:hidden;height:20px}
+				.line2{width:190px;overflow:hidden;height:38px}
+				.line3{width:190px;overflow:hidden;height:52px}
+				.line4{width:190px;overflow:hidden;height:70px}
+				
+				/****************A5**********************/
+				.a5_sender{width:356px;height:40px;overflow:hidden;}
+				.a5_wb_old_post, .a5_wb_target{width:213px;}
+				.transalteClsIE{filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3)}
+				.transalteClsNOTIE{-moz-transform:-90deg;-webkit-transform:-90deg}
+				/****************A5**********************/
+				.a5_body_print{margin-top : -69px;}
+				.a5_body_print_ie{margin-left : -140px;}
+				.adhPrintNo{width:40px;float:left;font-size:14px;background-color:#CFCBCC;border:1px solid #CFCBCC;text-align:center;}
+				.subCount{width:40px; float:left; text-align:left;font-size:14px;height:26px;line-height:26px;}
+				@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) { .IE10_margin{margin-top:6px;} #IE10_width{width:360px;} }
+				
+			</style>
+			<div class="adhesive_cnt_unIE10 brd" id="IE10_width">
+				<table>
+					<tbody><tr>
+						<td class="adhesive_logo brd_r brd_b tc">
+							<img src="/static/images/awd_logo.png" />
+							<!-- {adhesiveLogo} -->
+						</td>
+						<td class="adh_bar_code brd_b">
+							<div class="subCount"><span class="subCountNum">{subCountNum}</span></div>
+							<div class="logisticsNo_bar f12">&nbsp;</div>
+							<div class="adhPrintNo">{printNo}</div>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table>
+					<tbody><tr>
+						<td valign="top" class="wb_sender brd_r" style="width:249px;height:36px;">
+							<ul>
+								<li class="ml5 adh_wb_sender_li f12">
+									<span class="adh_bold">寄方:&nbsp;</span>
+									<span class="adh_wb_sender_shipperInfo4">{shipperInfo}</span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="wb_old_post">
+							<ul>
+								<li class="f12 ml5"><span class="adh_bold fl">原寄地:&nbsp;</span><span class="f24 fl bold shipperAddressCode2">{shipperAddressCode}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+		
+				<table><!-- style="TABLE-LAYOUT:fixed;word-break:break-all" -->
+					<tbody><tr>
+						<td valign="top" class="adh_reviver brd_r brd_t">
+							<ul>
+								<li class="f12 ml5 adh_wb_sender_li" style="height:54px;line-height:18px;">
+									<span class="adh_bold">收方:&nbsp;</span>
+									<span class="adh_wb_sender_receiver4" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;&nbsp; {receiverPhone}&nbsp;&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="adh_target brd_t">
+							<ul>
+								<li class="f12 ml5"><span class="adh_bold">目的地:&nbsp;</span></li>
+								<li class="h26 lh26 tc"><span class="target_font receiverAddressCode2">{receiverAddressCode}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table>
+					<tbody><tr>
+						<td valign="top" class="adh_reviver brd_r brd_t">
+							<div class="f12 ml5" style="width:249px;height:36px;">
+								<span class="adh_bold">托寄物信息:&nbsp;</span>
+								<span class="signGoodsName 2011SignGoodsName">{goodsNameAndNo}</span>
+							</div>
+						</td>
+						<td valign="top" class="adh_target brd_t">
+							<ul>
+								<li class="f12 ml5 h18"><span class="adh_bold">业务类型:&nbsp;</span> </li>
+								<li class="f12 ml5 h18 signExpressType">{expressType}</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table class="u_item_opts">
+					<tbody><tr>
+						<td class="tc brd brd_l_n f12" >
+							<span class="adh_bold">件数</span>
+						</td>
+						<td class="tc brd brd_l_n f12" >
+							<span class="adh_bold">托寄物数量</span>
+						</td>
+						<td class="tc brd f12" >
+							<span class="adh_bold">实际重量</span>
+						</td>
+						<td class="tc brd f12">
+							<span class="adh_bold">计费重量</span>
+						</td>
+						<td class="tc brd f12">
+							<span class="adh_bold f12">费用</span>
+						</td>
+						<td class="tc brd brd_r_n f12">
+							<span class="adh_bold">费用合计</span>
+						</td>
+					</tr>
+					<tr>
+						<td class="tc brd brd_l_n brd_b_n f12">1</td>
+						<td class="tc brd brd_l_n brd_b_n f12 signOtherService">{goodsNum}</td>  
+						<td class="tc brd brd_b_n f12"></td>
+						<td class="tc brd brd_b_n f12 signPackWeight">{packWeight}</td>
+						<td class="tc brd brd_b_n f12"><span class="orderAmount hidden">{orderAmount}</span></td>
+						<td class="tc brd brd_r_n brd_b_n f12 signTotalMoney"></td>
+					</tr>
+				</tbody></table>
+				
+				<table>
+					<tbody><tr>
+						<td rowspan="2" class="adh_pay_type brd_t brd_r">
+							<ul>
+								<li class="h24 lh24 f12 ml5">
+									<span class="adh_bold">付款:&nbsp;</span><span class="f12"><span class="signExpressPayMethod">{expressPayMethod}</span>  &nbsp;<span class="{payCustNumber}">{payCustId}</span></span>
+								</li>
+								<li class="h24 lh24 f12 ml5">
+									<span class="adh_bold">第三方地区:&nbsp;</span>
+									<span></span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="adh_sign_name brd_t brd_b brd_r f12">
+							<ul class="IE10_margin">
+								<li class="h19 lh19 ml5"><span class="adh_bold">寄方签名:&nbsp;</span></li>
+								<li class="h19 lh19 ml5 signOtherService">{adhesive_defaultShipperName}</li>
+							</ul>
+						</td>
+						<td valign="top" class="adh_reciver brd_t  brd_b f12">
+							<ul class="IE10_margin">
+								<li class="h19 lh19 ml5"><span class="adh_bold">收件员:&nbsp;</span></li>
+								<li class="h19 lh19 ml5 signOtherService">{pickUpNo}</li>
+							</ul>
+						</td>
+					</tr>
+					
+				</tbody></table>
+				
+				<table>
+					<tbody>
+					
+					<tr>
+						<td valign="top" rowspan="5" class="brd_t brd_r f12" style="width:190px;">
+							<ul style="height:91px;width:190px;overflow:hidden;">
+								<li class="h16 lh16 ml5"><span class="adh_bold">附加服务:</span> <span class="isInsurance signOtherService">{isInsurance}&nbsp;&nbsp;{serviceType}</span></li>
+								<li class="ml5 fl" style="width:186px;">
+									<dl id="adhesive_additional_service" class="signOtherService">
+										<dd class="{insuranceAmount_dd}">声明价值:&nbsp;<span class="insuranceAmount">{insuranceAmount}</span></dd><!-- class="{insuranceAmount_hid}" -->
+                                        <dd class="{codAmount_dd}">代收货款:&nbsp;<span class="codAmount">{codAmount}</span></dd><!-- class="{codAmount_hid}" -->
+                                        <dd class="{returnLogisticsNo_dd}">签单返还:&nbsp;<span class="returnLogisticsNo">{returnLogisticsNo}</span></dd>
+                                        <dd class="{packAmount_dd}">其他费用:&nbsp;<span class="packAmount">{packAmount}</span></dd>
+										<dd class="{tradeNo_dd}">订单编号:&nbsp;<span class="tradeNo">{tradeNo}</span></dd>
+										<dd class="{goodsProps_style}" style="width:186px;">销售属性:&nbsp;{goodsProps}</dd> <!-- {goodsProps} -->
+									</dl>
+								</li>
+							</ul>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="h18 lh18 brd_b_n f12" colspan="2" style="width: 190px;">
+							<ul>
+								<li class="ml5"><span class="adh_bold">寄件日期:<span class="signOtherService">{shipperDate}</span></span></li>
+							</ul>
+						</td>
+					</tr>
+					 
+					<tr>
+						<td valign="top" class="brd_t brd_r f12">
+							<ul>
+								<li class="h16 lh16 ml5"><span class="adh_bold">收方签名:&nbsp;</span></li>
+								<li class="h16 lh16 ml5"></li>
+							</ul>
+						</td>
+						<td valign="top" class="brd_t f12">
+							<ul>
+								<li class="h16 lh16 ml5"><span class="adh_bold">派件员:&nbsp;</span></li>
+								<li class="h16 lh16 ml5"></li>
+							</ul>
+						</td>
+					</tr>
+					
+					<tr>
+						<td colspan="2" class="h18 lh18 brd_t brd_b_n f12">
+							<ul>
+								<li class="ml5"><span class="adh_bold">派件日期:&nbsp;</span><span></span></li>
+							</ul>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" class="brd_t brd_b_n f12">
+							<ul>
+								<li>
+									<div class="ml5 wb_sender_first" style="width: 161px; height: 18px;overflow:hidden;">
+										<span class="adh_bold">备注栏:</span>
+										<span class="signOtherService">{sellerMessageAndBuyerMessage}</span>
+									</div>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table class="u_item_opts">
+					<tbody><tr><td class="brd_t"></td></tr>
+					<tr><td style="height:4px;"></td></tr>
+					<tr><td class="brd_b"></td></tr>
+				</tbody></table>
+				
+				<!-- ===============================================其他运单================================================== -->
+				
+				<table class="other_trade_order">
+					<tbody><tr>
+						<td valign="top" class="wb_sender brd_b">
+							<ul>
+								<li class="ml5 f12 wb_sender_first" style="height: 36px;">
+									<span class="adh_bold">寄方:&nbsp;</span>
+									<span class="adh_wb_sender_shipperInfo5">{shipperInfo}</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table class="other_trade_order">
+					<tbody><tr>
+						<td valign="top" class="wb_sender brd_b">
+							<ul>
+								<li>
+									<div class="ml5 f12 wb_sender_last">
+										<span class="adh_bold">收方:&nbsp;</span>
+										<span class="adh_wb_sender_receiver5" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;&nbsp;{receiverPhone}&nbsp;&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</span>
+									</div>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table class="u_item_opts other_trade_order"> 
+					<tbody><tr>
+						<td class="adh_bar_code brd_r" style="height:54px;line-height:54px;">
+							<div class="tc"></div>
+							<div class="logisticsNo_bar f12 hidden">{logisticsNo}</div>
+						</td>
+						<td valign="top" class="wb_old_post f12">
+							<ul class="reciver_info_ul">
+								<li class="reciver_info_li">
+									<span class="adh_bold">&nbsp;费用合计:&nbsp;</span>
+									<span class="signTotalMoney f12"></span>
+									<span class="orderAmount hidden">{orderAmount}</span>
+								</li>
+								<li class="brd_t reciver_info_li f12 pl5">
+										<span class="adh_bold">付款方式:&nbsp;<span class="signExpressPayMethod">{expressPayMethod}</span></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<!-- ===============================================其他运单================================================== -->
+				
+				<!-- ===============================================安心购运单================================================== -->
+				<table class="u_item_opts axg_trade_order hidden"> 
+					<tbody><tr>
+						<td class="adhesive_logo brd_r tc">
+							<img src="/static/images/axg_awd_logo.png?r=0000">
+						</td>
+						<td class="adh_bar_code">
+							<div class="tc mt3"><input id="adhesive_bar_code_img" type="hidden" value="/orders/bar_code?code={logisticsNo}" /></div>
+							<div class="logisticsNo_bar f12 hidden">{logisticsNo}</div>
+						</td>
+						
+					</tr>
+				</tbody></table>
+				
+				<table class="axg_trade_order hidden">
+					<tbody><tr>
+						<td valign="top" class="wb_sender brd_b brd_t">
+							<ul>
+								<li class="ml5 f12 wb_sender_first adh_wb_sender_shipperInfo6 brd_r" style="height: 36px;width: 220px;float:left;overflow:hidden;">
+									<span class="adh_bold">寄方:&nbsp;</span>
+									<span class="show">{shorterShipperInfo}</span>
+									<span class="hidden">{shipperInfo}</span>
+								</li>
+								<li class="reciver_info_li" style="float:left">
+									<span class="adh_bold f12">&nbsp;费用合计:&nbsp;</span>
+									<span class="signTotalMoney f12"></span>
+									<span class="orderAmount hidden f12">{orderAmount}</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				
+				<table class="axg_trade_order hidden">
+					<tbody><tr>
+						<td valign="top" class="wb_sender">
+							<ul>
+								<li class="ml5 f12 wb_sender_last brd_r" style="height: 18px;width: 220px;float:left;">
+									<span class="adh_bold">收方:&nbsp;</span>
+									<span class="adh_wb_sender_receiver6" title="{receiverName} {receiverPhone} {receiverFullAddress} {buyerNick}">{receiverName}&nbsp;&nbsp;{receiverPhone}&nbsp;&nbsp;{axgReceiverFullAddress}</span>
+								</li>
+								<li class="reciver_info_li f12 pl5" style="float:left;">
+										<span class="adh_bold">付款方式:&nbsp;<span class="signExpressPayMethod">{expressPayMethod}</span></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<!-- ===============================================安心购运单================================================== -->
+				
+			</div>
+		</div>
+	<!-- ===================================背胶打印================================================================ -->
+	
+	<!-- ===================================广告语================================================================== -->
+	
+	 <div id="advertising_template" class="hidden">
+	 		    <style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.hidden{display:none;}
+				.brd{border:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+				.zhufu{float:left;height:56px;width:230px;line-height:26px;font-size:18px;font-weight:bold;text-align:center;margin-top:27px;}
+				.logo_txt{text-align:center;height:18px;line-height:18px;}				
+				.logo_top{width:128px;height:73px;float:left;}
+				.logo_bottom{width:128px;height:106px;float:left;}
+				.content{padding-left:6px;line-height:24px;padding-top:10px;}
+			</style>
+			<div class="adhesive_cnt brd" style="width:364px;height:469px;">
+				<div style="height:73px;" class="brd_b">
+					<div class="brd_r logo_top">
+						<img src="/static/images/axg_awd_logo.png?b=7777" style="margin-top: 14px;" />
+					</div>
+					<div style="float:left;">
+						<div class="logisticsNo_bar f12 hidden">{logisticsNo}</div>
+					</div>
+				</div>
+				
+				
+					
+						 
+					
+					
+					
+					
+				
+				
+				<!-- 可自定义安心购广告语 -->
+				
+					<div style="height:276px;overflow:hidden;">
+						<div class="content" style="padding-top:5px;overflow:hidden; height:246px;font-weight:bold;font-size:18px;font-family:'宋体';">						
+							
+								<div>温馨提示：</div>
+							
+								<div>1、您购买的商品已加入“顺丰安心购”7天保障服务</div>
+							
+								<div>2、请务必开箱验货，确认货品完好无损，签收付款</div>
+							
+								<div>3、签收之日起，支持7天无理由退货</div>
+							
+								<div>4、如有任何问题，可致电顺丰速运客服热线 4008 111 111</div>
+							
+								<div>.</div>
+							
+								<div>.</div>
+							
+								<div>>>  >>  >>  >>  请沿此处揭开，保留此联</div>
+							
+						</div>
+					</div>
+				
+				<!-- 可自定义安心购广告语 -->
+				
+				
+				 
+				<table style="width:100%">
+					<tbody><tr><td class="brd_t"></td></tr>
+					<tr><td></td></tr>
+					<tr><td class="brd_b"></td></tr>
+				</tbody></table>
+				
+				<div style="height:106px;">
+					<div class="brd_r logo_bottom">
+						<img src="/static/images/awd_logo.png?c=76" style="margin-top:28px;padding-left:4px"/>
+						<!-- img src="/static/images/awd_logo_ad.png?b=22" style="margin-top:19px;" -->
+					</div>
+					<div class="zhufu">
+					    <div>顺丰安心购,祝您购物无忧!</div>
+					    <div>{axgReceiverContact}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	<!-- ===================================广告语================================================================== -->
+	
+	<!-- ===================================发货清单(明细单)上联================================================================== -->
+	
+	 <div id="shipperList_template_top" class="hidden">
+	 		    <style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.tc{text-align:center;}
+				.tl{text-align:left;}
+				.tr{text-align:right;}
+				.bold{font-weight:bold;}
+				.bold100{font-weight:100;}
+				.hidden{display:none;}
+				.pr3{padding-right:3px;}
+				.pl3{padding-left:3px;}
+				.pl2{padding-left:2px;}
+				.f12{font-size:12px;}
+				.h26{height:25px;}
+				.h20{height:20px;}
+				.lh26{line-height:25px;}
+				.lh18{line-height:18px;}
+				.lh20{line-height:20px;}
+				.brd{border:2px solid #000000;}
+				.brd_l{border-left:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+			</style>
+			<div class="adhesive_cnt brd_t" style="width:366px;"><!-- height:469px; -->
+				<div>
+					<div class="bold tc brd_b brd_l brd_r" style="height:26px; line-height:26px;"><span id="shopName">&nbsp;</span>发货明细单</div>
+					<div class="f12 h26 brd_r brd_l brd_b"> 
+                        <table width="100%" height="100%" cellspacing="0" cellpadding="0">
+                            <tbody><tr>
+                                <td style="width:171px; overflow:hidden;" class="brd_r pl3"><span class="f12 bold">订单号:</span>&nbsp;<span class="shipperlist_orderNo f12"></span></td>
+                                <td style="width:188px;overflow:hidden;" class="pl3"><span class="f12 bold">运单号:</span>&nbsp;<span class="shipperlist_tradeNo f12"></span></td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+					<div class="f12 h26"> 
+						<table cellspacing="0" cellpadding="0" width="100%">
+							<tr>
+								<td class="brd_b brd_l brd_r tl pl3 f12 lh26 h26 bold" style="width:58px;">买家姓名</td>
+								<td class="brd_b brd_r tl pl3 f12 bold100"><div id="receiverName" class="lh26 h26">&nbsp;</div></td>
+								<td class="brd_b brd_r tl pl3 f12 lh26 h26 bold" style="width:36px;">昵称</td>
+								<td class="brd_b brd_r tl pl3 f12 lh26 h26 bold100"><div style="width:84px;" id="buyerNick">&nbsp;</div></td>
+								<td class="brd_b brd_r tl pl3 f12 lh26 h26 bold" style="width:46px;">物流费</td>
+								<td class="brd_b brd_r tr pr3 f12 lh26 h26 bold100"><div style="width:48px;overflow:hidden;" id="postAmount">&nbsp;</div></td>
+							</tr>
+						</table>
+					</div>
+					<!-- 表头 -->
+					<div class="lh26 h26 f12">
+						<table cellspacing="0" cellpadding="0" width="100%">
+							<tr>
+								<td class="brd_b brd_l brd_r tl pl3 f12 lh26 h26 bold" style="width:71px;">商家编号</td>
+								<td class="brd_b brd_r tl pl3 f12 lh26 h26 bold" style="width:172px;">商品名称</td>
+								<td class="brd_b brd_r tc f12 lh26 h26 bold" style="width:34px;">数量</td>
+								<td class="brd_b brd_r tc f12 lh26 h26 bold" style="width:73px;">单价</td>
+							</tr>
+						</table>
+					</div>
+					<!-- 表头 -->
+						<div class="lh26 f12" id="shipper_table_list">
+							
+							<!--列表内容 4个刚好  , 7个测试下联 -->
+							
+							<!-- 统计信息 -->
+							<table cellspacing="0" cellpadding="0" width="100%" class="lastShipperDate">
+									<tr>
+										<td class="brd_b brd_l brd_r tl pl3 f12 lh26 h26 bold" style="width:71px;">发货日期</td>
+										<td class="brd_b brd_r tl pl3 f12 bold100"><div style="width:110px;overflow:hidden;"  class="lh26 h26" id="shipperDate">&nbsp;</div></td>
+										<td class="brd_b brd_r tc f12 lh26 h26 bold" style="width:60px;">合计</td>
+										<td class="brd_b brd_r tc f12 bold100"><div style="width:34px;overflow:hidden;" class="lh26 h26" id="totalQuantity">&nbsp;</div></td>
+										<td class="brd_b brd_r tc f12 bold100"><div style="width:73px;overflow:hidden;" class="lh26 h26" id="totalPrice">&nbsp;</div></td>
+									</tr>
+							</table>
+							<!-- 统计信息 -->
+						</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="hidden" id="shipper_list_item">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td class="brd_b brd_l brd_r tl pl3 f12 bold100"><div style="width:71px;overflow:hidden;" class="lh26">{goodsNo}</div></td>
+					<td class="brd_b brd_r tl pl3 f12 lh26 bold100" colspan="3"><div style="width:274px;" class="lh26">{goodsName}</div></td>
+				</tr>
+				<tr>
+					<td class="brd_b brd_l brd_r tl pl3 f12 lh26 bold" style="width:80px;">销售属性</td>
+					<td class="brd_b brd_r tl pl3 f12 bold100"><div style="width:172px;" class="lh18">{goodsProps}</div></td>
+					<td class="brd_b brd_r tc f12 bold100"><div style="width:34px;overflow:hidden;" class="lh18">{quantity}</div></td>
+					<td class="brd_b brd_r tc f12 bold100"><div style="width:73px;overflow:hidden;" class="lh18">{price}</div></td>
+				</tr>
+			</table>
+		</div>
+		
+		<div class="hidden" id="blank_shipper_table">
+			<table cellspacing="0" cellpadding="0" width="100%">
+					<tr>
+						<td class="tl pl3 f12 lh26 h26 bold100" style="width:80px;">&nbsp;</td>
+						<td class="tl pl3 f12 lh26 h26 bold100" colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td class="tl pl3 f12 lh26 h26 bold" style="width:80px;">&nbsp;</td>
+						<td class="tl pl3 f12 lh26 h26 bold100" style="width:172px;">&nbsp;</td>
+						<td class="tc f12 lh26 h26 bold100" style="width:47px;">&nbsp;</td>
+						<td class="tc f12 lh26 h26 bold100" style="width:60px;">&nbsp;</td>
+					</tr>
+				</table>
+		</div>
+		
+	<!-- ===================================发货清单(明细单)上联================================================================== -->
+	
+	<!-- ===================================发货清单(明细单)下联================================================================== -->
+	<div id="shipperList_template_bottom" class="hidden">
+		 <style>
+			html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+			.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+			.tc{text-align:center;}
+			.tl{text-align:left;}
+			.tr{text-align:right;}
+			.bold{font-weight:bold;}
+			.bold100{font-weight:100;}
+			.hidden{display:none;}
+			.pr3{padding-right:3px;}
+			.pl3{padding-left:3px;}
+			.pl2{padding-left:2px;}
+			.f12{font-size:12px;}
+			.h26{height:26px;}
+			.h20{height:20px;}
+			.lh26{line-height:26px;}
+			.lh20{line-height:20px;}
+			.brd{border:2px solid #000000;}
+			.brd_r{border-right:2px solid #000000;}
+			.brd_b{border-bottom:2px solid #000000;}
+			.brd_t{border-top:2px solid #000000;}
+		</style> 
+		<div style="height:106px;width:366px;" class="brd_t">
+			<table width="100%" cellspacing="0" cellpadding="0" style="margin-top:10px;">
+				<tr>
+					<td class="lh20 h20 f12 bold pl2" style="width:60px;">买家留言:</td>
+					<td class="lh20 h20 f12 bold100 pl2"><span id="shipperBuyerMessage">&nbsp;</span></td>
+				</tr>
+				<tr>
+					<td class="lh20 h20 f12 bold pl2" style="width:60px;">卖家备注:</td>
+					<td class="lh20 h20 f12 bold100 pl2"><span id="shipperSellerRemark">&nbsp;</span></td>
+				</tr>
+				
+			</table>
+		</div>
+	</div>
+	<!-- ===================================发货清单(明细单)下联================================================================== -->
+	
+	<!-- ===================================电子运单(双联)======================================================================== -->
+	<div id="adhesive_template_02" class="hidden">
+		<style>
+			html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+			div{font-family:宋体}
+			table{border-collapse:collapse;border-spacing:0}
+			.hidden{display:none;}
+			.f12{font-size:12px;}
+			.f14{font-size:14px;}
+			.f26{font-size:26px;font-weight:bold;}
+			.h16{height:16px;}
+			.lh16{line-height:16px;}
+			.h28{height:28px;}
+			.lh28{line-height:28px;}
+			.h24{height:24px;}
+			.lh24{line-height:24px;}
+			.h20{height:20px;line-height:20px;}
+			.h36{height:36px;line-height:36px}
+			.pl5{padding-left:5px;}
+			.pl28{padding-left:28px;}
+			.pl36{padding-left:36px;}
+			.pr10{padding-right:10px;}
+			.bold{font-weight:bold;}
+			.tc{text-align:center;}
+			.tr{text-align:right;}
+			.fl{float:left;}
+			.fr{float:right;}
+			.pt2{padding-top:2px;}
+			.mt2{margin-top:2px;}
+			.senderInfo{height:48px;line-height:16px;overflow:hidden}
+			.overflowHid{overflow:hidden;height:18px;line-height:18px;}
+			.logo_item{width:80px;float:left;height:32px;line-height:32px;}
+			.topContent_td1{width:252px;height:50px;}
+			.topContent_td2{width:113px;height:50px;}
+			.topContentOver2{width:212px;height:36px;line-height:16px;overflow:hidden;}
+			.targetCode{height:32px;line-height:32px;text-align:center;font-size:32px;font-weight:bold;}
+			.sendOrReciverOver{overflow:hidden;}
+			.reciver{width:36px;float:left;height:18px;line-height:18px;}
+			.brd{border:2px solid #000000;}
+			.brd_r{border-right:2px solid #000000;}
+			.brd_b{border-bottom:2px solid #000000;}
+			.brd_b2{border-bottom:4px solid #000000;}
+			.brd_t{border-top:2px solid #000000;}
+			.expressType{font-size:20px;width:109px;height:20px;overflow:hidden;}
+			.remark3{height:70px;line-height:16.5px;width:160px;overflow:hidden;margin-top:3px;}
+			.adhPrintNo{width:40px;height:30px;margin-top:1px;background-color:#CFCBCC;border:1px solid #CFCBCC;text-align:center;}
+		</style>
+		<div style="width:372px;height:564px;margin:0 auto;">
+			<div class="top_area f12 brd" style="width:99%;height:329px;margin-bottom:10px;">
+				<div class="logo brd_b h36" style="width:100%;text-align:center;">
+					<div style="width:208px;margin:0 auto;" class="h36">
+						<div class="logo_item f26">{codTitle}</div>
+						<div class="logo_item f14"><span class="subCountNum">{subCountNum}</span></div>
+						<div class="logo_item adhPrintNo f14">{printNo}</div>
+					</div>
+				</div>
+				<div class="top_content">
+					<table cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="f12 brd_b brd_r pl5 topContent_td1">
+								<div style="width:250px;float:left;height:45px;">
+									<div style="height:45px;line-height:15px;width:251px;overflow:hidden;">
+										<div style="width:36px;" class="fl">寄件: </div>
+										<div class="fl adh_wb_sender_shipperInfo7" style="width:215px;">{adhesive2_shipperInfo}</div>
+									</div>
+								</div>
+							</td>
+							<td class="f12 brd_b topContent_td2">
+								<div class="h16 lh16 pl5 pt2">原寄地:</div>
+								<div class="targetCode shipperAddressCode3">{shipperAddressCode}</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="f12 brd_b2 brd_r pl5 topContent_td1" style="height:50px;">
+								<div style="width:250px;float:left;height:45px;">
+									<div style="height:45px;line-height:15px;width:251px;">
+										<div style="width:36px;" class="fl">收件: </div>
+										<div class="fl adh_wb_sender_receiver7" style="width:215px;">{receiverName}&nbsp;{receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}</div>
+									</div>
+								</div>
+							</td>
+							<td class="f12 brd_b2 topContent_td2" style="height:50px;">
+								<div class="h16 lh16 pl5 pt2">目的地：</div>
+								<div class="targetCode receiverAddressCode3">{receiverAddressCode}</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="f12 brd_b2 brd_r topContent_td1" style="height:92px;">
+								
+							</td>
+							<td class="f12 brd_b2 topContent_td2" style="height:92px;">
+								<div class="pl5 overflowHid">业务类型</div>
+								<div class="tc bold expressType signExpressType">{expressType}</div>
+								<div class="f14 tc bold overflowHid signExpressType">{packWeight}KG</div>
+								<div class="h24 lh24 brd_t brd_b pl5 sendOrReciverOver">收件员:<span class="signExpressType">{pickUpNo}</span></div>
+								<div class="h24 lh24 pl5 sendOrReciverOver">派件员:<span class="signExpressType"></span></div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" id="adhesive2_additional_service">
+								<div class="pl5 overflowHid f12">
+									<div class="fl" style="width:209px;">
+										付款方式: <span class="f12"><span class="signExpressPayMethod">{expressPayMethod}</span>  &nbsp;<span class="{payCustNumber}">{payCustId}</span></span>
+									</div>
+									<div style="width:150px;" class="fr {returnLogisticsNo_dd} signOtherService">签单返还:<span class="returnLogisticsNo">{returnLogisticsNo}</span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {codAmount_dd} signOtherService" style="width:252px; height:18px;">
+									代收货款: <span class="codAmount">{codAmount}</span>
+									卡号: <span>{codCardNo}</span>&nbsp;
+								  </div>
+									<div class="fr" style="width:100px;">收方签署:<span class="signOtherService"></span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {insuranceAmount_dd} signOtherService" style="width:252px; height:18px;">
+									保价&nbsp;声明价值 : <span class="insuranceAmount">{insuranceAmount}</span>    
+								  </div>
+									<div class="fl signOtherService">&nbsp;<span></span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {packAmount_dd} signOtherService" style="width:252px; height:18px;">      
+									其他费用: <span class="packAmount">{packAmount}</span>
+								  </div>
+									<div class="fr" style="width:100px;">日期: <span class="signOtherService">{shipperDate}</span></div>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			
+			<div class="bottom_area f12 brd" style="width:99%;height:226px;">
+				<div style="height:70px;" class="brd_b">
+					<div style="width:200px;height:70px;line-height:70px;" class="brd_r fl">
+						
+					</div>
+					<div style="width:161px;height:100%;" class="fl pl5">
+						<div class="overflowHid fl mt2" style="width:34px;">
+							寄件:				
+						</div>
+						<div class="senderInfo fl mt2 adh_wb_sender_shipperInfo8" style="height:66px;width:122px;">{adhesive2_bottom_shipperInfo}</div>
+					</div>
+				</div>
+				<div style="width:363px;height:70px;overflow:hidden;" class="brd_b pl5">
+					<div style="width:195px;height:70px;" class="brd_r fl">
+						<div class="overflowHid fl" style="width:34px; padding-top:2px;">
+							收件:				
+						</div>
+						<div class="senderInfo fl adh_wb_sender_receiver8" style="height:66px;width:152px;padding-top:3px;">
+							{receiverName}&nbsp; {receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}
+						</div>
+					</div>
+					<div class="fl">
+						<div class="pl5 remark3">备注: <span class="signOtherService">{sellerMessageAndBuyerMessage2}</span></div>
+					</div>
+				</div>
+				
+				<div style="height:82px;overflow:hidden;">
+					<table width="100%" cellspacing="0" cellpadding="0">  
+							<tr>
+								<td class="pl5">
+									<div style="height:16px;line-height:16px;" class="mt2">
+										<span class="f12">托寄物内容: <span class="signGoodsName">{allGoodDesc}</span></span>
+									</div>
+								</td>
+							</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- ===================================电子运单(双联)======================================================================== -->
+	
+	<!-- ===================================电子运单(三联)======================================================================== -->
+	<div id="adhesive_template_03" class="hidden">
+		<style>
+			html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+			div{font-family:宋体}
+			table{border-collapse:collapse;border-spacing:0}
+			.hidden{display:none;}
+			.f12{font-size:12px;}
+			.f14{font-size:14px;}
+			.f26{font-size:26px;font-weight:bold;}
+			.h16{height:16px;}
+			.lh16{line-height:16px;}
+			.h28{height:28px;}
+			.lh28{line-height:28px;}
+			.h24{height:24px;}
+			.lh24{line-height:24px;}
+			.h20{height:20px;line-height:20px;}
+			.h42{height:42px;line-height:42px}
+			.pl5{padding-left:5px;}
+			.pl28{padding-left:28px;}
+			.pl36{padding-left:36px;}
+			.pr10{padding-right:10px;}
+			.bold{font-weight:bold;}
+			.tc{text-align:center;}
+			.tr{text-align:right;}
+			.fl{float:left;}
+			.fr{float:right;}
+			.pt2{padding-top:2px;}
+			.mt2{margin-top:2px;}
+			.senderInfo{height:48px;line-height:16px;overflow:hidden}
+			.overflowHid{overflow:hidden;height:18px;line-height:18px;}
+			.logo_item{width:80px;float:left;height:36px;line-height:36px;}
+			.topContent_td1{width:252px;height:50px;}
+			.topContent_td2{width:113px;height:50px;}
+			.topContentOver2{width:212px;height:36px;line-height:16px;overflow:hidden;}
+			.targetCode{height:32px;line-height:32px;text-align:center;font-size:32px;font-weight:bold;}
+			.sendOrReciverOver{overflow:hidden;}
+			.reciver{width:36px;float:left;height:18px;line-height:18px;}
+			.brd{border:2px solid #000000;}
+			.brd_r{border-right:2px solid #000000;}
+			.brd_b{border-bottom:2px solid #000000;}
+			.brd_b2{border-bottom:4px solid #000000;}
+			.brd_t{border-top:2px solid #000000;}
+			.top_content{height:272px;}
+			.expressType{font-size:20px;width:109px;height:20px;overflow:hidden;}
+			.remark3{height:70px;line-height:16.5px;width:160px;overflow:hidden;margin-top:3px;}
+			.payStyle{height:48px; overflow:hidden;line-height:16px;}
+			.adhPrintNo{width:40px;height:30px;background-color:#CFCBCC;border:1px solid #CFCBCC;text-align:center;}
+		</style>
+		<div style="width:372px;height:790px;margin:0 auto;">
+			<div class="top_area f12 brd" style="width:99%;height:329px;margin-bottom:8px;">
+				<div class="logo brd_b h36 fl" style="width:100%;text-align:center;">
+					<div style="width:208px;margin:0 auto;" class="h36">
+						<div class="logo_item f26">{codTitle}</div>
+						<div class="logo_item f14"><span class="subCountNum">{subCountNum}</span></div>  
+						<div class="logo_item adhPrintNo f14">{printNo}</div>
+					</div>
+				</div>
+				<div class="top_content fl">
+					<table cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="f12 brd_b brd_r pl5 topContent_td1">
+								<div style="width:250px;float:left;height:45px;">
+									<div style="height:45px;line-height:15px;width:251px;overflow:hidden;">
+										<div style="width:36px;" class="fl">寄件: </div>
+										<div class="fl adh_wb_sender_shipperInfo9" style="width:215px;">{adhesive2_shipperInfo}</div>
+									</div>
+								</div>
+							</td>
+							<td class="f12 brd_b topContent_td2">
+								<div class="h16 lh16 pl5 pt2">原寄地:</div>
+								<div class="targetCode shipperAddressCode4">{shipperAddressCode}</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="f12 brd_b2 brd_r pl5 topContent_td1" style="height:50px;">
+								<div style="width:250px;float:left;height:45px;">
+									<div style="height:45px;line-height:15px;width:251px;">
+										<div style="width:36px;" class="fl">收件: </div>
+										<div class="fl adh_wb_sender_receiver9" style="width:215px;">{receiverName}&nbsp;{receiverPhone}&nbsp;&nbsp;{receiverFullAddress}&nbsp;&nbsp;{buyerNick}</div>
+									</div>
+								</div>
+							</td>
+							<td class="f12 brd_b2 topContent_td2" style="height:50px;">
+								<div class="h16 lh16 pl5 pt2">目的地：</div>
+								<div class="targetCode receiverAddressCode4">{receiverAddressCode}</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="f12 brd_b2 brd_r topContent_td1" style="height:92px;">
+								
+							</td>
+							<td class="f12 brd_b2 topContent_td2" style="height:92px;">
+								<div class="pl5 overflowHid">业务类型</div>
+								<div class="tc bold expressType signExpressType">{expressType}</div>
+								<div class="f14 tc bold overflowHid signExpressType">{packWeight}KG</div>
+								<div class="h24 lh24 brd_t brd_b pl5 sendOrReciverOver">收件员:<span class="signExpressType">{pickUpNo}</span></div>
+								<div class="h24 lh24 pl5 sendOrReciverOver">派件员:<span class="signExpressType"></span></div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" id="adhesive3_additional_service">
+								<div class="pl5 overflowHid f12">
+									<div class="fl" style="width:209px;">
+										付款方式: <span class="f12"><span class="signExpressPayMethod">{expressPayMethod}</span>  &nbsp;<span class="{payCustNumber}">{payCustId}</span></span>
+									</div>
+									<div style="width:150px;" class="fr {returnLogisticsNo_dd} signOtherService">签单返还:<span class="returnLogisticsNo">{returnLogisticsNo}</span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {codAmount_dd} signOtherService" style="width:252px; height:18px;">
+									代收货款: <span class="codAmount">{codAmount}</span>
+									卡号: <span>{codCardNo}</span>&nbsp;
+								  </div>
+									<div class="fr" style="width:100px;">收方签署:<span class="signOtherService"></span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {insuranceAmount_dd} signOtherService" style="width:252px; height:18px;">
+									保价&nbsp;声明价值 : <span class="insuranceAmount">{insuranceAmount}</span>
+								  </div>
+									<div class="fl signOtherService">&nbsp;<span></span></div>
+								</div>
+								<div class="pl5 overflowHid f12">
+								  <div class="fl {packAmount_dd} signOtherService" style="width:252px; height:18px;">
+									其他费用: <span class="packAmount">{packAmount}</span>
+								  </div>
+									<div class="fr" style="width:100px;">日期: <span class="signOtherService">{shipperDate}</span></div>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<!-- ===========================================第二联============================================ -->
+			<div class="bottom_area f12 brd" style="width:99%;height:222px;margin-bottom:8px;">
+				<div style="height:70px;" class="brd_b">
+					<div style="width:200px;height:70px;line-height:70px;" class="brd_r fl">
+						
+					</div>
+					<div style="width:161px;height:100%;" class="fl pl5">
+						<div class="overflowHid fl mt2" style="width:34px;">
+							寄件:				
+						</div>
+						<div class="senderInfo fl mt2 adh_wb_sender_shipperInfo10" style="height:66px;width:122px;">{adhesive2_bottom_shipperInfo}</div>
+					</div>
+				</div>
+				<div style="width:363px;height:70px;overflow:hidden;" class="brd_b pl5">
+					<div style="width:195px;height:70px;" class="brd_r fl">
+						<div class="overflowHid fl" style="width:34px; padding-top:2px;">
+							收件:				
+						</div>
+						<div class="senderInfo fl adh_wb_sender_receiver10" style="height:66px;width:152px;padding-top:3px;">
+							{receiverName}&nbsp; {receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}
+						</div>
+					</div>
+					<div class="fl">
+						<div class="pl5 remark3">备注: <span class="signOtherService">{sellerMessageAndBuyerMessage2}</span></div>
+					</div>
+				</div>
+				
+				<div style="height:78px;overflow:hidden;">
+					<table width="100%" cellspacing="0" cellpadding="0">  
+							<tr>
+								<td class="pl5">
+									<div style="height:15px;line-height:15px;" class="mt2">
+										<span class="f12">托寄物内容: <span class="signGoodsName">{allGoodDesc}</span></span>
+									</div>
+								</td>
+							</tr>
+					</table>
+				</div>
+			</div>
+			<!-- ===========================================第二联============================================ -->
+			<!-- ===========================================第三联============================================ -->
+			<div class="bottom_area f12 brd" style="width:99%;height:222px;">
+				<div style="height:70px;" class="brd_b">
+					<div style="width:200px;height:70px;line-height:70px;" class="brd_r fl">
+						
+					</div>
+					<div style="width:161px;height:100%;" class="fl pl5">
+						<div class="overflowHid fl mt2" style="width:34px;">
+							寄件:				
+						</div>
+						<div class="senderInfo fl mt2 adh_wb_sender_shipperInfo11" style="height:66px;width:122px;">{adhesive2_bottom_shipperInfo}</div>
+					</div>
+				</div>
+				<div style="width:363px;height:70px;overflow:hidden;" class="brd_b pl5">
+					<div style="width:195px;height:70px;" class="brd_r fl">
+						<div class="overflowHid fl" style="width:34px; padding-top:2px;">
+							收件:				
+						</div>
+						<div class="senderInfo fl adh_wb_sender_receiver11" style="height:66px;width:152px;padding-top:3px;">
+							{receiverName}&nbsp; {receiverPhone}&nbsp;{receiverFullAddress}&nbsp;{buyerNick}
+						</div>
+					</div>
+					<div class="fl">
+						<div class="pl5 remark3">备注: <span class="signOtherService">{sellerMessageAndBuyerMessage2}</span></div>
+					</div>
+				</div>
+				
+				<div style="height:78px;overflow:hidden;">
+					<table width="100%" cellspacing="0" cellpadding="0">  
+							<tr>
+								<td class="pl5">
+									<div style="height:15px;line-height:15px;" class="mt2">
+										<span class="f12">托寄物内容: <span class="signGoodsName">{allGoodDesc}</span></span>
+									</div>
+								</td>
+							</tr>
+					</table>
+				</div>
+			</div>
+			<!-- ===========================================第三联============================================ -->
+		</div>
+		
+	</div>
+	<!-- ===================================电子运单(三联)======================================================================== -->
+	<div class="tempContainer hidden"></div>
+	
+	</body>
+	<script type="text/javascript">var contextPath = "";</script>
+	<script type="text/javascript" src="/static/js/lib/jquery-1.8.2.js"></script>
+	<script type="text/javascript" src="/static/js/lib/namespace.js"></script>
+	<script type="text/javascript" src="/static/js/lib/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="/static/js/lib/core.js"></script>
+	<script type="text/javascript" src="/static/js/lib/lodop/sf.lodop.js"></script>
+	<script type="text/javascript" src="/static/js/src/sf.constant.js"></script>
+	<script type="text/javascript" src="/static/js/src/maintain.js"></script>
+	<script type="text/javascript">
+		function printAdhesiveOrEwaybill(options){
+			LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));
+			//LODOP.PRINT_INITA(0,0,843,568,"电子运单打印");
+			LODOP.PRINT_INIT("");
+			if(options["templateType"] === "2" && adhesive=='-1'){
+				pinSelected = '-1';
+				afourSelected = '-1';
+				adhesive = LODOP.SELECT_PRINTER();
+				
+			}else if(options["templateType"] === "3" && afourSelected==='-1'){
+				pinSelected = '-1';
+				adhesive = '-1';
+				afourSelected = LODOP.SELECT_PRINTER();
+			}
+			
+			if(adhesive!='-1' || afourSelected!='-1'){	
+				var url = sfLib.Constant.actionUrls["getLogisticsOrders"];
+				jQuery.ajax({type:"post",url:url,data:{"orderNo":options["oids"],"addressId":options["addressId"],"templateType":options["templateType"],"pinSelected":pinSelected,"adhesive":adhesive,
+                    "afourSelected":afourSelected,"isPrint":options["isPrint"],"isShielded":options["isShielded"]},success:
+					function(result){
+						var records = result.data.orderInfo;
+						for(var i=0;i<records.length;i++){
+							var record = records[i];
+							var serviceType = record["serviceType"];
+							var adhesiveType = record["adhesiveType"];
+							
+							//serviceType = "04";       // 测试代码
+							
+							if(serviceType==="04"){      // 安心购订单
+								$(".axg_trade_order").removeClass("hidden");
+								$(".other_trade_order").addClass("hidden");
+							}else{  // 非安心购订单
+								$(".other_trade_order").removeClass("hidden");
+								$(".axg_trade_order").addClass("hidden");
+							}
+							
+							if(options["templateType"] === "2"){
+								if(adhesiveType === "1"){
+									strHtml=jQuery("#adhesive_template").html();           // HTML单联
+								}else if(adhesiveType === "2"){
+									strHtml =  $("#adhesive_template_02").html();          // HTML新运单双联
+								}else if(adhesiveType === "3"){
+									strHtml =  $("#adhesive_template_03").html();          // HTML新运单三联
+								}
+							}else if(options["templateType"] === "3"){
+								strHtml=jQuery("#a4_template").html();
+							}
+							
+							
+							strHtml = strHtml.replace(/{shipperDate}/g,(record.shipperDate || "").split(" ")[0]); 
+							
+							for(var key in record){
+								var filterResult = sfSrc.MainTain.filterRecord(key,record[key],record);
+								var value = filterResult.value;
+								
+								if(record["subLogisticsNos"] && record["subLogisticsNos"].length >0){
+									strHtml = strHtml.replace(/{subCountNum}/g,"1/"+(record["subLogisticsNos"].length+1));  
+								}else{
+									strHtml = strHtml.replace(/{subCountNum}/g,"");  
+								}
+								
+								if(key === "buyerNick"){
+									var buyerNick = record["buyerNick"]?"("+ record["buyerNick"] +")":"";
+									strHtml = strHtml.replace(/{buyerNick}/g,buyerNick);
+								}
+								
+								if(key === "receiverFullAddress"){
+									var buyerNick = record["buyerNick"]?"("+ record["buyerNick"] +")":"";
+									var axgReceiverFullAddress = (record[key]||"") + buyerNick;
+									strHtml = strHtml.replace(/{axgReceiverFullAddress}/g,sfSrc.MainTain.cutStr(axgReceiverFullAddress,8));
+								}
+								
+								if(key === "shipperFullAddress"){
+									strHtml = strHtml.replace("{axgShipperFullAddress}",sfSrc.MainTain.cutStr(record[key],38));
+								}
+								
+								if(key === "shipperInfo"){    
+									strHtml = strHtml.replace(/{shorterShipperInfo}/g,sfSrc.MainTain.cutStr(record[key],62));
+									strHtml = strHtml.replace(/{shipperInfo}/g,sfSrc.MainTain.cutStr(record[key],64));
+									
+									strHtml = strHtml.replace(/{a5_shipperInfo_1}/g,sfSrc.MainTain.cutStr(record[key],88));
+									strHtml = strHtml.replace(/{a5_shipperInfo_2}/g,sfSrc.MainTain.cutStr(record[key],78));
+									
+									strHtml = strHtml.replace(/{adhesive2_shipperInfo}/g,sfSrc.MainTain.cutStr(record[key],102));
+									strHtml = strHtml.replace(/{adhesive2_bottom_shipperInfo}/g,sfSrc.MainTain.cutStr(record[key],80));
+									
+								}
+								
+								if(key === "sellerMessage" || key === "buyerMessage" || key === "printRemark"){
+									var bMsg = (record["buyerMessage"])?record["buyerMessage"]:"";
+									var sMsg = (record["sellerMessage"])?record["sellerMessage"]:"";
+									
+									var sellerMessageAndBuyerMessage = sMsg+" "+  bMsg;
+									var sellerMessageAndBuyerMessage2 = sMsg+" "+ bMsg;
+									if(record["printRemark"]){
+										sellerMessageAndBuyerMessage = record["printRemark"];
+										sellerMessageAndBuyerMessage2 = record["printRemark"]+ " " + sellerMessageAndBuyerMessage2;
+									}
+									
+									sellerMessageAndBuyerMessage = sfSrc.MainTain.cutStr(sellerMessageAndBuyerMessage,36);
+									sellerMessageAndBuyerMessage2 = sfSrc.MainTain.cutStr(sellerMessageAndBuyerMessage2,90);
+									
+									strHtml = strHtml.replace(/{sellerMessageAndBuyerMessage}/g,sellerMessageAndBuyerMessage);
+									strHtml = strHtml.replace(/{sellerMessageAndBuyerMessage2}/g,sellerMessageAndBuyerMessage2);
+								}
+								
+								if(key === "goodsName" || key === "goodsNo"){
+									var goodsNameAndNo = (record["goodsName"]?record["goodsName"]:"");
+									goodsNameAndNo = goodsNameAndNo + " " + (record["goodsNo"]?record["goodsNo"]:"");
+									goodsNameAndNo = sfSrc.MainTain.cutStr(goodsNameAndNo,66);
+									strHtml = strHtml.replace(/{goodsNameAndNo}/g,goodsNameAndNo);
+								}
+								
+								if(key === "defaultShipperName"){
+									var adhesiveDefaultShipperName = record["defaultShipperName"]?record["defaultShipperName"]:"";
+									strHtml = strHtml.replace(/{adhesive_defaultShipperName}/g,sfSrc.MainTain.cutStr(adhesiveDefaultShipperName,12));
+								}
+								       
+								if(value){
+									if(key === "orderAmount"){
+										value = parseFloat(value)/100;
+										strHtml = strHtml.replace(eval("/{"+key+"}/g"),value);
+									}else if(key === "packAmount"){
+										value = parseFloat(value)/100;
+										strHtml = strHtml.replace(eval("/{"+key+"}/g"),value);
+									}else if(key === "goodsName"){
+										strHtml = strHtml.replace(eval("/{goodsName}/g"),sfSrc.MainTain.cutStr(value,68));
+										strHtml = strHtml.replace(eval("/{goodsName2}/g"),sfSrc.MainTain.cutStr(value,36));
+									}else if(key === "isInsurance"){
+										var showText = value==="1"?"保价":"";
+										var insuranceAmount = (value==="1")?(record["insuranceAmount"]/100):"";
+										strHtml = strHtml.replace(/{insuranceAmount}/g,insuranceAmount);
+										strHtml = strHtml.replace(eval("/{"+key+"}/g"),showText);
+									}else if(key === "serviceType"){
+										var showText = (value!=="01")?"代收货款":"";
+										var showCodText = (value!=="01")?"COD":"";
+										var codAmount = (value!=="01")?(record["codAmount"]/100):"";
+										strHtml = strHtml.replace(/{codAmount}/g,codAmount);
+										strHtml = strHtml.replace(/{codTitle}/g,showCodText);
+										strHtml = strHtml.replace(eval("/{"+key+"}/g"),showText);
+									}else if(key === "expressPayMethod"){
+										var hiddenCls = (value == "2" || value == "3")?"hidden" : "";
+										var showText = (value == "1" || value=="3" ? "寄付":(value=="2"?"到付":(value=="4"?"第三方付":"其他")));
+										strHtml = strHtml.replace(/{payCustNumber}/g,hiddenCls);
+										strHtml = strHtml.replace(/{expressPayMethod}/g,showText);
+										
+									}else{
+										strHtml = strHtml.replace(eval("/{"+key+"}/g"),value);
+									}
+								}else{
+									strHtml = strHtml.replace(eval("/{"+key+"}/g"),"");
+								}
+							}
+
+							strHtml = hidAdditionalService(options["templateType"],strHtml,adhesiveType);
+							strHtml = showLogo(serviceType,strHtml);
+							
+							if(options["templateType"] === "3"){
+								addA5(serviceType,strHtml,record);                  		// 将A5的页面添加到LODOP
+								addAdvertising(serviceType,options["templateType"],record);
+							}else if(options["templateType"] === "2"){
+								
+								if(adhesiveType === "1"){
+									addAdhesive(serviceType,strHtml,record);       			// 将背胶页面添加到LODOP
+									addAdvertising(serviceType,options["templateType"],record);          			// 将背胶的广告页面添加到LODOP
+								}else if(adhesiveType === "2"){
+									strHtml = showAllGoodInfo(strHtml,record);			    // 显示所有的托寄物信息
+									addDoubleAdhesive(strHtml,record);                     // 双联背胶热敏运单
+									
+								}else if(adhesiveType === "3"){
+									strHtml = showAllGoodInfo(strHtml,record);			    // 显示所有的托寄物信息
+									addThreeAdhesive(strHtml,record);                      // 三联背胶热敏运单
+								}
+								
+								
+								
+								addSubAdhesives(serviceType,adhesiveType,strHtml,record);               // 子母件时增加子件
+								addSignReturnAdhesives(serviceType,adhesiveType,strHtml,record);        //  增加签回单
+								
+								addShipperlist(serviceType,record);            			   // 运营端勾选了背胶热敏则执行此代码
+								LODOP.SET_PRINTER_INDEXA(adhesive);
+							}
+							
+						}
+						
+						//$(document.body).html($("#adhesive_template_03").html());return;
+						//$(document.body).html($("#adhesive_template_02").html());return;
+						//$(document.body).html(strHtml);return; //测试用的代码$("#advertising_template").html()
+						//$(document.body).html($("#shipperList_template_top").html());return; //测试用的代码$("#shipperList_template").html()
+						//$(document.body).html($("#a5_advertising_template").html());return; 
+						
+						if(options["printType"]==="preview"){
+							var printNumber = LODOP.PREVIEW();
+							savePreviewPrintNumber(options["oids"],printNumber);
+						}else{
+							var ifPrinted = LODOP.PRINT();
+							changeLastStatus(options["oids"],ifPrinted);
+						}
+					}
+				});
+			}
+		}; 
+		
+		function printPin(options){
+			LODOP=getLodop(document.getElementById('LODOP_OB'),document.getElementById('LODOP_EM'));
+			//LODOP.PRINT_INITA(0,0,843,568,"套打");
+			LODOP.PRINT_INIT("");
+			if(pinSelected=='-1'){
+				adhesive = '-1';
+				afourSelected = '-1';
+				pinSelected = LODOP.SELECT_PRINTER();
+			}
+			if(pinSelected!='-1'){
+				var url = sfLib.Constant.actionUrls["getTemplateOne"];
+				var params = {"templateType" : options["templateType"],"cmpyType" : options["cmpyType"],"pid":options["pid"]};
+				jQuery.ajax({type:"post",url:url,data:params,success:
+					function(templateResult)
+					{
+						jQuery.ajax({
+							type:"post",
+							url:sfLib.Constant.actionUrls["getLogisticsOrders"],
+							data:{"orderNo":options["oids"],"addressId":options["addressId"],"templateType":options["templateType"],"pinSelected":pinSelected,
+                                "adhesive":adhesive,"afourSelected":afourSelected,"isPrint":options["isPrint"],"isShielded":options["isShielded"]},
+							success:function(result){
+								var records = result.data.orderInfo;
+								for(var i=0;i<records.length;i++){
+									
+									//setPinPage(options["cmpyType"]);
+									
+									var templateConfig = templateResult.data.configInfo;
+									templateConfig = templateConfig.replace(/{currentDate}/g,(new Date()).Format("yyyy-M-d"));
+									templateConfig = sfSrc.MainTain.filterBeforePrint(records[i],templateConfig);
+									
+									for(key in records[i]){
+										var filterResult = sfSrc.MainTain.filterRecord(key,records[i][key],records[i]);
+										if(filterResult.value){
+											templateConfig = templateConfig.replace(eval("/{"+filterResult.key+"}/g"),filterResult.value);
+										}else{
+											templateConfig = templateConfig.replace(eval("/{"+filterResult.key+"}/g"),"");
+										}
+										
+									}
+									
+									var fontSize = templateResult.data.fontSize;
+									var cfig = jQuery.parseJSON(templateConfig);
+									
+									cfig["fontSize"] = fontSize;
+									cfig["expressType"] = records[i]["expressType"];
+									
+									sfSrc.MainTain.displayDesign(cfig,true);
+									
+									if(options["printType"]==="preview"){
+										LODOP.ADD_PRINT_SETUP_BKIMG(cfig.BKIMG);
+										LODOP.SET_SHOW_MODE("BKIMG_IN_PREVIEW",1); 	
+										LODOP.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW",1);//打印后自动关闭预览窗口
+										
+										/**************套打打印出条码*************************/
+										//LODOP.SET_PRINT_STYLEA(0,"NotOnlyHighPrecision",true);
+										//LODOP.ADD_PRINT_BARCODE(10,300,239,65,"128C","966995577410");
+										/**************套打打印出条码*************************/
+									}
+								}
+								
+								LODOP.SET_PRINT_PAGESIZE(1,0,0,"ecs");
+								LODOP.SET_PRINTER_INDEXA(pinSelected);
+								if(options["printType"]==="preview"){
+									var printNumber = LODOP.PREVIEW();
+									savePreviewPrintNumber(options["oids"],printNumber);
+								}else{
+									var ifPrinted = LODOP.PRINT();
+									changeLastStatus(options["oids"],ifPrinted);
+								}
+							}
+						,dataType:"json"});
+					},
+					error: function(request, textStatus, errorThrown){
+						alert("textStatus="+textStatus);
+					}
+					,dataType:"json"});
+			}
+		}
+		
+		function setPinPage(companyType){
+			if(companyType==="01"){              // 顺丰套打
+				LODOP.SET_PRINT_PAGESIZE(1,2180,1509,"");
+			}
+		}
+		
+		function hidAdditionalService(templateType,strHtml,adhesiveType){
+			var goodsProps_style = "",lineClassName = "",number = 0,dl;
+			if(templateType === "2"){    // 背胶
+				if(adhesiveType === "1"){
+					dl = jQuery("#adhesive_additional_service",strHtml);
+				}else if(adhesiveType === "2"){
+					dl = jQuery("#adhesive2_additional_service",strHtml);
+				}else if(adhesiveType === "3"){
+					dl = jQuery("#adhesive3_additional_service",strHtml);
+				}
+				
+			}else if(templateType === "3"){  // A5
+				number = number + 2;
+				dl = jQuery("#a5_additional_service",strHtml);
+			}
+			
+			var additionalServices = jQuery(".insuranceAmount,.codAmount,.returnLogisticsNo,.packAmount,.tradeNo",dl);
+			for(var i=0;i<additionalServices.length;i++){
+				if(!jQuery.trim(jQuery(additionalServices[i]).html())){
+					number = number + 1;
+					lineClassName = jQuery(additionalServices[i]).attr("class")+"_dd";
+					strHtml = strHtml.replace(eval("/{"+lineClassName+"}/g"),"hidden");
+				}
+			}
+			
+			goodsProps_style = "line"+number;
+			strHtml = strHtml.replace(/{goodsProps_style}/g,goodsProps_style);
+			return strHtml;
+		}
+		
+		function showLogo(serviceType,strHtml){
+			if(serviceType==="04"){      // 安心购订单
+				strHtml = strHtml.replace(/{adhesiveLogo}/g,"<img src='/static/images/axg_awd_logo.png?r=11'>");
+				strHtml = strHtml.replace(/{A5Logo}/g,"<img src='/static/images/awd_logo_ad.png?r=66'>");
+				
+			}else{                      //  非安心购
+				strHtml = strHtml.replace(/{adhesiveLogo}/g,"<img src='/static/images/awd_logo.png?r=22'>");
+				strHtml = strHtml.replace(/{A5Logo}/g,"<img src='/static/images/awd_logo_A5.png?r=44'>");
+			}
+			
+			return strHtml;
+		}
+		function isIE10(){
+			var flag = false;
+			try{
+				if(window.matchMedia("screen and (-ms-high-contrast: active), (-ms-high-contrast: none)").matches){
+					flag = true;
+				}
+			}catch(e){ }
+			
+			return flag;
+		}
+		function addA5(serviceType,strHtml,record){
+			LODOP.NewPage();
+			LODOP.ADD_PRINT_HTM(55,55,"100%","100%",strHtml);
+			LODOP.SET_PRINT_PAGESIZE(2,0,0,"A4");
+			LODOP.ADD_PRINT_BARCODE(64,320,160,46,"128C",record["logisticsNo"]);
+			
+			if(serviceType==="04"){      // 安心购订单		
+				if(isIE10()){
+					LODOP.ADD_PRINT_BARCODE(550,320,160,46,"128C",record["logisticsNo"]);
+				}else{
+					LODOP.ADD_PRINT_BARCODE(585,320,160,46,"128C",record["logisticsNo"]);
+				}
+			}else{
+				if(isIE10()){
+					LODOP.ADD_PRINT_BARCODE(644,120,160,46,"128C",record["logisticsNo"]);
+				}else{
+					LODOP.ADD_PRINT_BARCODE(680,120,160,46,"128C",record["logisticsNo"]);
+				}
+			}
+			
+			LODOP.SET_PRINTER_INDEXA(afourSelected);
+		}
+		
+		function showAllGoodInfo(strHtml,record){
+			var tradeNo,tmpGoodArray,allGoodDescs = new Array();
+			var goods = record["goodsList"],good;
+			
+			tradeNo = record["tradeNo"]?(record["tradeNo"]+"&nbsp;&nbsp;"):"";
+			for(var i = 0;i<goods.length;i++){
+				good = goods[i];
+				
+				tmpGoodArray = new Array();
+				if(good["goodsNo"]){
+					tmpGoodArray.push(good["goodsNo"]);
+				}
+				if(good["goodsName"]){
+					tmpGoodArray.push(good["goodsName"]);
+				}
+				if(good["goodsProps"]){
+					tmpGoodArray.push(good["goodsProps"]);	
+				}
+				if(good["quantity"]){
+					tmpGoodArray.push(good["quantity"]);	
+				}
+				allGoodDescs.push(tmpGoodArray.join(",")); 
+			}
+			
+			
+			var goodInfo = tradeNo + allGoodDescs.join("/");
+			goodInfo = sfSrc.MainTain.cutStr(goodInfo,288);
+			strHtml = strHtml.replace(/{allGoodDesc}/g,goodInfo);
+			return strHtml;
+		}
+		
+		function addDoubleAdhesive(strHtml,record){
+			strHtml = setValueBy(strHtml,[".adh_wb_sender_receiver7"],[sfSrc.MainTain.cutStr($(".adh_wb_sender_receiver7",strHtml).html(),98)]);
+			
+			LODOP.NewPageA();
+			LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+			
+			LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",record["logisticsNo"]);
+			LODOP.ADD_PRINT_BARCODE(346,30,150,60,"128C",record["logisticsNo"]);
+		}
+		
+		function addThreeAdhesive(strHtml,record){
+			strHtml = setValueBy(strHtml,[".adh_wb_sender_receiver9"],[sfSrc.MainTain.cutStr($(".adh_wb_sender_receiver9",strHtml).html(),98)]);
+			LODOP.NewPageA();
+			LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+			
+			LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",record["logisticsNo"]);
+			LODOP.ADD_PRINT_BARCODE(344,30,150,60,"128C",record["logisticsNo"]);
+			LODOP.ADD_PRINT_BARCODE(575,30,150,60,"128C",record["logisticsNo"]);
+		}
+		
+		function addAdhesive(serviceType,strHtml,record){
+			//strHtml = setValueBy(strHtml,[".2011GoodsProps"],[sfSrc.MainTain.cutStr($(".2011GoodsProps",strHtml).html(),34)]);
+			strHtml = setValueBy(strHtml,[".2011SignGoodsName"],[sfSrc.MainTain.cutStr($(".2011SignGoodsName",strHtml).html(),66)]);
+			strHtml = setValueBy(strHtml,[".adh_wb_sender_shipperInfo4"],[sfSrc.MainTain.cutStr($(".adh_wb_sender_shipperInfo4",strHtml).html(),74)]); 
+			strHtml = setValueBy(strHtml,[".adh_wb_sender_receiver4"],[sfSrc.MainTain.cutStr($(".adh_wb_sender_receiver4",strHtml).html(),140)]);  
+			
+			LODOP.NewPageA();
+			LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+			//LODOP.SET_PRINT_PAGESIZE(3,975,30,"");
+			LODOP.ADD_PRINT_BARCODE(7,175,160,46,"128C",record["logisticsNo"]);
+			
+			if(serviceType==="04"){      // 安心购订单
+				LODOP.ADD_PRINT_BARCODE(372,175,160,46,"128C",record["logisticsNo"]);
+			}else{                       // 非安心购订单
+				LODOP.ADD_PRINT_BARCODE(432,17,160,46,"128C",record["logisticsNo"]);
+			}
+		}
+		function addAdvertising(serviceType,templateType,record){
+			var strHtml;
+			if(serviceType==="04"){      // 安心购订单
+				LODOP.NewPageA();
+				if(templateType === "3"){
+					strHtml = jQuery("#a5_advertising_template").html();
+					strHtml = strHtml.replace(/{axgReceiverContact}/g,(record["axgReceiverContact"]||""));
+					LODOP.ADD_PRINT_HTM(55,55,"100%","100%",strHtml);
+					LODOP.SET_PRINT_PAGESIZE(2,0,0,"A4");
+					LODOP.ADD_PRINT_BARCODE(75,260,160,46,"128C",record["logisticsNo"]);
+				}else if(templateType === "2"){
+					strHtml = jQuery("#advertising_template").html();
+					strHtml = strHtml.replace(/{axgReceiverContact}/g,(record["axgReceiverContact"]||""));
+					LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+					LODOP.ADD_PRINT_BARCODE(20,175,160,46,"128C",record["logisticsNo"]);
+				}
+				
+			}
+		}
+		
+		function addSubAdhesives(serviceType,adhesiveType,strHtml,record){
+			strHtml = strHtml.replace(/{returnLogisticsNo_dd}/g," hidden ");
+			var subAdhesives = record["subLogisticsNos"]||[],len = subAdhesives.length,number = "";
+			for(var i=1;i<=len;i++){
+				number = (i + 1) + "/" + (len + 1);
+				strHtml = setValueBy(strHtml,[".subCountNum"],[number]);  
+				LODOP.NewPageA();
+				LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+				
+				
+				if(adhesiveType === "1"){
+					LODOP.ADD_PRINT_BARCODE(7,175,160,46,"128C",record["subLogisticsNos"][i-1]);
+					if(serviceType==="04"){      // 安心购订单
+						LODOP.ADD_PRINT_BARCODE(372,175,160,46,"128C",record["subLogisticsNos"][i-1]);
+					}else{                       // 非安心购订单
+						LODOP.ADD_PRINT_BARCODE(430,17,160,46,"128C",record["subLogisticsNos"][i-1]);
+					}	
+				}else if(adhesiveType === "2"){
+					LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",record["subLogisticsNos"][i-1]);
+					LODOP.ADD_PRINT_BARCODE(346,30,150,60,"128C",record["subLogisticsNos"][i-1]);
+				}else if(adhesiveType === "3"){
+					LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",record["subLogisticsNos"][i-1]);
+					LODOP.ADD_PRINT_BARCODE(344,30,150,60,"128C",record["subLogisticsNos"][i-1]);
+					LODOP.ADD_PRINT_BARCODE(575,30,150,60,"128C",record["subLogisticsNos"][i-1]);
+				}
+				
+				pageNumber = pageNumber + 1;                        //  多一个字母件计数
+			}
+		 
+		}  
+		
+		function addSignReturnAdhesives(serviceType,adhesiveType,strHtml,record){
+			strHtml = strHtml.replace(/{returnLogisticsNo_dd}/g," hidden ");
+			
+			var returnLogisticsNo = record["returnLogisticsNo"];
+			if(returnLogisticsNo){
+				strHtml = setValueBy(strHtml,[".subCountNum"],["&nbsp;"]);  
+				LODOP.NewPageA();
+				var classNames = [".adh_wb_sender_receiver1",".adh_wb_sender_shipperInfo1 .show",
+				                  ".adh_wb_sender_receiver2",".adh_wb_sender_shipperInfo2 .show",
+				                  ".adh_wb_sender_receiver3",".adh_wb_sender_shipperInfo3 .show",
+				                  ".adh_wb_sender_receiver4",".adh_wb_sender_shipperInfo4",
+				                  ".adh_wb_sender_receiver5",".adh_wb_sender_shipperInfo5",
+				                  ".adh_wb_sender_receiver6",".adh_wb_sender_shipperInfo6 .show",
+				                  ".adh_wb_sender_receiver7",".adh_wb_sender_shipperInfo7",
+				                  ".adh_wb_sender_receiver8",".adh_wb_sender_shipperInfo8",
+				                  ".adh_wb_sender_receiver9",".adh_wb_sender_shipperInfo9",
+				                  ".adh_wb_sender_receiver10",".adh_wb_sender_shipperInfo10",
+				                  ".adh_wb_sender_receiver11",".adh_wb_sender_shipperInfo11"];
+			
+					var shipperInfo = [(record["returnShipperName"]||""),(record["returnShipperMobile"]||""),
+					                   (record["returnShipperMobile"]?"":(record["returnShipperPhone"]||"")),
+					                   (record["returnShipperFullAddress"]||"")].join(" ");
+				
+					var values = [$(".adh_wb_sender_shipperInfo1 .hidden",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo2 .hidden",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo3 .hidden",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo4",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo5",strHtml).html(),shipperInfo,
+				              sfSrc.MainTain.cutStr($(".adh_wb_sender_shipperInfo6 .hidden",strHtml).html(),28),sfSrc.MainTain.cutStr(shipperInfo,62),
+				              $(".adh_wb_sender_shipperInfo7",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo8",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo9",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo10",strHtml).html(),shipperInfo,
+				              $(".adh_wb_sender_shipperInfo11",strHtml).html(),shipperInfo];
+					
+				strHtml = setValueBy(strHtml,classNames,values);		
+				
+				
+				classNames = [".signGoodsName",".signExpressType",".signPackWeight",".signTotalMoney",".signExpressPayMethod",
+				              ".signOtherService",
+				              ".receiverAddressCode1",".shipperAddressCode1",
+				              ".receiverAddressCode2",".shipperAddressCode2",
+				              ".receiverAddressCode3",".shipperAddressCode3",
+				              ".receiverAddressCode4",".shipperAddressCode4"];
+				
+				values = ["签单返还","&nbsp;","1KG","3","到付","&nbsp;",
+				          $(".shipperAddressCode1",strHtml).html(),$(".receiverAddressCode1",strHtml).html(),
+				          $(".shipperAddressCode2",strHtml).html(),$(".receiverAddressCode2",strHtml).html(),
+				          $(".shipperAddressCode3",strHtml).html(),$(".receiverAddressCode3",strHtml).html(),
+				          $(".shipperAddressCode4",strHtml).html(),$(".receiverAddressCode4",strHtml).html()];
+				strHtml = setValueBy(strHtml,classNames,values);
+				
+				
+				LODOP.ADD_PRINT_HTM(0,2,"100%","100%",strHtml);
+				
+				if(adhesiveType === "1"){
+					LODOP.ADD_PRINT_BARCODE(7,175,160,46,"128C",returnLogisticsNo);
+					if(serviceType==="04"){      // 安心购订单
+						LODOP.ADD_PRINT_BARCODE(372,175,160,46,"128C",returnLogisticsNo);
+					}else{                       // 非安心购订单
+						LODOP.ADD_PRINT_BARCODE(430,17,160,46,"128C",returnLogisticsNo);
+					}
+				}else if(adhesiveType === "2"){
+					LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",returnLogisticsNo);
+					LODOP.ADD_PRINT_BARCODE(346,30,150,60,"128C",returnLogisticsNo);
+				}else if(adhesiveType === "3"){
+					LODOP.ADD_PRINT_BARCODE(157,30,210,80,"128C",returnLogisticsNo);
+					LODOP.ADD_PRINT_BARCODE(344,30,150,60,"128C",returnLogisticsNo);
+					LODOP.ADD_PRINT_BARCODE(575,30,150,60,"128C",returnLogisticsNo);
+				}
+				
+				pageNumber = pageNumber + 1;                        //  多一个签回单计数
+			}
+			
+		}
+		
+		function setValueBy(strHtml,classNames,values){
+			classNames = classNames||[];
+			var tempContainer = jQuery(".tempContainer").empty(); 
+			jQuery(strHtml).appendTo(tempContainer);
+			for(var i=0;i<classNames.length;i++){
+				if(values[i]){
+					jQuery(classNames[i],tempContainer).html(values[i]);
+				}
+				
+			}
+			strHtml = tempContainer.html();
+			return strHtml;
+		}
+		
+		function addShipperlist(serviceType,record){	
+			var adhesiveType = record["adhesiveType"];
+			
+			var shipperDate = record.shipperDate;
+			var lastShipperItem = jQuery("#shipper_table_list table.lastShipperDate");
+			
+			var shipperTplTop = jQuery("#shipperList_template_top");
+			var shipperListItem = jQuery("#shipper_list_item");
+			var shipperTplBottom = jQuery("#shipperList_template_bottom");
+			
+			pageNumber = pageNumber + 1;              			   // 1 代表订单页
+			if(serviceType==="04" && adhesiveType==="1"){         // 安心购订单
+				pageNumber = pageNumber + 1;    				 // 1代表广告页
+			}
+			
+			var order = record["order"];
+			if(order){
+				LODOP.NewPageA();
+				jQuery("#shipper_table_list table:not(.lastShipperDate)").remove();
+				
+				var trade = order["trades"][0];
+				jQuery(".shipperlist_tradeNo").html(record["logisticsNo"]||"");				// 运单号
+				jQuery(".shipperlist_orderNo").html(trade["tradeNo"]||"");				   // 订单号
+				jQuery("#shopName").html(trade["shopName"]||"");              //  店铺名称
+				jQuery("#receiverName").html(sfSrc.MainTain.cutStr((order["receiverName"]||""),8));	 //   买家姓名
+			
+				jQuery("#buyerNick").html(sfSrc.MainTain.cutStr((trade["buyerNick"]||""),14));         //    买家昵称
+				jQuery("#postAmount").html(((trade["postAmount"]/100).toFixed(2))||"");       //   物流费
+				jQuery("#shipperDate").html(shipperDate||"");    		  //   发货日期
+				
+				//jQuery("#shipperContact").html(record["shipperContact"]);           // 商家的发货地址
+				//jQuery("#shipperFullAddress").html(sfSrc.MainTain.cutStr(record["shipperFullAddress"],92));   // 商家发货地址的联系方式
+				
+				var shipperBuyerMessage = trade["buyerMessage"]||"";   // 买家留言
+				var shipperSellerRemark = trade["sellerMessage"]||"";  // 卖家备注
+				jQuery("#shipperBuyerMessage").html(sfSrc.MainTain.cutStr(shipperBuyerMessage,98));     
+				jQuery("#shipperSellerRemark").html(sfSrc.MainTain.cutStr(shipperSellerRemark,98));   
+				
+				var goods = order["goods"];
+				var totalQuantity = 0,totalPrice = 0,discountAmountPrice = 0;
+				for(var index=0;index<goods.length;index++){
+					var tpl = shipperListItem.html();
+					tpl = tpl.replace(/{goodsNo}/g,goods[index]["goodsNo"]||"");
+					tpl = tpl.replace(/{goodsName}/g,sfSrc.MainTain.cutStr((goods[index]["goodsName"]||""),46));
+					tpl = tpl.replace(/{goodsProps}/g,goods[index]["goodsProps"]||"");
+					tpl = tpl.replace(/{quantity}/g,goods[index]["quantity"]||"");
+					
+					discountAmountPrice = goods[index]["price"]*goods[index]["quantity"] - goods[index]["discountAmount"];
+					
+					tpl = tpl.replace(/{price}/g,(discountAmountPrice/100).toFixed(2)||"");
+					jQuery(tpl).insertBefore(lastShipperItem);
+					
+					totalQuantity = totalQuantity + goods[index]["quantity"];
+					totalPrice = totalPrice + (discountAmountPrice/100) ;
+				}
+				
+				jQuery("#totalQuantity").html(totalQuantity);
+				jQuery("#totalPrice").html(totalPrice.toFixed(2));
+			
+				
+				pageNumber = beforeNewPage(shipperTplTop,pageNumber,serviceType,adhesiveType);
+				
+				if(adhesiveType === "1"){
+					LODOP.ADD_PRINT_HTM(0,1,367,488,shipperTplTop.html());  // 单联
+				}else if(adhesiveType === "2"){
+					LODOP.ADD_PRINT_HTM(0,1,367,600,shipperTplTop.html());  // 双联
+				}else if(adhesiveType === "3"){
+					LODOP.ADD_PRINT_HTM(0,1,367,784,shipperTplTop.html());    // 三联
+				}
+				
+				LODOP.ADD_PRINT_HTM(480,1,367,300,shipperTplBottom.html());
+				LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+				LODOP.SET_PRINT_STYLEA(0,"PageIndex",pageNumber);
+				LODOP.SET_PRINT_STYLEA(0,"Vorient",1);
+			
+			}
+		}
+		
+		function beforeNewPage(shipperTplTop,pageNumber,serviceType,adhesiveType){ 
+			var maxHeight,minHeight;
+			if(adhesiveType === "1"){
+				maxHeight = 510 , minHeight = 380;    //单联
+			}else if(adhesiveType === "2"){
+				maxHeight = 610 , minHeight = 430;    //双联
+			}else if(adhesiveType === "3"){
+				maxHeight = 810 , minHeight = 650;      //三联
+			}
+			
+			var listCnt = jQuery("#shipper_table_list");
+			var blankCnt = jQuery("#blank_shipper_table");
+			var height = $(shipperTplTop).css("height");
+			height = parseInt(height.replace("px",""));
+			
+			var leftHeight = height;
+			
+			if(height>maxHeight){
+				var number = parseInt(height/maxHeight);
+				leftHeight = (height-number * maxHeight);
+				pageNumber = pageNumber + number;
+			}
+			  
+			if(leftHeight>=minHeight && leftHeight<=maxHeight){
+				blankCnt.css("height",(maxHeight-leftHeight));
+				listCnt.append(blankCnt.html());
+				pageNumber = pageNumber + 1;
+			}
+			
+			return pageNumber + 1;
+			
+		}
+		
+		function savePreviewPrintNumber(oids,printNumber){
+			if(printNumber !==0){
+				var url = "/orders/preview_print";
+				var params = {"orderNo":oids,"printNumber":printNumber};
+				jQuery.ajax({type:"post",url:url,data:params,success:function(data){
+					changeLastStatus(oids,printNumber);
+				},dataType:"json"});
+			}
+		}
+		
+		function changeLastStatus(oids,printNumber){
+			if(oids){
+				oids = oids.split(",");
+				if(printNumber>=1 || printNumber===true){
+					for(var i=0;i<oids.length;i++){
+						jQuery(".list_data td[title='"+oids[i]+"']",window.opener.document.body).parent().find("td[aria-describedby='tabs-1-table_printNum']").html("已打印");
+					}
+				}
+			}
+			window.close();
+		}
+	</script>
+	
+	<object width="0" height="0" classid="clsid:2105C259-1E0C-4534-8141-A753534CB4CA" id="LODOP_OB"> 
+	  <param value="内嵌显示区域" name="Caption">
+	  <param value="1" name="Border">
+	  <param value="#C0C0C0" name="Color">
+	  <embed width="0" height="0" pluginspage="install_lodop.exe" type="application/x-print-lodop" id="LODOP_EM">
+	</object>
+	
+	<script type="text/javascript">
+		var LODOP,options = {},pageNumber = 0;
+		var adhesive = (''||'-1');
+		var pinSelected = (''||'-1');
+		var afourSelected = (''||'-1');
+		options["pid"] = '1';
+		options["oids"] = 'GO1400079897112';
+		options["cmpyType"] = '01';
+		options["printType"] = 'preview';
+		options["addressId"] = '';
+		options["templateType"] = '1';
+        options["isPrint"] = 'false';
+        options["isShielded"] = '0';
+        
+		if(options["templateType"] === '2'||options["templateType"] === '3'){
+			printAdhesiveOrEwaybill(options);
+		}else{
+			printPin(options);
+		}
+		
+		function getPrinterIndex(type){
+			var printerCount = LODOP.GET_PRINTER_COUNT(),printerName;
+			for(var idx=0;idx<printerCount;idx++){
+				printerName = LODOP.GET_PRINTER_NAME(idx);
+				if(printerName && printerName.indexOf(type)!==-1){
+					return idx;
+				}
+			}
+		}
+	</script>
+</html>

@@ -377,6 +377,9 @@
                             <a href="{{ url_for('admin.print_order_invoices',order_id=order.order_id) }}"
                                class="btn btn-small btn-block" title="发货单打印" target="_blank">
                                 发货单打印</a>
+                                {% if order.express_id==2 %}
+                                fdsa
+                                {% else %}
                                 <a href="#" id="express-print" class="btn btn-small btn-block btn-primary" title="快递单打印"
                                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
                                    data-express_num="{{ order.express_num }}"
@@ -389,6 +392,7 @@
                                    data-tel="{{ order.shipping_address.tel|default('',true) }}"
                                    data-postcode="{{ order.shipping_address.postcode|default('',true) }}"
                                    date-fee="{{order.actual_fee if order.payment_type==1 else 0 }}">快递单打印</a>
+                                {% endif %}
 
                         {% endif %}
 

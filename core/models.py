@@ -62,6 +62,8 @@ class Order(db.Model):
 
     express_id = Column(db.SmallInteger, nullable=False, default=0)#快递公司
     express_number = Column(db.String(50), index=True)#快递号
+    express_sfdestcode = Column(db.String(5))#顺风目的地代码
+    express_sfok = Column(db.Boolean, nullable=False, default=True)#顺风确认 john
     lhyd_postal = relationship('Order_LHYD_Postal', primaryjoin="(Order_LHYD_Postal.order_id == Order.order_id)")
 
     remark = Column(db.String(500))#订单备注
@@ -1421,7 +1423,15 @@ class Outbound(db.Model):
     created = Column(db.DateTime, default=datetime.now, nullable=False)
     
 
+class Order_Operator(db.Model):
+    ''''''
+    __tablename__ = 'order_operator'
+    id = Column(db.Integer, primary_key=True)
+    order_id = Column(db.BigInteger(unsigned=True), db.ForeignKey('order.order_id'), nullable=False)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)
+    operate_time = Column(db.DateTime, default=datetime.now)
+    to_operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)
+    remark = Column(db.String(100))#备注
+    ip = Column(db.String(30))#ip
 
-
-    
     

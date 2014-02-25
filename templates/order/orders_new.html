@@ -52,6 +52,95 @@
 
     <script type="text/javascript">
     $(function () {
+        //增加顺风打印
+		$('a#sf-express-print').on('click',function(){            
+			if($('a#sf-express-print').attr("disabled") == 'disabled'){
+				return;
+			}
+			$('a#sf-express-print').attr("disabled",true);
+			var order_id = parseInt($(this).data('order_id'));
+			var req = $.ajax({
+				url: "{{ url_for('admin.sf_order') }}",
+				dataType: "json",
+				type: 'POST',
+				data: {order_id: order_id}
+			});
+			req.done(function (data) {
+				if (data.result == true) {
+					$('a#sf-express-print').attr("disabled",false);
+					window.open('/order/printsf/'+order_id);
+					window.location.reload(true);
+				}
+				else {
+					bootbox.alert("操作失败：" + data.error);
+					$('a#sf-express-print').attr("disabled",false);
+				}
+			});
+			req.fail(function (request, status, error) {
+				bootbox.alert('发生错误:' + error);
+				$('a#sf-express-print').attr("disabled",false);
+			});
+			return false;
+			
+        });
+        //增加顺风取消
+		$('a#sf-express-qx').on('click',function(){            
+			if($('a#sf-express-qx').attr("disabled") == 'disabled'){
+				return;
+			}
+			$('a#sf-express-qx').attr("disabled",true);
+			var order_id = parseInt($(this).data('order_id'));
+			var req = $.ajax({
+				url: "{{ url_for('admin.sf_quxiao') }}",
+				dataType: "json",
+				type: 'POST',
+				data: {order_id: order_id}
+			});
+			req.done(function (data) {
+				if (data.result == true) {
+					window.location.reload(true);
+				}
+				else {
+					bootbox.alert("操作失败：" + data.error);
+					$('a#sf-express-qx').attr("disabled",false);
+				}
+			});
+			req.fail(function (request, status, error) {
+				bootbox.alert('发生错误:' + error);
+				$('a#sf-express-qx').attr("disabled",false);
+			});
+			return false;
+			
+        });
+        //增加顺风确认
+		$('a#sf-express-queren').on('click',function(){            
+			if($('a#sf-express-queren').attr("disabled") == 'disabled'){
+				return;
+			}
+			$('a#sf-express-queren').attr("disabled",true);
+			var order_id = parseInt($(this).data('order_id'));
+			var req = $.ajax({
+				url: '{{ url_for('admin.sf_order') }}',
+				dataType: "json",
+				type: 'POST',
+				data: {order_id: order_id}
+			});
+			req.done(function (data) {
+				if (data.result == true) {
+					window.location.reload(true);
+				}
+				else {
+					bootbox.alert("操作失败：" + data.error);
+					$('a#sf-express-print').attr("disabled",false);
+				}
+			});
+			req.fail(function (request, status, error) {
+				bootbox.alert('发生错误:' + error);
+				$('a#sf-express-print').attr("disabled",false);
+			});
+			return false;
+			
+        });
         var all_express = JSON.parse('{{ config['EXPRESS_CONFIG']|tojson|safe }}');
         $('select').select2({
             width:'145px'
@@ -786,7 +875,8 @@
                         class="block {% if order.payment_type==2 %}label{% else %}{% endif %}">{{ order.payment_type_name }}</span>
                 </td>
                 <td>{{ order_status(order.status) }}</td>{% set express_id2 = order.lhyd_postal[0] %}
-                <td>{% if order.express_id %}{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}{% endif %}
+                <td>{% if order.express_sfdestcode and order.status == 1 %}<span style="color:#FF0000; font-weight:bold;">顺风订单流程无法逆转,请重新下单</span>{% endif %}
+                {% if order.express_id %}{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}{% endif %}
                     {% if order.express_number and order.express_id != 99 %}
                         <br/>
                         {% if order.express_id in (3,7,) %}
@@ -814,7 +904,13 @@
                                class="btn btn-small btn-block" title="修改地址"><i class="icon-edit"></i>
                                 地址修改</a>
                         {% endif %}
-
+					
+                        {% if order.status==4 and order.express_id==1 %}
+                            <a href="{{ url_for('admin.print_sf',order_id=order.order_id) }}"
+                               class="btn btn-small btn-block {% if order.is_print_invoice %}visited{% endif %}" title="快递单打印" target="print_invoice" data-order_id="{{ order.order_id }}">
+                                快递单打印</a>
+                            <!--<a id="sf-express-qx" class="btn btn-small btn-primary btn-block" data-order_id="{{ order.order_id }}" title="取消快递">取消快递</a>-->
+                        {% endif %}
                         {% if order.status==40 and order.store_id==1 %}
 {#                            {% if not order.is_picker %}#}
 {#                                <a href="javascript:void(0)" class="btn btn-small btn-block" title="验货" data-order_id="{{ order.order_id }}" id="picker">验货</a>#}
@@ -824,6 +920,10 @@
                                 发货单打印</a>
 
                             {% if order.express_id!=99 %}
+                                {% if order.express_id==1 %}
+                                <a id="sf-express-print" class="btn btn-small btn-primary btn-block" data-order_id="{{ order.order_id }}" title="快递号生成">
+                                快递号生成</a>
+                                {% else %}
                                 <a href="javascript:void(0)" id="express-print" class="btn btn-small btn-block {% if order.is_print_express %}visited{% endif %}" title="快递单打印"
                                    data-order_id="{{ order.order_id }}"
                                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
@@ -838,6 +938,7 @@
                                    data-remark="{{ order.user_remark|default('',true) }}"
                                    data-postcode="{{ order.shipping_address.postcode|default('',true) }}"
                                    data-fee="{{order.actual_fee if order.payment_type==1 else 0 }}">快递单打印</a>
+                                {% endif %}
                             {% endif %}
 
                         {% endif %}
@@ -851,7 +952,7 @@
 
                         {% if config['ORDER_OPROVRAL_CONFIG'].has_key(order.status) -%}
                             {%- for name,_css,to_status,payment_type,flag in config['ORDER_OPROVRAL_CONFIG'][order.status] -%}
-                                {% if compare_bitwise(payment_type,order.payment_type) %}
+                                {% if compare_bitwise(payment_type,order.payment_type) and not (order.express_sfdestcode and order.status == 1 and to_status == 2) %}
                                     <a href="javascript:void(0)" class="btn btn-block btn-small {{ _css }}"
                                        from_status="{{ order.status }}"
                                        status="{{ to_status }}" order_id="{{ order.order_id }}" id="operate"

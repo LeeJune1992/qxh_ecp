@@ -195,6 +195,8 @@ ENDPOINTS = [
     ('orders',u'订单查询','A'),
     ('order_search',u'订单检索','A'),
     ('add_order',u'订单录入','A'),
+    ('sf_order',u'快递单生成','A'),
+    ('print_sf',u'打印顺风','A'),
     ('change_order_op',u'订单转派','A'),
     ('order_approval',u'待处理订单','A'),
     ('manage_order',u'订单审批','A'),
@@ -272,6 +274,8 @@ ENDPOINTS = [
     ('sale_report_user_list',u'[营销]会员客户详细','E'),
     ('jiexian_tongji',u'[营销]外呼统计','E'),
     ('xlj_tongji',u'[营销]心力健统计','E'),
+    ('xlj_tongji2',u'[营销]心力健统计报表','E'),
+
 
 
     ('financial_report',u'财务报表','E'),
@@ -353,6 +357,9 @@ ORDER_TYPES = {
     11:u'淘宝订单',
     12:u'亚马逊订单',
     13:u'天猫订单',
+    14:u'心力健送书订单',
+    15:u'心力健成交订单',
+    16:u'心力健复购订单',
     101:u'样品订单',
     102:u'客情订单',
     103:u'调库订单',
@@ -378,6 +385,7 @@ ORDER_MODES = {
     13:u'亚马逊订单',
     14:u'立方网网上订单',
     15:u'爱妻美网上订单',
+    16:u'心力健',
     100:u'其它',
 }
 
@@ -398,6 +406,7 @@ USER_ORIGINS = {
     9:u'聚美',
     10:u'外呼放弃',
     11:u'心力健',
+    12:u'气血和601',
     99:u'其它',
 }
 
@@ -706,9 +715,35 @@ PRODUCT_INTENTION = {
     5:u'心力健',
     4:u'其它'
 }
+#心力健媒体
+XLJ_MEDIA = {
+    1:u'心力健老年生活报',
+    2:u'心力健江南保健报',
+    3:u'心力健快乐老人报（山东）',
+    4:u'心力健长沙晚报',
+    5:u'心力健扬州晚报',
+    6:u'心力健福建老年报',
+    7:u'心力健厦门晚报',
+    8:u'心力健楚天都市报',
+    9:u'心力健北京晨报',
+    10:u'心力健扬子晚报',
+    11:u'心力健新安晚报',
+    12:u'心力健燕赵晚报',
+    13:u'心力健青岛早报',
+    14:u'心力健全国'
+
+
+
+}
+
 
 XLJ_ID = 10125
 
+
+from global_settings import SF_D
+from global_settings import SF_Custid
+from global_settings import SF_Key
+from global_settings import SF_Url
 
 from global_settings import DEBUG
 ALLOWED_ORDER_ITEMS_CACHE_KEY = 'ORDER_ITEMS_CACHE_KEY_%d'%DEBUG

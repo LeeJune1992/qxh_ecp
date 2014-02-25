@@ -16,12 +16,12 @@ from utils.tools import printException,des
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import Outbound,Knowledge,Knowledge_Category,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
-
-
+import suds
+from xml.dom import minidom
 admin = Blueprint('admin', __name__)
 
 
@@ -1464,6 +1464,14 @@ def change_order_op():
             order.operator_id = op.id
             order.created_by = op.id
             order.team = op.team
+            #add john 增加修改归属人记录
+            order_operator = Order_Operator()
+            order_operator.order_id = order.order_id
+            order_operator.operator_id = current_user.id
+            order_operator.to_operator_id = op_id
+            order_operator.remark = '更改归属人'
+            order_operator.ip = request.remote_addr
+            db.session.add(order_operator)
         db.session.commit()
         return jsonify(result=True)
     except Exception,e:
@@ -1474,7 +1482,7 @@ def change_order_op():
 
 
 
-def _manage_order(order,to_status,remark=''):
+def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,express_sfok=0):
     _allows = filter(lambda a: a[2] == to_status and a[3] & order.payment_type, ORDER_OPROVRAL_CONFIG[order.status])
     if len(_allows) <> 1: return False,u'未允许操作'
     op_name, css, to_status, payment_type, flag = _allows[0]
@@ -1507,10 +1515,20 @@ def _manage_order(order,to_status,remark=''):
         order.express_id = int(express_id)
 
     elif order.status == 40 and to_status == 4:
-        express_num = request.form.get('express_num', 0)
-        if not express_num:
-            return False,u'请先输入快递单号'
-        order.express_number = express_num
+        if sf_id=='':
+            express_num = request.form.get('express_num', 0)
+            if not express_num:
+                return False,u'请先输入快递单号'
+            order.express_number = express_num            
+        else:
+            order.express_number = sf_id
+            order.express_sfdestcode = express_sfdestcode
+            order.express_sfok = express_sfok
+    elif order.status == 4 and to_status == 40:#取消快递        
+        order.express_number = ''
+        order.express_sfdestcode = ''
+        order.express_sfok = 0
+
 
     #库存处理
     if flag == 1:#--->出库
@@ -1601,6 +1619,170 @@ def manage_order(order_id):
     result,desc = _manage_order(order,to_status,remark)
     return jsonify(result=result,error=desc)
 
+@admin.route('/order/sf/', methods=['POST'])
+@admin_required
+def sf_order():
+    order_id = int(request.form['order_id'])
+    try:
+        order = Order.query.get(order_id)
+    except:
+        return jsonify(result=False, error=u'订单不存在')
+
+    if not ORDER_OPROVRAL_CONFIG.has_key(order.status):
+        return jsonify(result=False, error=u'非法操作')
+
+    #检测是否授权
+    if not order.is_authorize(current_user):
+        return jsonify(result=False, error=u'权限不足，无法执行该操作')
+    client = suds.client.Client(SF_Url)
+    client.set_options(headers={"Content-Type":"text/xml; charset=utf-8"})
+    print 'ok'
+    print order.payment_type
+    sfcity = ' d_province=\''+order.shipping_address.province+'\' d_city=\''+order.shipping_address.city+'\''
+    
+    sfgod = ''
+    if order.payment_type == 1 and order.actual_fee > 0:
+        sfgod = '<AddedService name=\'COD\' value=\''+str(order.actual_fee)+'\' value1=\'0283439931\' value2=\'\' value3=\'\' value4=\'\' /> '
+    SF_Order = 'orderid=\''+str(order_id)+'\' express_type=\'3\' '
+    custid = 'custid=\''+SF_Custid+'\''
+    strxml = '''<Request service='OrderService' lang='zh-CN'>
+        <Head>'''+SF_Custid+''','''+SF_Key+'''</Head><Body>
+         <Order 
+                  '''+SF_Order+SF_D+sfcity+'''                  
+d_company=''
+                  d_contact='
+'''+order.shipping_address.ship_to+'''
+'
+                  d_tel='
+'''+str(order.shipping_address.phone)+str(order.shipping_address.tel)+'''
+'
+                  d_address='
+'''+order.shipping_address.format_address+'''
+'
+                  parcel_quantity='1'
+                  pay_method='1'>
+<OrderOption '''+custid+''' >'''+sfgod+'''
+                    </OrderOption>   
+                   </Order></Body>
+         </Request> 
+        '''
+    results = client.service.sfexpressService(strxml)
+    doc = minidom.parseString(results)
+    root = doc.documentElement
+    #print 'ok'+results
+    #print strxml
+    #current_app.logger.error(u'strxml:%s' % (strxml))
+    current_app.logger.error(u'results:%s,%s' % (str(order_id),results))
+    OrderResponse = root.getElementsByTagName("OrderResponse")
+    if len(OrderResponse) > 0:
+        #print 'ok2'
+        sf_id = OrderResponse[0].getAttribute('mailno')
+        if order.shipping_address.province == '北京市':
+            express_sfdestcode = '010'
+        elif order.shipping_address.province == '上海市':
+            express_sfdestcode = '021'
+        elif order.shipping_address.province == '天津市':
+            express_sfdestcode = '022'
+        elif order.shipping_address.province == '重庆市':
+            express_sfdestcode = '023'
+        elif order.shipping_address.province == '新疆维吾尔自治区':
+            express_sfdestcode = '991'
+        else:
+            express_sfdestcode = OrderResponse[0].getAttribute('destcode')
+        
+        #生成条形码
+        #发货确认
+        confirmxml = '''<Request service='OrderConfirmService' lang='zh-CN'>
+<Head>%s,%s</Head>
+         <Body>
+         <OrderConfirm  mailno='%s' orderid='%s'>
+           </OrderConfirm>
+           </Body>
+        </Request>
+'''%(SF_Custid,SF_Key,sf_id,str(order_id))
+        #print confirmxml
+        results = client.service.sfexpressService(confirmxml)
+        #print results
+        current_app.logger.error(u'qrresults:%s,%s' % (str(order_id),results))
+        doc = minidom.parseString(results)
+        root = doc.documentElement
+        OrderConfirmResponse = root.getElementsByTagName("OrderConfirmResponse")
+        if len(OrderResponse) > 0:
+            result,desc = _manage_order(order,4,u'顺风拣货',sf_id,express_sfdestcode,1)
+            return jsonify(result=result,error=desc)
+        else:
+            result,desc = _manage_order(order,4,u'顺风拣货',sf_id,express_sfdestcode,0)
+            return jsonify(result=False,error='顺风发货确认失败')
+    else:
+        return jsonify(result=False,error=u'顺风接口错误')
+
+@admin.route('/order/sfquxiao/', methods=['POST'])
+@admin_required
+def sf_quxiao():
+    order_id = int(request.form['order_id'])
+    try:
+        order = Order.query.get(order_id)
+    except:
+        return jsonify(result=False, error=u'订单不存在')
+
+    if not ORDER_OPROVRAL_CONFIG.has_key(order.status):
+        return jsonify(result=False, error=u'非法操作')
+
+    #检测是否授权
+    if not order.is_authorize(current_user):
+        return jsonify(result=False, error=u'权限不足，无法执行该操作')
+    
+    #发货确认
+    confirmxml = '''<Request service='OrderConfirmService' lang='zh-CN'>
+<Head>%s,%s</Head>
+     <Body>
+     <OrderConfirm  mailno='%s' orderid='%s'>
+       </OrderConfirm>
+       </Body>
+    </Request>
+'''%(SF_Custid,SF_Key,order.express_number,str(order_id))
+    print confirmxml
+    client = suds.client.Client(SF_Url)
+    results = client.service.sfexpressService(confirmxml)
+    print results
+    doc = minidom.parseString(results)
+    root = doc.documentElement
+    OrderConfirmResponse = root.getElementsByTagName("OrderConfirmResponse")
+    if len(OrderResponse) > 0:    
+        result,desc = _manage_order(order,40,u'取消快递')
+        return jsonify(result=result,error=desc)
+    else:
+        return jsonify(result=False,error=u'取消快递失败')
+
+@admin.route('/order/printsf/<int:order_id>', methods=['POST', 'GET'])
+@admin_required
+def print_sf(order_id):
+    order = Order.query.get(order_id)
+    ocount = 0
+    for oi in order.order_items:
+        ocount+=oi.quantity
+    return render_template('order/print_sf.html',ocount=ocount, order=order, datat=datetime.now().strftime('%Y-%m-%d'))
+
+@admin.route('/order/creattxm', methods=['POST', 'GET'])
+@admin_required
+def creattxm():
+    a = barcode('qrcode','Hello Barcode Writer In Pure PostScript.',options=dict(version=9, eclevel='M'),margin=10, data_mode='8bits')
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=0,
+    )
+    #qr = qrcode.QRCode(a)
+    qr.add_data('ok')
+    qr.make(fit=False)        
+    img = qr.make_image()
+    a = barcode('qrcode','Hello Barcode Writer In Pure PostScript.',options=dict(version=9, eclevel='M'),margin=10, data_mode='8bits')
+    
+    a.save('./static/qrcode/'+'15.jpg')
+    return 'ok'
+    
 
 def _edit_order(order):
     try:
@@ -2112,11 +2294,11 @@ def sms_mass():
             break
         group_phones.append(','.join(phones[:200]))
         phones = phones[200:]
-
+    #暂时删除20131225
     try:
-        #for _phones in group_phones:
-            #暂时删除20131225SMS.add_sms(_phones,message,status=0,operator_id=current_user.id,remark=remark,commit=False)
-        #db.session.commit()
+        for _phones in group_phones:
+            SMS.add_sms(_phones,message,status=0,operator_id=current_user.id,remark=remark,commit=False)
+        db.session.commit()
         return jsonify(result=True)
     except Exception,e:
         return jsonify(result=False,error=u'群发失败，%s'%e)
@@ -2768,8 +2950,15 @@ def manage_knowledge():
 @admin_required
 def search_knowledge():
     q = request.args.get('q','none')
-    page = int(request.args.get('page', 1))
+    if q:
+        return '1'
+    else:
+        categorylist = Knowledge_Category.query.filter()
+        for c in categorylist:
+            bb = Knowledge.query.filter(Knowledge.category_id == c.id)
+    print categorylist
     news_list = Knowledge.query.join(Knowledge_Category,Knowledge_Category.id==Knowledge.category_id).filter('knowledge.title like \'%%'+q+'%%\' or knowledge_category.name =\''+q+'\'').order_by(desc(Knowledge.created))
+    print news_list
     return render_template('knowledge/search.html', news_list=news_list)
 
 
@@ -2803,15 +2992,16 @@ def add_knowledge():
         return redirect(url_for('admin.manage_knowledge'))
     return render_template('knowledge/knowledge_form.html', items=items,form=form)
 
-@admin.route('/knowledge/get/<int:id>', methods=['POST'])
+@admin.route('/knowledge/get/<int:id>', methods=['GET'])
 @admin_required
 def get_knowledge(id):
+    knowledge = Knowledge()
     try:
         knowledge = Knowledge.query.get_or_404(id)
     except:
         return jsonify(result=False, error=u'知识不存在'+str(id))
     
-    return jsonify(result=True,knowledge=knowledge)
+    return jsonify(result=True,knowledge=knowledge.content)
 
 
 @admin.route('/knowledge/delete/<int:id>', methods=['POST'])
@@ -3009,6 +3199,42 @@ def john_dcd20131219():
     _conditions = ['(batch_id <> \'20130718\' or batch_id is null)']     
     _conditions.append(User.assign_operator_id == 89)
     pagination = User.query.filter(*_conditions).order_by(desc(User.expect_time))
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id left join `order` on `order`.order_id=stock_in.order_id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    return render_template('john/dcd20131111.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['user_origin','op','user_type','username','phone','show_abandon'])
+#导出芪枣健胃茶的数据
+@admin.route('/john/dcd20140106')
+@login_required
+def john_dcd20140106():
+    _conditions = []   
+    #_conditions = ['user.product_intention=1 and user.dialog_times>5']     
+    _conditions.append(User.assign_operator_id == None)
+    _conditions.append(User.product_intention == 1)
+    _conditions.append(User.dialog_times > 5)
+    _conditions.append(User.user_type == 1)
+
+    pagination = User.query.filter(*_conditions).order_by(desc(User.expect_time))
+    print pagination
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id left join `order` on `order`.order_id=stock_in.order_id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    return render_template('john/dcd20131111.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['user_origin','op','user_type','username','phone','show_abandon'])
+#导出芪枣健胃茶的数据
+@admin.route('/john/dcd20140221')
+@login_required
+def john_dcd20140221():
+    _conditions = []   
+    _conditions = ['(user.product_intention=1 or user.remark like \'\%芪\%\')']     
+    _conditions.append(User.user_type == 2)
+    _conditions.append('(operator.team in (\'C1\',\'C2\') AND id<>40)')
+
+    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(*_conditions).order_by(desc(User.expect_time))
+    print pagination
     #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id left join `order` on `order`.order_id=stock_in.order_id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
     #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
     return render_template('john/dcd20131111.html',
