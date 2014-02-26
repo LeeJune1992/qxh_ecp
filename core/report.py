@@ -1602,10 +1602,18 @@ def xlj_tongji():
 @admin_required
 def xlj_tongji2():
     _conditions = ["`user`.origin=11"]
-    _xljmedia = request.args.get('xljmedia','')
-    if _xljmedia:
-        _xljmedia = int(_xljmedia)
-        _conditions.append('`user`.m1="%s"'%XLJ_MEDIA[_xljmedia])
+    _m1 = request.args.get('m1','')
+    if _m1:
+        _conditions.append('`user`.m1="%s"'%_m1)
+        
+    _m2 = request.args.get('m2','')
+    if _m2:
+        _conditions.append('`user`.m2="%s"'%_m2)
+
+    _m3 = request.args.get('m3','')
+    if _m3:
+        _conditions.append('`user`.m3="%s"'%_m3)
+
 
     _start_date = request.args.get('start_date','')
     if _start_date:
