@@ -1627,33 +1627,33 @@ def xlj_tongji2():
  WHERE %s'''%' AND '.join(_conditions)
     #return _sql1
     _sql2 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     #return _sql2
     
     _sql3 = '''SELECT COUNT(distinct `order`.order_id) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=14 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=14 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
     _sql4 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
     
     _sql5 = '''SELECT round(avg(`order`.item_fee-`order`.discount_fee),2) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     #return _sql5
     _sql6 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=14 AND `order`.status=108 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=14 AND `order`.status<>103 AND `order`.status=108 AND %s'''%' AND '.join(_conditions)
     
     _sql7 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
     _sql8 = '''SELECT COUNT(distinct `order`.order_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
     _sql9 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
     _sql10 = '''SELECT round(avg(`order`.item_fee-`order`.discount_fee),2) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
 
     
     
