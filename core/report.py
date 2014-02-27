@@ -1640,7 +1640,7 @@ def xlj_tongji2():
     
     _sql3 = '''SELECT COUNT(distinct `order`.order_id) from `order` join `user` on user.user_id=`order`.user_id 
          WHERE `order`.order_type=14 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
-    
+    #return _sql3
     _sql4 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `user` join `order` on user.user_id=`order`.user_id 
          WHERE `order`.order_type=15 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
     
@@ -1663,14 +1663,39 @@ def xlj_tongji2():
     _sql10 = '''SELECT round(avg(`order`.item_fee-`order`.discount_fee),2) from `order` join `user` on user.user_id=`order`.user_id 
          WHERE `order`.order_type=16 AND `order`.status<>103 AND %s'''%' AND '.join(_conditions)
 
-    
-    
-    
-    
-    
-    
-    
     _sql = _sql1+' union all '+_sql2+' union all '+_sql3+' union all '+_sql4+' union all '+_sql5+' union all '+_sql6+' union all '+_sql7+' union all '+_sql8+' union all '+_sql9+' union all '+_sql10
     #return _sql
     rows = db.session.execute(_sql)
     return render_template('report/user_report_by_xljbb.html',rows=rows,period=period)
+#心力健媒体进线情况表
+@report.route('/xlj/mtjxqk')
+@admin_required
+def xlj_mtjxqk():
+    _conditions = ["`user`.origin=11"]
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.join_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.join_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.join_time>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql1 = '''SELECT COUNT(distinct user.user_id),m1,m2 user_ids FROM `user`
+ WHERE %s group by m1,m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
+    #return _sql1
+    _sql2 = '''SELECT COUNT(distinct `order`.order_id),`user`.m1,`user`.m2 from `order` join `user` on user.user_id=`order`.user_id 
+         WHERE `order`.order_type=14 AND `order`.status<>103 AND %s group by `user`.m1,`user`.m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
+
+    
+    #return _sql
+    rows = db.session.execute(_sql1)
+    rows2 = db.session.execute(_sql2)
+    return render_template('report/user_report_by_xljjxqkb.html',rows=rows,rows2=rows2,period=period)
