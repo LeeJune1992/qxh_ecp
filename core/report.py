@@ -1699,3 +1699,29 @@ def xlj_mtjxqk():
     rows = db.session.execute(_sql1)
     rows2 = db.session.execute(_sql2)
     return render_template('report/user_report_by_xljjxqkb.html',rows=rows,rows2=rows2,period=period)
+#心力健销售情况表
+@report.route('/xlj/xsqkb')
+@admin_required
+def xlj_xsqkb():
+    _conditions = ["`user`.origin=11"]
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.join_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.join_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.join_time>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql1 = '''select `operator`.nickname,group_concat(`user`.phone,`user`.m1,`user`.m2),COUNT(distinct user.user_id) from user join `operator` on `user`.assign_operator_id=`operator`.id
+ WHERE %s group by `user`.assign_operator_id order by `user`.assign_operator_id'''%' AND '.join(_conditions)
+    db.session.execute('SET SESSION group_concat_max_len=10240')
+    rows = db.session.execute(_sql1)
+    return render_template('report/user_report_by_xsqkb.html',rows=rows,period=period)
