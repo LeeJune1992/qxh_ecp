@@ -1761,7 +1761,10 @@ def print_sf(order_id):
     ocount = 0
     for oi in order.order_items:
         ocount+=oi.quantity
-    return render_template('order/print_sf.html',ocount=ocount, order=order, datat=datetime.now().strftime('%Y-%m-%d'))
+    if order.order_type==14 or order.order_type==15 or order.order_type==16:
+        return render_template('order/print_sfxlj.html',ocount=ocount, order=order, datat=datetime.now().strftime('%Y-%m-%d'))
+    else:
+        return render_template('order/print_sf.html',ocount=ocount, order=order, datat=datetime.now().strftime('%Y-%m-%d'))
 
 @admin.route('/order/creattxm', methods=['POST', 'GET'])
 @admin_required
