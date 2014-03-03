@@ -483,7 +483,7 @@ STOCK_OUT_CATEGORIES_IDs = [12,13,14,20,11]
 ITEM_QUANTITY_THRESHOLD = 200
 
 #SKU单位
-SKU_UNITS = [u'件',u'盒',u'瓶',u'袋',u'个',u'套',u'本']
+SKU_UNITS = [u'件',u'盒',u'瓶',u'袋',u'个',u'套',u'本',u'条']
 
 #操作员状态
 OPERATOR_STATUS = {
