@@ -51,7 +51,8 @@
         ('report.financial_report_by_paidantuihuotongji','物流派单退货表统计'),
         ('report.financial_report_by_qianshou','物流签收表'),
         ('report.financial_report_by_qianshoutongji','物流签收表统计'),
-        ('report.financial_report_by_qianshou_tuihuo','物流签收退货表')] %}
+        ('report.financial_report_by_qianshou_tuihuo','物流签收退货表'),
+        ('report.financial_report_by_paidan_zaitu','物流派单在途明细表')] %}
             {% if endpoint == request.endpoint %}
                 <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
             {% else %}
