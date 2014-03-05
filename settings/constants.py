@@ -293,6 +293,7 @@ ENDPOINTS = [
     ('financial_report_by_qianshoutongji',u'[财务]物流签收表统计','E'),
     ('financial_report_by_qianshou_tuihuo',u'[财务]物流签收退货表','E'),
     ('financial_report_by_paidan_zaitu',u'[财务]物流派单在途明细表','E'),
+    ('financial_report_by_paidan_dzzaitu',u'[财务]物流派单对帐在途明细表','E'),
 
     ('logistics_report',u'物流报表','E'),
     ('logistics_report_by_day_delivery',u'[物流]物流发货明细表','E'),
@@ -716,6 +717,7 @@ PRODUCT_INTENTION = {
     2:u'保健品',
     3:u'化妆品',
     5:u'心力健',
+    6:u'心力健其它',
     4:u'其它'
 }
 #心力健媒体

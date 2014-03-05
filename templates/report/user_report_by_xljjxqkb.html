@@ -37,8 +37,12 @@
                     <tr>
                         <td>{{ row[1] }}{{ row[2] }}</td>
                         <td>{{ row[0] }}</td>
-                    </tr>
+                    </tr><font style="display:none">{{ totaljx.append(row[0]) }}</font>
                 {% endfor %}
+                    <tr>
+                        <td>合计</td>
+                        <td>{{ totaljx|sum }}</td>
+                    </tr>
                 </tbody>
             </table>
             </div>
@@ -55,8 +59,12 @@
                     <tr>
                         <td>{{ row[1] }}{{ row[2] }}</td>
                         <td>{{ row[0] }}</td>
-                    </tr>
+                    </tr><font style="display:none">{{ totalss.append(row[0]) }}</font>
                 {% endfor %}
+                    <tr>
+                        <td>合计</td>
+                        <td>{{ totalss|sum }}</td>
+                    </tr>
                 </tbody>
             </table>
             </div>
