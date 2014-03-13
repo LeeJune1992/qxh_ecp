@@ -19,7 +19,7 @@ if __name__ == '__main__':
 ,(select count(*) from `user_giveup` where status=1 AND DATE_FORMAT(audit_time,'%%Y-%%m-%%d')=DATE_FORMAT(now(),'%%Y-%%m-%%d'))
 ,(select count(distinct user_id) from `user` where batch_id IS NULL AND user_type=2)
 ,(select count(distinct u.user_id) from `user` u join `order` o on o.user_id=u.user_id where u.batch_id IS NULL AND u.user_type=2 and datediff(now(),o.created)<=90)
-,(select count(distinct u.user_id) from `user` u join `order` o on o.user_id=u.user_id where u.batch_id IS NULL AND u.user_type=2 and u.user_id not in (select user_id from `order` where datediff(now(),created)<=90))
+,(select count(distinct u.user_id) from `user` u where u.batch_id IS NULL AND u.user_type=2 and u.user_id not in (select user_id from `order` where datediff(now(),created)<=90))
 ,(select count(*) from `user` where origin=5)
 ,(select count(distinct a.user_id) from address a join `user` u on u.user_id=a.user_id where u.batch_id IS NULL AND u.user_type=2 and a.district like '%%县')
 ,(select count(distinct a.user_id) from address a join `user` u on u.user_id=a.user_id where u.batch_id IS NULL AND u.user_type=2 and (a.district IS NULL or a.district ='' or a.district like '%%区'))
