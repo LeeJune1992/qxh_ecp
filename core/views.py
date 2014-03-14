@@ -3132,7 +3132,10 @@ def sale_report_user_list():
             if list_type == 1:
                 _conditions.append('user.user_id in ('+hg_user_list+')')
             else:
-                _conditions.append('user.user_id in ('+cm_user_list+')')
+                if us.cm_user_list:
+                    _conditions.append('user.user_id in ('+cm_user_list+')')
+                else:
+                    _conditions.append('user.user_id in (0)')
         else:
             _conditions.append('user.user_id in (0)')
     else:
@@ -3235,6 +3238,40 @@ def john_dcd20140221():
     _conditions = ['(user.product_intention=1 or user.remark like \'\%芪\%\')']     
     _conditions.append(User.user_type == 2)
     _conditions.append('(operator.team in (\'C1\',\'C2\') AND id<>40)')
+
+    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(*_conditions).order_by(desc(User.expect_time))
+    print pagination
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id left join `order` on `order`.order_id=stock_in.order_id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    return render_template('john/dcd20131111.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['user_origin','op','user_type','username','phone','show_abandon'])
+#导出气血和的数据
+@admin.route('/john/dcd20140304')
+@login_required
+def john_dcd20140304():
+    _conditions = []   
+    _conditions = ['(user.product_intention=0 or user.remark like \'\%气血和\%\')']     
+    _conditions.append(User.user_type == 2)
+    _conditions.append('(operator.team in (\'C1\',\'C2\') AND id<>40)')
+
+    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(*_conditions).order_by(desc(User.expect_time))
+    print pagination
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id left join `order` on `order`.order_id=stock_in.order_id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    #pagination = db.session.query('select stock_in.order_id,sku.name,`order`.express_id from stock_in left join sku on   stock_in.sku_id=sku.id   where stock_in.created>\'2013-09-01\' and stock_in.created<\'2013-10-01\'')
+    return render_template('john/dcd20131111.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['user_origin','op','user_type','username','phone','show_abandon'])
+#导出会员库的数据
+@admin.route('/john/dcd20140311')
+@login_required
+def john_dcd20140311():
+    _conditions = []   
+    _conditions = ['(user.product_intention<>1 or user.remark like \'\%芪枣\%\')']     
+    _conditions.append(User.user_type == 2)
+    #_conditions.append('(operator.team in (\'C1\',\'C2\') AND id<>40)')
 
     pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(*_conditions).order_by(desc(User.expect_time))
     print pagination
