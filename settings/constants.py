@@ -273,8 +273,7 @@ ENDPOINTS = [
     ('sale_report_by_user_total','[营销]会员客户数量统计','E'),
     ('sale_report_user_list',u'[营销]会员客户详细','E'),
     ('jiexian_tongji',u'[营销]外呼统计','E'),
-    ('xlj_tongji',u'[营销]心力健统计','E'),
-    ('xlj_tongji2',u'[营销]心力健统计报表','E'),
+    ('xlj_sale_tongji',u'[营销]心力健销售统计','E'),
     ('xlj_mtjxqk',u'[营销]心力健媒体进线情况表','E'),
     ('xlj_xsqkb',u'[营销]心力健销售情况表','E'),
 
@@ -294,6 +293,7 @@ ENDPOINTS = [
     ('financial_report_by_qianshou_tuihuo',u'[财务]物流签收退货表','E'),
     ('financial_report_by_paidan_zaitu',u'[财务]物流派单在途明细表','E'),
     ('financial_report_by_paidan_dzzaitu',u'[财务]物流派单对帐在途明细表','E'),
+    ('financial_report_by_paidan_pdwdz',u'[财务]物流派单未对帐明细表','E'),
 
     ('logistics_report',u'物流报表','E'),
     ('logistics_report_by_day_delivery',u'[物流]物流发货明细表','E'),
@@ -465,10 +465,11 @@ STOCK_IN_CATEGORIES = {
     11:u'借调入库',
     12:u'调库入库',
     19:u'历史入库',
-    20:u'退货入库'
+    20:u'退货入库',
+    21:u'系统重发入库'
 }
 
-STOCK_IN_CATEGORIES_IDs = [10,11,12,19]
+STOCK_IN_CATEGORIES_IDs = [10,11,12,19,21]
 
 STOCK_OUT_CATEGORIES = {
     10:u'销售出库',
@@ -539,8 +540,8 @@ TEAMS = {
 }
 
 TEAM_RETAIN_USER_HOURS = {
-    'A1':{0:72},
-    'A2':{0:72},
+    'A1':{0:168},
+    'A2':{0:168},
     'B1':{0:168,7:1440,8:1440,9:1440},
     'B2':{0:168,7:1440,8:1440,9:1440},
     'C1':{0:0},

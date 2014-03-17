@@ -14,7 +14,7 @@ if __name__ == '__main__':
     trans = conn.begin()
     try:
         #
-        sql = '''SET @@GROUP_CONCAT_MAX_LEN=9999999999;INSERT INTO `user_statistics` (tjdate,new_users,giveup_users,users,hg_users,cm_users,tj_users,city_users,xian_users,hg_user_list,cm_user_list) values(
+        sql = '''SET @@GROUP_CONCAT_MAX_LEN=99999999999;INSERT INTO `user_statistics` (tjdate,new_users,giveup_users,users,hg_users,cm_users,tj_users,city_users,xian_users,hg_user_list,cm_user_list) values(
 (DATE_FORMAT(now(),'%%Y-%%m-%%d')),(select count(*) from `user` where member_time=DATE_FORMAT(now(),'%%Y-%%m-%%d'))
 ,(select count(*) from `user_giveup` where status=1 AND DATE_FORMAT(audit_time,'%%Y-%%m-%%d')=DATE_FORMAT(now(),'%%Y-%%m-%%d'))
 ,(select count(distinct user_id) from `user` where batch_id IS NULL AND user_type=2)
