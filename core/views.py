@@ -265,6 +265,7 @@ def edit_operator(operator_id):
         operator.email = form.email.data
         operator.username = form.username.data
         operator.op_id = form.op_id.data
+        operator.store_id = form.store_id.data
         operator.assign_user_type = form.assign_user_type.data
         operator.team = form.team.data if form.team.data else None
         if form.password.data and len(form.password.data) >= 6:
@@ -287,6 +288,7 @@ def add_operator():
         operator.email = form.email.data
         operator.username = form.username.data
         operator.op_id = form.op_id.data
+        operator.store_id = form.store_id.data
         operator.password = form.password.data
         operator.team = form.team.data if form.team.data else None
         operator.role_id = int(form.role.data.id)
@@ -1397,6 +1399,9 @@ def order_approval():
         # allowed_status = ROLE_ALLOWED_ORDER_STATUS[current_user.role_id]
         # _conditions.append(Order.status.in_(allowed_status))
     _conditions.extend(order_conditions())
+    #增加库房的选择物流
+    if current_user.role_id == 104:
+        _conditions.append(Order.store_id == current_user.store_id)
 
     #base_query =
     if current_user.role_id == ORDER_ROLE_ID:
@@ -1425,7 +1430,9 @@ def orders():
                 #_conditions.append(db.and_(Order.team.like(current_user.team[0] + '%')))#只能看到本组的数据
                 _conditions.append(db.or_(Order.assign_operator_id == current_user.id,
                                          Order.order_id.in_(db.session.query(Order_Log.order_id).filter(Order_Log.operator_id==current_user.id))))
-    
+    #增加库房的选择物流
+    if current_user.role_id == 104:
+        _conditions.append(Order.store_id == current_user.store_id)
     page = int(request.args.get('page', 1))
 
     per_page = request.args.get('per_page','')
@@ -1439,7 +1446,7 @@ def orders():
             desc(Order.created)).paginate(page, per_page=PER_PAGE)
     else:
         pagination = Order.query.join(User, Order.user_id == User.user_id).order_by(desc(Order.created)).paginate(page,per_page=PER_PAGE)
-
+    print pagination
     ops = db.session.query(Operator.id,Operator.nickname).filter(Operator.role_id==ORDER_ROLE_ID)
     return render_template('order/orders_new.html', pagination=pagination, show_query=True, ops = [(op_id,name) for op_id,name in ops])
 
@@ -1590,11 +1597,12 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
     order_log.order_id = order.order_id
     order_log.ip = request.remote_addr
     db.session.add(order_log)
-
+    print order.assign_operator_id
     order.update_status(to_status)
     order.operate_log = remark
     order.modified = datetime.now()
-
+    print 'ok'
+    print order.assign_operator_id
     db.session.commit()
     current_app.logger.info('ORDER|MANAGE|%s|%d|%d|%s'%(order.order_id,current_user.id,to_status,remark))
     return True,''
