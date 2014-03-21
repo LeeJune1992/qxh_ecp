@@ -1236,12 +1236,11 @@ def update_order_picker_status():
 @admin_required
 def order_fast_delivery():        
     if request.method=='POST':
-        express_id = int(request.form['express_id'])
-        _conditions = [Order.express_id==express_id,Order.status==4]
+        express_id = int(request.form['express_id']) 
+        orders = Order.query.filter(Order.express_id==express_id,Order.status==4)
         #增加库房的选择物流
         if current_user.role_id == 104:
-            _conditions.append(Order.store_id == current_user.store_id)        
-        orders = Order.query.filter(_conditions)
+            orders = Order.query.filter(Order.express_id==express_id,Order.store_id == current_user.store_id,Order.status==4)
         try:
             for order in orders:
                 result,desc = _manage_order(order,5,u'一键发货')
