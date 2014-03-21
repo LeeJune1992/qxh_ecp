@@ -3,21 +3,28 @@
 #库房配置表
 STORES = {
     1:u'成都仓',
-    2:u'北京仓',
+    2:u'西安仓',
     }
+STORES2 = {
+    0:u'无',
+    1:u'成都仓',
+    2:u'西安仓',
+    }
+
 
 #快递公司配置
 EXPRESS_CONFIG = {
-    1:{'name':u'顺丰速运','code':'shunfeng','stores':[1],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
+    1:{'name':u'顺丰速运','code':'shunfeng','stores':[1,2],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
     2:{'name':u'宅急送','code':'zhaijisong','stores':[1],'area_url':'http://www.zjs.com.cn/WS_Business/WS_Bussiness_CityArea.aspx?id=6'},
     3:{'name':u'飞狐快递','code':'feihukuaidi','stores':[1],'area_url':''},
     4:{'name':u'优速快递','code':'yskd','stores':[1],'area_url':'http://www.uc56.com/Chinese/RagionSearchMsg.aspx'},
     5:{'name':u'邮政小包','code':'youzhengguonei','stores':[1],'area_url':'http://www.ems.com.cn/'},
     6:{'name':u'邮政快递','code':'youzhengguonei','stores':[1],'area_url':'http://www.ems.com.cn/'},
-    7:{'name':u'北京飞狐','code':'feihukuaidi','area_url':'','stores':[2]},
+    7:{'name':u'北京飞狐','code':'feihukuaidi','area_url':'','stores':[3]},
     8:{'name':u'申通快递','code':'shentong','stores':[1],'area_url':'http://www.sto.cn/web%20select.asp'},
     9:{'name':u'陆航韵达','code':'luhangyunda','area_url':'','stores':[1]},
-    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2]}
+    10:{'name':u'EMS','code':'ems','area_url':'','stores':[2]},
+    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,3]}
 }
 
 LOSS_TYPES = {
@@ -423,7 +430,7 @@ USER_ASSIGN_HOURS = {
 
 ASSIGN_DEFAULT_HOURS = 72
 
-USER_INTENT_LEVELS = ['A','B','C','D','E']
+USER_INTENT_LEVELS = ['A','B','C','D','E','F']
 
 USER_STATUS = {
     0:u'全部',

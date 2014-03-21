@@ -911,7 +911,7 @@
                                 快递单打印</a>
                             <!--<a id="sf-express-qx" class="btn btn-small btn-primary btn-block" data-order_id="{{ order.order_id }}" title="取消快递">取消快递</a>-->
                         {% endif %}
-                        {% if order.status==40 and order.store_id==1 %}
+                        {% if order.status==40 %}
 {#                            {% if not order.is_picker %}#}
 {#                                <a href="javascript:void(0)" class="btn btn-small btn-block" title="验货" data-order_id="{{ order.order_id }}" id="picker">验货</a>#}
 {#                            {% endif %}#}
@@ -920,7 +920,7 @@
                                 发货单打印</a>
 
                             {% if order.express_id!=99 %}
-                                {% if order.express_id==1 %}
+                                {% if order.express_id==1 and order.store_id==1 %}
                                 <a id="sf-express-print" class="btn btn-small btn-primary btn-block" data-order_id="{{ order.order_id }}" title="快递号生成">
                                 快递号生成</a>
                                 {% else %}
