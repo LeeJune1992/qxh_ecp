@@ -1234,10 +1234,14 @@ def update_order_picker_status():
 
 @admin.route('/order/fast_delivery',methods=['POST','GET'])
 @admin_required
-def order_fast_delivery():
+def order_fast_delivery():        
     if request.method=='POST':
         express_id = int(request.form['express_id'])
-        orders = Order.query.filter(Order.express_id==express_id,Order.status==4)
+        _conditions = [Order.express_id==express_id,Order.status==4]
+        #增加库房的选择物流
+        if current_user.role_id == 104:
+            _conditions.append(Order.store_id == current_user.store_id)        
+        orders = Order.query.filter(_conditions)
         try:
             for order in orders:
                 result,desc = _manage_order(order,5,u'一键发货')
@@ -1249,6 +1253,9 @@ def order_fast_delivery():
             return jsonify(result=False,error=e.message)
 
     objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4).group_by(Order.express_id).all()
+    #增加库房的选择物流
+    if current_user.role_id == 104:
+        objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4,Order.store_id == current_user.store_id).group_by(Order.express_id).all()
     express_orders = []
     for express_id,order_nums,item_fee,discount_fee in objs:
         express_orders.append({'express_id':express_id,
