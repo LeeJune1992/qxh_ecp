@@ -1262,8 +1262,6 @@ def order_fast_delivery():
     objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4).group_by(Order.express_id).all()
     #增加库房的选择物流
     if current_user.role_id == 104:
-        aa = current_user.store_id
-        return str(aa)
         objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4,Order.store_id == current_user.store_id).group_by(Order.express_id).all()
     express_orders = []
     for express_id,order_nums,item_fee,discount_fee in objs:
