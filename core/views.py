@@ -42,7 +42,12 @@ admin = Blueprint('admin', __name__)
 def _pending_order_nums():
     '''获取待处理订单数'''
     if not current_user.is_admin:
-        return db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,
+        #增加库房的选择物流
+        if current_user.role_id == 104:
+            return db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,
+                                                                           Order.status<100,Order.store_id == current_user.store_id)).scalar()
+        else:
+            return db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,
                                                                            Order.status<100)).scalar()
     else:
         return 0
@@ -58,6 +63,9 @@ def pending_order_nums():
 @login_required
 def staff_reminder():
     orders = db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,Order.status<100)).scalar()
+    #增加库房的选择物流
+    if current_user.role_id == 104:
+        orders = db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,Order.status<100,Order.store_id == current_user.store_id)).scalar()    
     if current_user.role_id==ORDER_ROLE_ID:
         users = db.session.query(func.count(User.user_id)).filter(db.and_(User.assign_operator_id == current_user.id,
                                                                               User.expect_time!= None,
@@ -1254,6 +1262,8 @@ def order_fast_delivery():
     objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4).group_by(Order.express_id).all()
     #增加库房的选择物流
     if current_user.role_id == 104:
+        aa = current_user.store_id
+        return str(aa)
         objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4,Order.store_id == current_user.store_id).group_by(Order.express_id).all()
     express_orders = []
     for express_id,order_nums,item_fee,discount_fee in objs:
