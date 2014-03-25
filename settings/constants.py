@@ -3,28 +3,30 @@
 #库房配置表
 STORES = {
     1:u'成都仓',
-    2:u'西安仓',
+    2:u'北京仓',
+    3:u'西安仓',
     }
 STORES2 = {
     0:u'无',
     1:u'成都仓',
-    2:u'西安仓',
+    2:u'北京仓',
+    3:u'西安仓',
     }
 
 
 #快递公司配置
 EXPRESS_CONFIG = {
-    1:{'name':u'顺丰速运','code':'shunfeng','stores':[1,2],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
+    1:{'name':u'顺丰速运','code':'shunfeng','stores':[1,2,3],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
     2:{'name':u'宅急送','code':'zhaijisong','stores':[1],'area_url':'http://www.zjs.com.cn/WS_Business/WS_Bussiness_CityArea.aspx?id=6'},
     3:{'name':u'飞狐快递','code':'feihukuaidi','stores':[1],'area_url':''},
     4:{'name':u'优速快递','code':'yskd','stores':[1],'area_url':'http://www.uc56.com/Chinese/RagionSearchMsg.aspx'},
     5:{'name':u'邮政小包','code':'youzhengguonei','stores':[1],'area_url':'http://www.ems.com.cn/'},
     6:{'name':u'邮政快递','code':'youzhengguonei','stores':[1],'area_url':'http://www.ems.com.cn/'},
-    7:{'name':u'北京飞狐','code':'feihukuaidi','area_url':'','stores':[3]},
+    7:{'name':u'北京飞狐','code':'feihukuaidi','area_url':'','stores':[2]},
     8:{'name':u'申通快递','code':'shentong','stores':[1],'area_url':'http://www.sto.cn/web%20select.asp'},
     9:{'name':u'陆航韵达','code':'luhangyunda','area_url':'','stores':[1]},
-    10:{'name':u'EMS','code':'ems','area_url':'','stores':[2]},
-    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,3]}
+    10:{'name':u'EMS','code':'ems','area_url':'','stores':[3]},
+    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2]}
 }
 
 LOSS_TYPES = {
@@ -536,7 +538,8 @@ TEAMS = {
     'A2':u'爱妻美组',
     'B1':u'外呼组',
     'B2':u'TQ组',
-    'B3':u'心力健组',
+    'B3':u'心力健1组',
+    'B4':u'心力健2组',
     'C1':u'维护1组',
     'C2':u'维护2组',
     'D1':u'分销商',
@@ -759,6 +762,8 @@ from global_settings import SF_D
 from global_settings import SF_Custid
 from global_settings import SF_Key
 from global_settings import SF_Url
+
+from global_settings import KF_ROOLEIDS
 
 from global_settings import DEBUG
 ALLOWED_ORDER_ITEMS_CACHE_KEY = 'ORDER_ITEMS_CACHE_KEY_%d'%DEBUG
