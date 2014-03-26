@@ -5,9 +5,9 @@ SECRET_KEY = '0dc2a52516784b9f8dff69c872asff5'
 PROPAGATE_EXCEPTIONS = True
 
 #数据库配置
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://ai7m:ai7mecp@10.10.10.231/ai7m?charset=utf8'
-#SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://ai7m:ai7mecp@10.10.10.231/ai7mtest?charset=utf8'
-#SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:root1230@localhost/ecp24?charset=utf8'
+#SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://ai7m:ai7mecp@10.10.10.231/ai7m?charset=utf8'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://ai7m:ai7mecp@10.10.10.231/ai7mtest?charset=utf8'
+#SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:root1230@localhost/ecp?charset=utf8'
 SQLALCHEMY_ECHO = False
 SQLALCHEMY_POOL_SIZE = 10
 SQLALCHEMY_POOL_TIMEOUT = 10
@@ -38,3 +38,8 @@ SF_Url = 'http://bsp-test.sf-express.com:9090/bsp-ois/ws/expressService?wsdl'
 
 #SF_Key = 'zNNx:G~y0OlSUpICkdiXFLf}vIYmU`BC'
 #SF_Url = 'http://bsp-ois.sf-express.com/bsp-ois/ws/expressService?wsdl'
+
+#库房
+KF_ROOLEIDS = [104,1006]
+KF_XIANID = 118
+KF_CHENGDUID = 49

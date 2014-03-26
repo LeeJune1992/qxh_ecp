@@ -16,7 +16,7 @@ STORES2 = {
 
 #快递公司配置
 EXPRESS_CONFIG = {
-    1:{'name':u'顺丰速运','code':'shunfeng','stores':[1,2,3],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
+    1:{'name':u'成都顺丰','code':'shunfeng','stores':[1,2],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
     2:{'name':u'宅急送','code':'zhaijisong','stores':[1],'area_url':'http://www.zjs.com.cn/WS_Business/WS_Bussiness_CityArea.aspx?id=6'},
     3:{'name':u'飞狐快递','code':'feihukuaidi','stores':[1],'area_url':''},
     4:{'name':u'优速快递','code':'yskd','stores':[1],'area_url':'http://www.uc56.com/Chinese/RagionSearchMsg.aspx'},
@@ -26,6 +26,7 @@ EXPRESS_CONFIG = {
     8:{'name':u'申通快递','code':'shentong','stores':[1],'area_url':'http://www.sto.cn/web%20select.asp'},
     9:{'name':u'陆航韵达','code':'luhangyunda','area_url':'','stores':[1]},
     10:{'name':u'EMS','code':'ems','area_url':'','stores':[3]},
+    11:{'name':u'西安顺丰','code':'shunfeng','stores':[3],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
     99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2]}
 }
 
@@ -764,6 +765,9 @@ from global_settings import SF_Key
 from global_settings import SF_Url
 
 from global_settings import KF_ROOLEIDS
+from global_settings import KF_XIANID
+from global_settings import KF_CHENGDUID
+
 
 from global_settings import DEBUG
 ALLOWED_ORDER_ITEMS_CACHE_KEY = 'ORDER_ITEMS_CACHE_KEY_%d'%DEBUG
