@@ -117,6 +117,13 @@ class Order(db.Model):
             if role_id == ORDER_ROLE_ID:
                 self.assign_operator_id = self.created_by
                 self.need_assign = False
+            elif to_status in [4,32,9,10,40]:#在库房这里直接分配
+                if self.store_id == 1:
+                    self.assign_operator_id = KF_CHENGDUID
+                    self.need_assign = False
+                elif self.store_id == 3:
+                    self.assign_operator_id = KF_XIANID
+                    self.need_assign = False
             else:
                 self.assign_operator_id = None
                 self.need_assign = True
@@ -1215,7 +1222,7 @@ class Operator(db.Model, UserMixin):
     op_id = Column(db.String(10),nullable=True)#工号
     _password = Column('password', db.String(80), nullable=False)
     created = Column(db.DateTime, default=datetime.now)
-
+    store_id = Column(db.SmallInteger, nullable=False)#所在库房
     def _get_password(self):
         return self._password
 
