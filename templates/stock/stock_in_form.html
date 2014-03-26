@@ -11,6 +11,7 @@
     $('select').select2({
         width:'280px'
     });
+	$('#store_id').val({{current_user.store_id}}).change();
     $('body').data({'units': {}});
     var units = $('body').data('units');
     {% for k,obj in form.sku._get_object_list() %}
