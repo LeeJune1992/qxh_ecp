@@ -43,7 +43,7 @@ def _pending_order_nums():
     '''获取待处理订单数'''
     if not current_user.is_admin:
         #增加库房的选择物流
-        if current_user.role_id == 104:
+        if current_user.role_id in KF_ROOLEIDS:
             return db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,
                                                                            Order.status<100,Order.store_id == current_user.store_id)).scalar()
         else:
@@ -64,7 +64,7 @@ def pending_order_nums():
 def staff_reminder():
     orders = db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,Order.status<100)).scalar()
     #增加库房的选择物流
-    if current_user.role_id == 104:
+    if current_user.role_id in KF_ROOLEIDS:
         orders = db.session.query(func.count(Order.order_id)).filter(db.and_(Order.assign_operator_id == current_user.id,Order.status<100,Order.store_id == current_user.store_id)).scalar()    
     if current_user.role_id==ORDER_ROLE_ID:
         users = db.session.query(func.count(User.user_id)).filter(db.and_(User.assign_operator_id == current_user.id,
@@ -719,6 +719,12 @@ def add_stock_in():
             _in_quantity = form.quantity.data
             if _in_quantity <= 0:
                 raise Exception(u'入库数量错误')
+            print (int(form.store_id.data) != int(current_user.store_id))
+            print (form.store_id.data)
+            print (current_user.store_id)
+            #增加库房的选择物流
+            if current_user.role_id in KF_ROOLEIDS and int(form.store_id.data) != int(current_user.store_id):
+                raise Exception(u'仓库选择错误')
             stock_in.sku_id = _sku.id
             stock_in.store_id = form.store_id.data
             stock_in.c = form.c.data
@@ -741,7 +747,8 @@ def add_stock_in():
         except Exception, e:
             current_app.logger.error('add stock in failed, error: %s.' % e)
             db.session.rollback()
-            flash(u'登记入库发生错误！', 'error')
+            #flash(u'登记入库发生错误！', 'error')
+            flash(e.message, 'error')
     return render_template('stock/stock_in_form.html', form=form, is_edit=False)
 
 
@@ -836,6 +843,10 @@ def add_stock_out():
             _quantity = form.quantity.data
             if _quantity <= 0:
                 raise Exception(u'出库数量错误')
+            #增加库房的选择物流
+            if current_user.role_id in KF_ROOLEIDS and int(form.store_id.data) != int(current_user.store_id):
+                raise Exception(u'仓库选择错误')
+
 
             stock_out.sku_id = _sku.id
             stock_out.store_id = form.store_id.data
@@ -1247,7 +1258,7 @@ def order_fast_delivery():
         express_id = int(request.form['express_id']) 
         orders = Order.query.filter(Order.express_id==express_id,Order.status==4)
         #增加库房的选择物流
-        if current_user.role_id == 104:
+        if current_user.role_id in KF_ROOLEIDS:
             orders = Order.query.filter(Order.express_id==express_id,Order.store_id == current_user.store_id,Order.status==4)
         try:
             for order in orders:
@@ -1261,7 +1272,7 @@ def order_fast_delivery():
 
     objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4).group_by(Order.express_id).all()
     #增加库房的选择物流
-    if current_user.role_id == 104:
+    if current_user.role_id in KF_ROOLEIDS:
         objs = db.session.query(Order.express_id,func.count(Order.order_id),func.round(func.sum(Order.item_fee),2),func.sum(Order.discount_fee)).filter(Order.status==4,Order.store_id == current_user.store_id).group_by(Order.express_id).all()
     express_orders = []
     for express_id,order_nums,item_fee,discount_fee in objs:
@@ -1414,7 +1425,7 @@ def order_approval():
         # _conditions.append(Order.status.in_(allowed_status))
     _conditions.extend(order_conditions())
     #增加库房的选择物流
-    if current_user.role_id == 104:
+    if current_user.role_id in KF_ROOLEIDS:
         _conditions.append(Order.store_id == current_user.store_id)
 
     #base_query =
@@ -1445,7 +1456,7 @@ def orders():
                 _conditions.append(db.or_(Order.assign_operator_id == current_user.id,
                                          Order.order_id.in_(db.session.query(Order_Log.order_id).filter(Order_Log.operator_id==current_user.id))))
     #增加库房的选择物流
-    if current_user.role_id == 104:
+    if current_user.role_id in KF_ROOLEIDS:
         _conditions.append(Order.store_id == current_user.store_id)
     page = int(request.args.get('page', 1))
 
