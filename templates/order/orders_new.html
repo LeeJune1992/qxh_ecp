@@ -303,7 +303,7 @@
                 '',//单位名称
                 '',//单位简称
                 '',//开户银行
-                '',//帐号
+                o.data('order_id'),//帐号
                 '中国',//国家
                 o.data('province'),//省份
                 o.data('city'),//地市
@@ -926,7 +926,19 @@
                                 {% else %}
                                 <a href="javascript:void(0)" id="express-print" class="btn btn-small btn-block {% if order.is_print_express %}visited{% endif %}" title="快递单打印"
                                    data-order_id="{{ order.order_id }}"
-                                   data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+				{% if order.store_id==3 and (order.express_id == 11 or order.express_id == 10) and (order.actual_fee==0 or order.payment_type==2) %}
+                    {%if order.order_type==14 or order.order_type==15 or order.order_type==16 %}
+                    data-express_name="心力健{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}零"
+                    {% else %}
+                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}零"
+                    {% endif %}
+				{% else %}
+					{%if order.order_type==14 or order.order_type==15 or order.order_type==16 %}
+                    data-express_name="心力健{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+                    {% else %}
+                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+                    {% endif %}
+				{% endif %}
                                    data-express_num="{{ order.express_num }}"
                                    data-ship_to="{{ order.shipping_address.ship_to }}"
                                    data-address="{{ order.shipping_address.format_address }}"
