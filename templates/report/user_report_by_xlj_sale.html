@@ -2,16 +2,24 @@
 {% from "_macro.html" import search_date_form with context %}
 {% block js %}
     {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/mediaXLJ.js') }}"></script>
     <script type="text/javascript">
         $(function(){
+			new MMMS('m1', 'm2', 'm3');
 			$('select').select2({
 				width:'180px'
 			});
+			$('#m1').val("{{ request.args.get('m1','')|default('',true) }}").change();
+			$('#m2').val("{{ request.args.get('m2','')|default('',true) }}").change();
+			$('#m3').val("{{ request.args.get('m3','')|default('',true) }}").change();
         });
     </script>
 {% endblock %}
 {% block report %}
     <form action="" method="get" class="form-search inline">
+        <select id="m1" name="m1" style="width: 200px"></select>
+        <select id="m2" name="m2" style="width: 200px"></select>
+        <select id="m3" name="m3" style="width: 200px"></select>
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
