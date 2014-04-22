@@ -755,7 +755,7 @@ def financial_report_by_return():
                 `order`.express_id,
                 `order_item`.name,
                 `order_item`.price,
-                SUM(`order_item`.quantity),
+                SUM(`order_item`.in_quantity),
                 SUM(`order_item`.fee)
             FROM `order_item`
             JOIN `order` ON `order_item`.order_id=`order`.order_id
