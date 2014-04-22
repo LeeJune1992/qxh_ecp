@@ -954,6 +954,35 @@
                             {% endif %}
 
                         {% endif %}
+                        
+                        {% if order.express_id and current_user.is_admin %}
+                                <a href="javascript:void(0)" id="express-print" class="btn btn-small btn-block {% if order.is_print_express %}visited{% endif %}" title="快递单打印"
+                                   data-order_id="{{ order.order_id }}"
+				{% if order.store_id==3 and (order.express_id == 11 or order.express_id == 10) and (order.actual_fee==0 or order.payment_type==2) %}
+                    {%if order.order_type==14 or order.order_type==15 or order.order_type==16 %}
+                    data-express_name="心力健{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}零"
+                    {% else %}
+                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}零"
+                    {% endif %}
+				{% else %}
+					{%if order.order_type==14 or order.order_type==15 or order.order_type==16 %}
+                    data-express_name="心力健{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+                    {% else %}
+                    data-express_name="{{ config['EXPRESS_CONFIG'][order.express_id]['name'] }}"
+                    {% endif %}
+				{% endif %}
+                                   data-express_num="{{ order.express_num }}"
+                                   data-ship_to="{{ order.shipping_address.ship_to }}"
+                                   data-address="{{ order.shipping_address.format_address }}"
+                                   data-province="{{ order.shipping_address.province|format_address }}"
+                                   data-city="{{ order.shipping_address.city|format_address }}"
+                                   data-district="{{ order.shipping_address.district|format_address }}"
+                                   data-phone="{{ order.shipping_address.phone }}"
+                                   data-tel="{{ order.shipping_address.tel|default('',true) }}"
+                                   data-remark="{{ order.user_remark|default('',true) }}"
+                                   data-postcode="{{ order.shipping_address.postcode|default('',true) }}"
+                                   data-fee="{{order.actual_fee if order.payment_type==1 else 0 }}">快递单打印</a>
+                        {% endif %}
 
                         {% if order.status in config['ORDER_ALLOWED_RETRAN_STATUS'] %}
                             <a href="{{ url_for('admin.add_order',link_order_id=order.order_id) }}"
