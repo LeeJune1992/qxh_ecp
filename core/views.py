@@ -2928,6 +2928,36 @@ def securitycodes():
         pagination = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == '11')).paginate(page, per_page=20)
 
     return render_template('securitycode/search.html', pagination=pagination,sc=sc)
+@admin.route('/securitycode/searchlog', methods=['GET', 'POST'])
+@admin_required
+def securitycodelog():
+    _conditions = []
+    code = request.args.get('code', None)
+    if code:
+        _conditions.append('`security_code_log`.`code` ="'+code+'"')
+    username = request.args.get('username', None)
+    if username:
+        _conditions.append('`security_code_log`.`username` ="'+username+'"')
+    tel = request.args.get('tel', None)
+    if tel:
+        _conditions.append('`security_code_log`.`tel` ="'+tel+'"')
+    province = request.args.get('province', None)
+    if province:
+       _conditions.append('`security_code_log`.`province` ="'+province+'"')
+    city = request.args.get('city', None)
+    if city:
+       _conditions.append('`security_code_log`.`city` ="'+city+'"')
+
+    district = request.args.get('district', None)
+    if district:
+       _conditions.append('`security_code_log`.`district` ="'+district+'"')
+    street = request.args.get('street', None)
+    if street:
+       _conditions.append('`security_code_log`.`street` ="'+street+'"')
+    page = int(request.args.get('page', 1))
+    pagination = Security_Code_Log.query.filter(*_conditions).paginate(page, per_page=20)
+
+    return render_template('securitycode/searchlog.html', pagination=pagination)
 
 @admin.route('/order/lhyd_yz', methods=['GET', 'POST'])
 @admin_required
@@ -3314,3 +3344,26 @@ def john_dcd20140311():
                            pagination=pagination,
                            operators=operators,
                            show_queries=['user_origin','op','user_type','username','phone','show_abandon'])
+
+@admin.route('/order/fast_delivery_detal',methods=['GET'])
+@admin_required
+def order_fast_delivery_detal():
+    _sql1 = '''SELECT `order`.store_id,sku.name,sum(order_item.quantity) FROM `order_item` join sku on sku.id=order_item.sku_id
+join `order` on `order`.order_id=order_item.order_id
+ WHERE order_item.order_id in (select order_id from `order` where status=4 and store_id='''+str(current_user.store_id)+''') group by `order`.store_id,sku.name'''
+    if current_user.is_admin:
+        _sql1 = '''SELECT `order`.store_id,sku.name,sum(order_item.quantity) FROM `order_item` join sku on sku.id=order_item.sku_id
+         join `order` on `order`.order_id=order_item.order_id
+         WHERE order_item.order_id in (select order_id from `order` where status=4) group by `order`.store_id,sku.name'''
+        
+    #return _sql2
+    totaljx = []#所有订单总额
+    #totalss = []#所有订单数
+    
+    #return _sql1
+    rows2 = db.session.execute(_sql1)
+    _sql2 = 'select count(order_id) from `order` where status=4 and store_id='+str(current_user.store_id)
+    if current_user.is_admin:
+        _sql2 = 'select count(order_id) from `order` where status=4'
+    totalss = db.session.execute(_sql2)
+    return render_template('order/fast_delivery_detal.html',totaljx=totaljx,totalss=totalss,rows2=rows2)

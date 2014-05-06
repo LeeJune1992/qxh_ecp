@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination with context %}
+
+{% set category='order' %}
+{% block title %}一键发货明细{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+        });
+
+    </script>
+{% endblock %}
+{% block main %}
+    <div class="span6">{% for express_order in totalss %}订单数:{{ express_order[0] }}{% endfor %}
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+            {% if current_user.is_admin %}<th>仓库</th>{% endif %}
+            <th>商品</th>
+            <th>数量</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for express_order in rows2 %}
+            <tr>
+                {% if current_user.is_admin %}<td>
+                    {{ config['STORES'][express_order[0]] }}
+                </td>{% endif %}
+                <td>{{ express_order[1] }}</td>
+                <td>{{ express_order[2] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+{% endblock %}
