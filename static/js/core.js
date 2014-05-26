@@ -49,7 +49,7 @@ var validate_phone = function(phone){
     }
 };
 var validate_zip = function(phone){
-    var pattern=/^[1-9]\d{5}$/;
+    var pattern=/^[0-9]\d{5}$/;
     if(pattern.test(phone))
     {
         return true;
