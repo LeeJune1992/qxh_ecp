@@ -48,6 +48,17 @@ var validate_phone = function(phone){
         return false;
     }
 };
+var validate_zip = function(phone){
+    var pattern=/^[1-9]\d{5}$/;
+    if(pattern.test(phone))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+};
 
 var address = {
     reset:function(){

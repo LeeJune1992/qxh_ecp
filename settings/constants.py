@@ -214,6 +214,7 @@ ENDPOINTS = [
     ('order_detail',u'查看订单','A'),
     ('print_order_invoices',u'发货单打印','A'),
     ('order_fast_delivery',u'一键发货','A'),
+    ('order_fast_delivery_detal',u'一键发货明细','A'),
     ('except_orders',u'差额订单调整','A'),
     ('order_lhyd_yz',u'陆航韵达邮政录单','A'),
 
@@ -337,6 +338,7 @@ ENDPOINTS = [
     
     
     ('securitycodes',u'防伪码查询','H'),
+    ('securitycodelog',u'防伪码查询记录','H'),
 
     ('categorys',u'知识类别管理','I'),
     ('manage_knowledge',u'知识管理','I'),
@@ -551,8 +553,8 @@ TEAMS = {
 }
 
 TEAM_RETAIN_USER_HOURS = {
-    'A1':{0:168},
-    'A2':{0:168},
+    'A1':{0:72},
+    'A2':{0:72},
     'B1':{0:168,7:1440,8:1440,9:1440},
     'B2':{0:168,7:1440,8:1440,9:1440},
     'C1':{0:0},
@@ -767,6 +769,9 @@ from global_settings import SF_Url
 from global_settings import KF_ROOLEIDS
 from global_settings import KF_XIANID
 from global_settings import KF_CHENGDUID
+from global_settings import WLNQ_XIANID
+from global_settings import WLNQ_CHENGDUID
+
 
 
 from global_settings import DEBUG
