@@ -1472,7 +1472,7 @@ def orders():
     else:
         pagination = Order.query.join(User, Order.user_id == User.user_id).order_by(desc(Order.created)).paginate(page,per_page=PER_PAGE)
     print pagination
-    ops = db.session.query(Operator.id,Operator.nickname).filter(Operator.role_id==ORDER_ROLE_ID)
+    ops = db.session.query(Operator.id,Operator.nickname).filter(Operator.role_id==ORDER_ROLE_ID,Operator.status<>9)
     return render_template('order/orders_new.html', pagination=pagination, show_query=True, ops = [(op_id,name) for op_id,name in ops])
 
 
@@ -2186,11 +2186,11 @@ def manage_users():
 
     #仅允许管理本部门员工数据
     if not current_user.is_admin and current_user.team:
-        operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0))
+        operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0,Operator.status<>9))
         op_ids = [op.id for op in operators]
         _conditions.append(User.assign_operator_id.in_(op_ids))
     else:
-        operators = Operator.query.filter(Operator.assign_user_type>0)
+        operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9)
 
     page = int(request.args.get('page', 1))
 
