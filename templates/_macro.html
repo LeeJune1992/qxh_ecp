@@ -76,6 +76,8 @@
             {{ nav_link('admin.order_approval','待处理订单',0) }}
                 {% endif %}
             {{ nav_link('admin.order_fast_delivery','一键发货') }}
+            {{ nav_link('admin.order_fast_delivery_detal','一键发货明细') }}
+            {{ nav_link('admin.order_retransmission','重发订单') }}
             {{ nav_link('admin.except_orders','差额订单调整') }}
             {{ nav_link('admin.search_order_phone','号码查询') }}
             {{ nav_link('admin.order_lhyd_yz','陆航韵达邮政录单') }}
@@ -146,6 +148,7 @@
     {% elif category=='securitycode' %}
         <ul class="nav nav-list bs-docs-sidenav">
             {{ nav_link('admin.securitycodes','防伪码查询') }}
+            {{ nav_link('admin.securitycodelog','防伪码查询记录') }}
         </ul>
     {% elif category=='knowledge' %}
         <ul class="nav nav-list bs-docs-sidenav">

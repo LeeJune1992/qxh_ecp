@@ -3367,3 +3367,17 @@ join `order` on `order`.order_id=order_item.order_id
         _sql2 = 'select count(order_id) from `order` where status=4'
     totalss = db.session.execute(_sql2)
     return render_template('order/fast_delivery_detal.html',totaljx=totaljx,totalss=totalss,rows2=rows2)
+
+@admin.route('/order/retransmission',methods=['GET'])
+@admin_required
+def order_retransmission():
+    _sql1 = '''select * from (select count(order_id) as cc,order_id,operate_time from order_log where to_status=5 group by order_id,operate_time ) aa where cc>1 order by order_id desc; '''+str(current_user.store_id)+''') group by `order`.store_id,sku.name'''
+      
+    #return _sql2
+    totaljx = []#所有订单总额
+    #totalss = []#所有订单数
+    
+    #return _sql1
+    rows2 = db.session.execute(_sql1)
+    #totalss = db.session.execute(_sql2)
+    return render_template('order/retransmission.html',totaljx=totaljx,rows2=rows2)
