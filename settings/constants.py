@@ -152,6 +152,7 @@ ROLE_ALLOWED_ORDER_STATUS = {
 
 #下单角色ID
 ORDER_ROLE_ID = 101
+SEE_ORDER_ROLE_ID = [101,106,1000,1001,1002,1003,1005]
 
 #订单审批流程配置[操作,界面样式,变更状态,付款方式,库存标识(0:无,1:出库,2:入库)]
 ORDER_OPROVRAL_CONFIG = {
@@ -215,8 +216,11 @@ ENDPOINTS = [
     ('print_order_invoices',u'发货单打印','A'),
     ('order_fast_delivery',u'一键发货','A'),
     ('order_fast_delivery_detal',u'一键发货明细','A'),
+    ('order_retransmission',u'重发订单','A'),
     ('except_orders',u'差额订单调整','A'),
     ('order_lhyd_yz',u'陆航韵达邮政录单','A'),
+    ('hasarrived',u'物流已到货','A'),
+    ('caiwuqr',u'财务确认','A'),
 
     ('my_users',u'我的客户库','B'),
     ('public_new_users',u'新客户公共库','B'),
@@ -423,6 +427,9 @@ USER_ORIGINS = {
     10:u'外呼放弃',
     11:u'心力健',
     12:u'气血和601',
+    13:u'地面已购',
+    14:u'抽奖未购',
+    15:u'抽奖已购',
     99:u'其它',
 }
 
@@ -430,7 +437,7 @@ NEED_PAID_USER_ORIGINS = [7,8,9,11]
 
 #操作员分配客户时长(根据来源)
 USER_ASSIGN_HOURS = {
-    1:72,2:168,3:72,4:168,5:72,6:72,7:1440,8:1440,9:1440,99:1440
+    1:72,2:168,3:72,4:168,5:72,6:72,7:1440,8:1440,9:1440,13:5,14:72,15:72,99:1440
 }
 
 ASSIGN_DEFAULT_HOURS = 72
@@ -760,6 +767,7 @@ XLJ_MEDIA = {
 
 XLJ_ID = 10125
 
+DRUGS = '10001,10002,10003,10004,10120,'#药品ID
 
 from global_settings import SF_D
 from global_settings import SF_Custid
