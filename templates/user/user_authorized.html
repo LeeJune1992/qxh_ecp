@@ -644,6 +644,37 @@ $(function () {
         });
         return false;
     });
+    $('a#voucher_add').click(function () {
+        var confirm_text = '确认给该客户添加代金卷？';
+        bootbox.prompt(confirm_text, function (result) {
+            if(result === null){
+				return;
+			}else if(result == ''){
+				//bootbox.alert('原因为空,请填写原因!');
+				//return;
+			}
+
+            var req = $.ajax({
+                url: '{{ url_for('admin.voucher_add',user_id=user.user_id) }}',
+                dataType: "json",
+                type: 'POST',
+                data: {remark: result,price:20}
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.href = "{{ url_for('admin.my_users') }}";
+                }
+                else {
+                    bootbox.alert('发生错误：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+        });
+        return false;
+    });
 
 
     $('a#sms_notify').click(function () {
@@ -1155,6 +1186,7 @@ $(function () {
             {% if mobile_phones %}
                 <a href="#" id="send_sms" class="btn btn-warning btn-small" onclick="$('#smsModal').modal('show');">发送短信</a>
             {% endif %}
+            <a href="#" id="voucher_add" class="btn btn-danger btn-small">添加代金卷</a>
             <a href="#" id="drop_user" class="btn btn-danger btn-small">申请放弃客户</a>
         {% endif %}
             </div>

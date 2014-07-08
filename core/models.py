@@ -89,6 +89,8 @@ class Order(db.Model):
     editor = db.relationship('Operator', primaryjoin="(Operator.id == Order.operator_id)")
     assign_operator = db.relationship('Operator', primaryjoin="(Operator.id == Order.assign_operator_id)")
     is_xlj = Column(db.Boolean, nullable=False, default=True)#是否心力健 john
+    voucher_id = Column(db.Integer)
+    voucher_fee = Column(db.Float(unsigned=True), nullable=False)
     @property
     def store_name(self):
         if self.store_id:
@@ -124,6 +126,14 @@ class Order(db.Model):
                 elif self.store_id == 3:
                     self.assign_operator_id = KF_XIANID
                     self.need_assign = False
+            elif to_status in [6]:#在物流内勤这里直接分配
+                if self.store_id == 1:
+                    self.assign_operator_id = WLNQ_CHENGDUID
+                    self.need_assign = False
+                elif self.store_id == 3:
+                    self.assign_operator_id = WLNQ_XIANID
+                    self.need_assign = False
+
             else:
                 self.assign_operator_id = None
                 self.need_assign = True
@@ -1440,5 +1450,22 @@ class Order_Operator(db.Model):
     to_operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)
     remark = Column(db.String(100))#备注
     ip = Column(db.String(30))#ip
+
+    
+
+class User_Voucher(db.Model):
+    '''代金卷'''
+    __tablename__ = 'user_voucher'
+
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'))
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作人员
+    operator = db.relationship('Operator', primaryjoin="(Operator.id == User_Voucher.operator_id)")#操作人员
+    created = Column(db.DateTime,default=datetime.now)#创建时间
+    price = Column(db.Integer)#金额
+    remark = Column(db.String(100))#备注
+    status = Column(db.Boolean,nullable=False,default=False)#状态
+    order_id = Column(db.BigInteger(unsigned=True), db.ForeignKey('order.order_id'), nullable=True)#订单号
+    order = db.relationship('Order', primaryjoin="(Order.order_id == User_Voucher.order_id)")#订单
 
     

@@ -16,7 +16,7 @@ from utils.tools import printException,des
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -1021,8 +1021,8 @@ def _add_order(operator, request):
         if _id==XLJ_ID:
             is_xlj=True
             break
-        
     total_item_fee = 0
+    totalitemfee = 0
     _sku_objs = {}
     _sku_sets = []
     _order_items = []
@@ -1045,6 +1045,8 @@ def _add_order(operator, request):
 
             _fee = _price * quantity
             total_item_fee += _fee
+            if DRUGS.find(data['sku-id']+',') == -1:
+                totalitemfee += _fee
             _order_items.append((_sku.id,'',_name,_price,quantity,_fee,_sku.unit,_sku.code))
         else:
             _sku_set = Sku_Set.query.get(_id)
@@ -1061,8 +1063,17 @@ def _add_order(operator, request):
                 _fee = item_price * _quantity
                 _order_items.append((_sku.id,_sku_set.name,_sku.name,item_price,_quantity,_fee,_sku.unit,_sku.code))
             total_item_fee += _sku_set.price * quantity
+            if DRUGS.find(data['sku-id']+',') == -1:
+                totalitemfee += _sku_set.price * quantity
+
             _sku_sets.append((_sku_set, quantity))
         
+    #代金卷
+    djj = int(request.form.get('djj', 0))
+    print djj
+    if djj > 0:
+        voucheruser = User_Voucher.query.get(djj) 
+        if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'
 
     try:
         if user_id:
@@ -1135,6 +1146,18 @@ def _add_order(operator, request):
         order.operator_id = operator.id
         order.team = operator.team
         order.update_status(1)
+        
+        if djj>0:
+            order.item_fee -= voucheruser.price#订单减去代金卷
+            order.voucher_id = djj
+            print 'ok1'
+            print djj
+            print order.voucher_id
+            print 'ok'
+            order.voucher_fee = voucheruser.price
+            voucheruser.order_id = order.order_id
+            db.session.add(voucheruser)
+
 
         db.session.add(order)
         db.session.flush()
@@ -1189,6 +1212,7 @@ def _add_order(operator, request):
 
         user.add_order(order)#添加用户订单
 
+        
         db.session.commit()
         return True, order.order_id
     except Exception, e:
@@ -1472,7 +1496,8 @@ def orders():
     else:
         pagination = Order.query.join(User, Order.user_id == User.user_id).order_by(desc(Order.created)).paginate(page,per_page=PER_PAGE)
     print pagination
-    ops = db.session.query(Operator.id,Operator.nickname).filter(Operator.role_id==ORDER_ROLE_ID,Operator.status<>9)
+    ops = db.session.query(Operator.id,Operator.nickname).filter(Operator.role_id.in_(SEE_ORDER_ROLE_ID),Operator.status<>9)
+    print ORDER_ROLE_ID
     return render_template('order/orders_new.html', pagination=pagination, show_query=True, ops = [(op_id,name) for op_id,name in ops])
 
 
@@ -1826,6 +1851,12 @@ def _edit_order(order):
             return False, u'当前状态禁止修改订单信息！'
         is_xlj = False
         items_changed = int(request.form['items_changed'])
+        #代金卷
+        djj = int(request.form.get('djj', 0))
+        if djj > 0:
+            voucheruser = User_Voucher.query.get(djj) 
+
+
         if items_changed:
             items = json.loads(request.form['items'])
 
@@ -1838,6 +1869,7 @@ def _edit_order(order):
             if len(items) == 0: return False, u'选择商品不可为空'
 
             total_item_fee = 0
+            totalitemfee = 0
             _sku_objs = {}
             _sku_sets = []
             _order_items = []
@@ -1860,6 +1892,7 @@ def _edit_order(order):
 
                     _fee = _price * quantity
                     total_item_fee += _fee
+                    totalitemfee += _fee
                     _order_items.append((_sku.id,'',_name,_price,quantity,_fee,_sku.unit,_sku.code))
                 else:
                     _sku_set = Sku_Set.query.get(_id)
@@ -1876,6 +1909,7 @@ def _edit_order(order):
                         _fee = item_price * _quantity
                         _order_items.append((_sku.id,_sku_set.name,_sku.name,item_price,_quantity,_fee,_sku.unit,_sku.code))
                     total_item_fee += _sku_set.price * quantity
+                    totalitemfee += _sku_set.price * quantity
                     _sku_sets.append((_sku_set, quantity))
 
             #扣减原有销售数量
@@ -1912,6 +1946,55 @@ def _edit_order(order):
                 db.session.add(_order_sku_set)
 
             order.item_fee = total_item_fee#TODO:优惠处理
+            if djj > 0:                
+                if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'                
+                #order.item_fee -= voucheruser.price #订单减去代金卷
+
+        if djj > 0:
+            if order.voucher_fee > 0:#以前有 现在有
+                if order.voucher_id == djj:
+                    if items_changed:
+                        order.item_fee -= voucheruser.price #订单减去代金卷
+                else:          
+                    if items_changed:
+                        order.item_fee -= voucheruser.price #订单减去代金卷          
+                    ordervoucher = User_Voucher.query.get(order.voucher_id)
+                    if ordervoucher:
+                        ordervoucher.order_id = None
+                        db.session.add(ordervoucher)
+                    print 'ok2'
+                    if voucheruser:
+                        order.voucher_id = djj
+                        order.voucher_fee = voucheruser.price
+                        voucheruser.order_id = order.order_id
+                        db.session.add(voucheruser)
+                    else:
+                        return False, '不能使用该代金卷2'   
+            else:#以前没有 现在有
+                if voucheruser:
+                    order.item_fee -= voucheruser.price #订单减去代金卷
+                    order.voucher_id = djj
+                    order.voucher_fee = voucheruser.price
+                    print 'ok'
+                    print order.order_id
+                    voucheruser.order_id = order.order_id
+                    db.session.add(voucheruser)
+                else:
+                    return False, '不能使用该代金卷2'   
+        else:
+            if order.voucher_fee > 0:#以前有  现在没有
+                voucheruser = User_Voucher.query.get(order.voucher_id)
+                if voucheruser:                
+                    voucheruser.order_id = None
+                    db.session.add(voucheruser)
+                order.voucher_fee = 0
+                order.voucher_id = 0
+                if items_changed:
+                    pass
+                else:
+                    order.item_fee += voucheruser.price #订单增加代金卷
+
+
         order.is_xlj = is_xlj
         order.order_type = int(request.form.get('order_type', 1))
         order.order_mode = int(request.form.get('order_mode', 1))
@@ -1942,12 +2025,17 @@ def _edit_order(order):
 @admin_required
 def edit_order(order_id):
     order = Order.query.get(order_id)
+    _conditions = []
+    _conditions.append(User_Voucher.order_id == order_id)
+    voucheruser = User_Voucher.query.filter(db.and_(*_conditions)).first()
+
+
     if request.method == 'POST':
         result, desc = _edit_order(order)
         if result:
             current_app.logger.info('ORDER|EDIT|%s|%s'%(order.order_id,current_user.id))
         return jsonify(result=result, error=desc)
-    return render_template('order/edit_order.html', order=order, items=allowed_order_items())
+    return render_template('order/edit_order.html', order=order,voucheruser=voucheruser, items=allowed_order_items())
 
 @admin.route('/order/user/<int:user_id>')
 @login_required
@@ -3381,3 +3469,147 @@ def order_retransmission():
     rows2 = db.session.execute(_sql1)
     #totalss = db.session.execute(_sql2)
     return render_template('order/retransmission.html',totaljx=totaljx,rows2=rows2)
+
+
+@admin.route('/order/hasarrived',methods=['POST', 'GET'])
+@admin_required
+def hasarrived():
+    if request.method == 'POST':
+        op = request.form['op']
+        if op == '1':
+            orderids = request.form['orders']
+            orders = orderids.split(',')
+            orders1 = orders
+            p = re.compile(r"(\d{11}$)")
+            orders = [order for order in orders if order and p.match(order)]
+            if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
+         
+            page = int(request.args.get('page', 1))
+            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders
+            if orders.total<len(orders1):
+                return jsonify(result=False,error='订单号状态错误或重复！')
+            try:
+                for order in orders.items:
+                    result,desc = _manage_order(order,60,u'一键对帐')
+                    if result is not True:
+                        raise Exception(u'处理订单《%s》发生错误：%s'%(order.order_id,desc))
+                return jsonify(result=True)
+            except Exception,e:
+                current_app.logger.error('FAST Reconciliation ERROR.%s'%e)
+                return jsonify(result=False,error=e.message)
+        else:
+            orderids = request.form['orders']
+            #print orderids
+            orders = orderids.split('\r\n')
+            orders1 = orders
+            p = re.compile(r"(\d{11}$)")
+            orders = [order for order in orders if order and p.match(order)]
+            #print len(orders1)>len(orders)
+            msg = ''
+            if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
+
+            if msg:
+                return render_template('order/hasarrived.html',orderids=orderids,msg=msg)  
+            msg = ''
+            page = int(request.args.get('page', 1))
+            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders
+            if orders.total<len(orders1):
+                msg = '订单号状态错误或重复！'
+            return render_template('order/hasarrived.html',orderids=orderids,msg=msg,orders=orders)    
+    else:
+        page = int(request.args.get('page', 1))
+        orders = Order.query.filter('1=2').paginate(page, per_page=user_per_page())
+        return render_template('order/hasarrived.html',orders=orders)
+
+@admin.route('/order/caiwuqr')
+@admin_required
+def caiwuqr():
+    orders = request.form['orders'].split(',')
+    
+    p = re.compile(r"(\d{11}$)")
+    orders = [order for order in orders if order and p.match(order)]
+    print orders
+    if len(orders)==0:return jsonify(result=False,error=u'群发号码为空或错误！')
+    code = request.args.get('code','')
+    error = ''
+    phones = ''
+    if m:
+        order = Order.query.filter(Order.express_number==m).first()
+        while True:
+            if not order:
+                error = u'订单不存在！'
+                break
+            if order.code and code <> code:
+                error = u'查询码输入错误！'
+                break
+            if order.status<>5:
+                error = u'当前订单状态不允许查询号码！'
+                break
+
+            _phones = []
+            shipping_address = order.shipping_address
+            if shipping_address.phone:_phones.append(shipping_address.phone)
+            if shipping_address.tel:_phones.append(shipping_address.tel)
+            phones = '<br/>'.join(_phones)
+            break
+    return render_template('order/caiwuqr.html',error=error,phones=phones)
+
+#add john 添加代金卷
+@admin.route('/user/voucher_add/<int:user_id>',methods=['POST'])
+@login_required
+def voucher_add(user_id):
+    if request.method=='POST':
+        user = User.query.get_or_404(user_id)
+        remark = request.form['remark']
+        price = request.form['price']
+        if user.assign_operator_id<>current_user.id:
+            return jsonify(result=False,error=u'该客户不归属于你，无法添加代金卷。')
+        _conditions = []
+        _conditions.append(User_Voucher.user_id == user_id)
+        voucheruserdata = User_Voucher.query.filter(db.and_(*_conditions)).limit(1)
+        voucherusers = []
+        for g in voucheruserdata:
+            voucherusers.append(g.id)
+        try:
+            voucheruser = User_Voucher();
+            voucheruser.user_id = user_id
+            voucheruser.operator_id = current_user.id
+            voucheruser.remark = remark
+            voucheruser.price = price
+            if len(voucherusers) > 0:
+                if remark=='':
+                    return jsonify(result=False,error=u'原因为空,请填写原因!')
+                voucheruser.status = False
+            else:
+                voucheruser.status = True
+            db.session.add(voucheruser)
+            db.session.commit()
+            current_app.logger.info('VOUCHER_USER|%s|%s|%s|%s'%(user.user_id,voucheruser.id,current_user.id,datetime.now()))
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            return jsonify(result=False,error=u'无法添加代金卷，%s'%e)
+#add john 获取代金卷
+@admin.route('/user/voucher_get',methods=['POST'])
+@login_required
+def voucher_get():
+    if request.method=='POST':
+        user_id = request.form['user_id']
+        user = User.query.get_or_404(user_id)
+        _conditions = []
+        _conditions.append(User_Voucher.user_id == user_id)    
+        _conditions.append(User_Voucher.status == True)
+        order_id = request.form['order_id']
+        if order_id:
+            _conditions.append(db.or_(User_Voucher.order_id == None,User_Voucher.order_id == int(order_id)))
+        else:
+            _conditions.append(User_Voucher.order_id == None)
+        voucheruser = User_Voucher.query.filter(db.and_(*_conditions))
+        _uservoucher = []
+        for vr in voucheruser:
+            _uservoucher.append({'id': vr.id,
+                               'price': vr.price})
+
+        return jsonify(uservoucher=_uservoucher)

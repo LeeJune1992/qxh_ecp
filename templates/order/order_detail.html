@@ -62,7 +62,12 @@
                 {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td style="color: red">{{ order_item.in_quantity }}</td><td style="color: red">{{ order_item.loss_quantity }}</td>{% endif %}
 
             </tr>
-        {% endfor %}</table></tr>
+        {% endfor %}
+        {% if order.voucher_fee %}
+        <tr><td style="text-align: left"><span>代金卷(抵扣)</span></td><td>1</td><td>{{ order.voucher_fee }}</td>
+        </tr>
+        {% endif %}
+        </table></tr>
 
         <tr><td class="right">折扣</td><td>{{ config['DISCOUNT_TYPES'][order.discount_type] }} {% if order.discount_fee>0 %}<span class="label label-success">优惠金额 ￥{{ order.discount_fee }}</span>{% endif %}</td></tr>
         <tr><td class="right">商品金额</td><td><span style="font-size: 14px;color: blue">￥{{ order.item_fee }}</span></td></tr>

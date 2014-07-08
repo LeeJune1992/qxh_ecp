@@ -58,6 +58,7 @@
     {{ super() }}
     <script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
     <script type="text/javascript">
+	var drugs = '{{config['DRUGS']}}';
     $(function () {
         function show_err(err) {
             $('#error').show();
@@ -177,6 +178,7 @@
             },
             formatSelection: function (user) {
                 address.show(user.user_id);
+				getvoucher(user.user_id);
                 $('button[type="submit"]').show();
                 return user.name + " | " + user.tel;
 
@@ -195,13 +197,54 @@
                     }
                 });
 
-
+		//获取代金卷(抵扣)
+		function getvoucher(user_id){
+			if(user_id > 0){
+				var req = $.ajax({
+					url: '{{ url_for('admin.voucher_get') }}',
+					dataType: "json",
+					cache: false,
+					data: {user_id: user_id,order_id:0},
+					type: 'POST'
+				});
+				req.done(function (data) {
+					var uservoucher = data.uservoucher;
+					if (!$.isEmptyObject(uservoucher)) {
+						var html = '<ul class="radio inline" id="payment_type">';
+						$.each(uservoucher, function () {
+							var attrs = '';
+							$.each(this, function (i, item) {
+								attrs += i + '="' + item + '" ';
+							});
+							html += "<li style='margin-right:35px'><input type='radio' value='"+this.id+"' id='dff"+this.id+"' dprice='"+this.price+"' name='djj'><label for='dff"+this.id+"'>代金卷(抵扣)"+this.price+"</label></li>";
+						});
+						html += "</ul><a name='onvoucher' href='#' onclick='javascipt:return false;'>取消</a>";
+						$('#uservoucher').html(html);
+						$('a[name="onvoucher"]').click(function () {
+							$("input:radio[name='djj']").attr("checked",false);
+							order.refresh();
+						});
+						$('input[name="djj"]').click(function () {
+							order.refresh();
+						});
+					}
+					else {
+						$('#shipping_address').html('');
+					}
+				});
+			}else{
+				$('#uservoucher').html('');
+			}
+		
+		}
         {% if request.args.has_key('user_id') %}
         $('#ship_to').val('{{ request.args['name'] }}');
         $('#phone').val('{{ request.args['phone'] }}');
         $('#user_id').select2('data', { user_id: {{ request.args['user_id'] }}, name: '{{ request.args['name'] }}',tel:'{{ request.args['phone'] }}' }).trigger('change');
+		getvoucher({{ request.args['user_id'] }});
         {% else %}
         $("#user_id").val(0);
+		getvoucher(0);
         {% endif %}
 
         /*   提交订单   */
@@ -320,11 +363,15 @@
                 var items = $('body').data('items');
                 var $sel = $('#selected-items');
                 var total_fee = 0;
+				var totalfee = 0;
                 if (!$.isEmptyObject(items)) {
                     $sel.html('<table id="display-items" class="table table-condensed"><thead><tr><th class="span3">商品</th><th style="text-align:center">数量</th><th style="text-align:center">单价</th><th></th></tr></thead></table>');
                     for (var i in items) {
                         var item = items[i];
                         total_fee += item.price * item.quantity;
+						if(drugs.indexOf(item["sku-id"].concat(',')) == -1){
+							totalfee += item.price * item.quantity;
+						}
                         var style = 'background-color:#fcfcfc';
                         if(item.price=='0'){
                             style = 'background-color:#fcf8f1;color:red';
@@ -338,12 +385,24 @@
                         $("a#del-" + i).addClass('delete');
                     }
                     //$sel.append('</table>');
+					if(totalfee>20){
+						$('#uservoucher').show();
+						var voucher = $("input:radio[name='djj']:checked").val();
+						if(voucher){
+							total_fee -= $("input:radio[name='djj']:checked").attr("dprice");
+						}
+					}else{
+						$("input:radio[name='djj']").attr("checked",false);
+						$('#uservoucher').hide();
+					}
                     $('#fee').show();
                     $('#fee').text("商品总价：￥" + total_fee);
                 }
                 else {
                     $sel.html('<span class="alert alert-warning span12">尚未选择任何商品</span>');
                     $('#fee').hide();
+					$("input:radio[name='djj']").attr("checked",false);
+					$('#uservoucher').hide();
                 }
                 $('input#total_fee').val(total_fee);
             },
@@ -427,6 +486,7 @@
                     <span class="add-on" id="unit">件</span>
                 </div>
                 <a class="btn btn-warning" id="add-item" style="margin-left: 20px">添加商品</a>
+                <div  style="margin-left: 15px; display:none;" id="uservoucher"></div>
             </div>
         </div>
 

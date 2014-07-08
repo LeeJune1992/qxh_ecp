@@ -418,7 +418,9 @@
                 $('#return_item_info').html('<table class="table table-condensed" id="return-items"><thead><tr><th class="span3">商品</th><th style="text-align:center">总数</th><th style="text-align:center">入库数</th><th style="text-align:center">报损数</th></tr></thead><tbody></tbody></table>');
                 var rows = $(this).closest('tr').find('table.table-item > tbody >tr');
                 rows.each(function(){
-                    $('<tr style="background-color:#fcfcfc" data-quantity="'+$(this).data('quantity')+'" data-id="'+$(this).data('item_id')+'"><td>' + $(this).data('item_name') + '</td><td style=\"text-align:center\"><strong>' + $(this).data('quantity')+$(this).data('unit')+ '</strong></td><td style=\"text-align:center\"><input type="text" class="input input-mini" value="'+$(this).data('quantity')+'" /></td><td><input type="text" class="input input-mini" value="0"/></td></tr>').appendTo($('table#return-items > tbody'));
+                    if($(this).data('item_id') != '99999'){
+						$('<tr style="background-color:#fcfcfc" data-quantity="'+$(this).data('quantity')+'" data-id="'+$(this).data('item_id')+'"><td>' + $(this).data('item_name') + '</td><td style=\"text-align:center\"><strong>' + $(this).data('quantity')+$(this).data('unit')+ '</strong></td><td style=\"text-align:center\"><input type="text" class="input input-mini" value="'+$(this).data('quantity')+'" /></td><td><input type="text" class="input input-mini" value="0"/></td></tr>').appendTo($('table#return-items > tbody'));
+					}
                 });
                 //$('<a class="btn btn-warning" href="/stock/losses/add?link_order_id='+$(this).attr('order_id')+'" target="_blank">报损登记</a>').appendTo($('#return_item_info'));
                 $('#return_item_info').show();
@@ -845,6 +847,12 @@
                                 {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td>{{ order_item.in_quantity }}</td><td>{{ order_item.loss_quantity }}</td>{% endif %}
                             </tr>
                         {% endfor %}
+                        {% if order.voucher_fee %}
+                        <tr data-item_id="99999"><td><span>代金卷(抵扣)</span></td><td><strong>1</strong>张</td><td>{{ order.voucher_fee }}</td>
+                        {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td>1</td><td>0</td>{% endif %}
+                        </tr>
+                        {% endif %}
+                        
                 </tbody>
                     </table>
                     </p>

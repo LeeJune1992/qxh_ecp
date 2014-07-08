@@ -111,6 +111,17 @@
             <td>{{ order_item.price*order_item.quantity }}</td>
         </tr>
     {% endfor %}
+        {% if order.voucher_fee %}
+        <tr>
+        <td>99999</td>
+        <td style="text-align: left">代金卷(抵扣)</td>
+        <td>一张</td>
+        <td>张</td>
+        <td>1</td>
+        <td>{{ order.voucher_fee }}</td>
+        <td>{{ order.voucher_fee }}</td>
+        </tr>
+        {% endif %}
 
     <tr style="background-color: #f1f1f1;text-align: left">
         <td align="right" style="font-weight: bold">合计</td>
