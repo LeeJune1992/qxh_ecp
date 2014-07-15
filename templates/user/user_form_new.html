@@ -438,6 +438,15 @@
         });
         /*   地址查询   */
         new PCAS("province", "city", "district");
+    $('#address select').change(function () {
+        var _name = $(this).attr('name');
+        if (_name == 'province') {
+            $('#city').select2('val', '').change();
+        }
+        else if (_name == 'city') {
+            $('#district').select2('val', '').change();
+        }
+    });
     });
 </script>
 {{ place_auto_complete_js() }}
