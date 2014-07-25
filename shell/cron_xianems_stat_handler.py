@@ -28,6 +28,7 @@ if __name__ == '__main__':
                 JOIN (SELECT `order_item`.`order_id` as oid,GROUP_CONCAT(CONCAT(`order_item`.name,'*',`order_item`.quantity) SEPARATOR '，') as item_info
                 FROM `order_item` GROUP BY `order_item`.`order_id`) AS order_items ON `order`.order_id=`order_items`.oid  WHERE express_id=10 AND express_number is not null
                 AND `order`.delivery_time IS NOT NULL
+                AND `order`.item_fee > 0
                 AND `order`.delivery_time>='%s' AND `order`.delivery_time<='%s'
         INTO OUTFILE '%s'
         FIELDS TERMINATED BY ','
