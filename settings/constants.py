@@ -225,6 +225,7 @@ ENDPOINTS = [
     ('my_users',u'我的客户库','B'),
     ('public_new_users',u'新客户公共库','B'),
     ('public_old_users',u'会员公共库','B'),
+    ('qxhdm_users',u'地面公共库','B'),
     ('search_user_form',u'客户检索输入框','B'),
     ('search_user',u'客户检索','B'),
     ('giveup_users',u'放弃客户审核','B'),
@@ -430,14 +431,17 @@ USER_ORIGINS = {
     13:u'地面已购',
     14:u'抽奖未购',
     15:u'抽奖已购',
+    16:u'维护老顾客抽奖',
+    17:u'终端微信',
+    18:u'终端提交',
     99:u'其它',
 }
 
-NEED_PAID_USER_ORIGINS = [7,8,9,11]
+NEED_PAID_USER_ORIGINS = [7,8,9,11,13]
 
 #操作员分配客户时长(根据来源)
 USER_ASSIGN_HOURS = {
-    1:72,2:168,3:72,4:168,5:72,6:72,7:1440,8:1440,9:1440,13:5,14:72,15:72,99:1440
+    1:72,2:168,3:72,4:168,5:72,6:72,7:1440,8:1440,9:1440,13:5,99:1440
 }
 
 ASSIGN_DEFAULT_HOURS = 72
@@ -505,7 +509,7 @@ STOCK_OUT_CATEGORIES_IDs = [12,13,14,20,11]
 ITEM_QUANTITY_THRESHOLD = 200
 
 #SKU单位
-SKU_UNITS = [u'件',u'盒',u'瓶',u'袋',u'个',u'套',u'本',u'条']
+SKU_UNITS = [u'件',u'盒',u'瓶',u'袋',u'个',u'套',u'本',u'条',u'张']
 
 #操作员状态
 OPERATOR_STATUS = {
@@ -560,8 +564,8 @@ TEAMS = {
 }
 
 TEAM_RETAIN_USER_HOURS = {
-    'A1':{0:72},
-    'A2':{0:72},
+    'A1':{0:72,13:1},
+    'A2':{0:72,13:1},
     'B1':{0:168,7:1440,8:1440,9:1440},
     'B2':{0:168,7:1440,8:1440,9:1440},
     'C1':{0:0},

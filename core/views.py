@@ -16,7 +16,7 @@ from utils.tools import printException,des
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import QXHDM_User,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -1232,6 +1232,11 @@ def _add_order(operator, request):
 #     return _items
 
 
+@admin.route('/order/clear_order_items')
+@admin_required
+def clear_order_items():
+    cache.set(ALLOWED_ORDER_ITEMS_CACHE_KEY,None,0)
+    return 'ok'
 def allowed_order_items():
     _data = cache.get(ALLOWED_ORDER_ITEMS_CACHE_KEY)
     if isinstance(_data,list):
@@ -1375,6 +1380,7 @@ def search_order_phone():
 
 def order_conditions():
     _conditions = []
+    _conditions.append(Order.status < 200)
     order_id = request.args.get('order_id', 0)
     if order_id: _conditions.append(Order.order_id == int(order_id))
 
@@ -2606,6 +2612,18 @@ def _edit_user(user):
         user.m3 = request.form['m3']
 
         expect_time = request.form['expect_time']
+        
+        is_new = request.form['is_new']
+        if not is_new:is_new = 0
+        is_new = int(is_new)        
+        user.is_new = is_new
+        if is_new:
+            user.fugou = 0
+        else:
+            fugou = request.form['fugou']
+            if not fugou:fugou = 0
+            user.fugou = fugou
+        user.disease = request.form['disease']
         #print expect_time
         if expect_time:
             #print datetime.strptime(expect_time,'%Y-%m-%d %H:%M')
@@ -2743,6 +2761,18 @@ def _add_user():
         user.m1 = request.form['m1']
         user.m2 = request.form['m2']
         user.m3 = request.form['m3']
+
+        is_new = request.form['is_new']
+        if not is_new:is_new = 0
+        is_new = int(is_new)        
+        user.is_new = is_new
+        if is_new:
+            user.fugou = 0
+        else:
+            fugou = request.form['fugou']
+            if not fugou:fugou = 0
+            user.fugou = fugou
+        user.disease = request.form['disease']
 
         if dialog_content:
             user.dialog_times = 1
@@ -3613,3 +3643,39 @@ def voucher_get():
                                'price': vr.price})
 
         return jsonify(uservoucher=_uservoucher)
+#地面相关
+@admin.route('/dm/status',methods=['POST'])
+@login_required
+def dmyx():
+    if request.method=='POST':
+        user_id = request.form['user_id']
+        status = request.form['status']
+        user = User.query.get_or_404(user_id)
+        user.is_valid = status
+        db.session.add(user)
+        dmuser = QXHDM_User.query.filter(QXHDM_User.user_id == user_id).first()
+        dmuser.is_valid = status
+        dmuser.valid_time = datetime.now().strftime('%Y-%m-%d')
+        db.session.add(dmuser)
+
+        db.session.commit()
+
+        return jsonify(result=True)
+
+
+@admin.route('/user/qxhdm')
+@admin_required
+def qxhdm_users():
+    _conditions = user_conditions()
+    _conditions.append(User.user_type==user_type)
+    _conditions.append(User.assign_operator_id == None)
+    page = int(request.args.get('page', 1))
+    is_order,order_by = user_order_by()
+    if not is_order:order_by = asc(User.is_assigned)
+    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+    return render_template('user/users.html',
+                           pagination=pagination,
+                           show_label = True if user_type==1 else False,
+                           operators=Operator.query.filter(Operator.assign_user_type==user_type),
+                           show_queries=['admin','username','phone','show_assign','user_origin','show_abandon'])
+

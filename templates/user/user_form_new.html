@@ -386,7 +386,7 @@
             req.done(function (data) {
                 if (data.result == true) {
                     var data=data.error;
-                    window.location.href = "/user/detail/"+data.user_id+'/'+data.token;
+                    window.location.href = "/user/detail/"+data.user_id;
                 }
                 else {
                     show_err(data.error);
@@ -446,6 +446,16 @@
         else if (_name == 'city') {
             $('#district').select2('val', '').change();
         }
+		else{
+			var _address = "";
+			$.each(['#province', '#city', '#district'], function (index, name) {
+				var d = $(name).val();
+				if (d != "请选择" && d != "市辖县" && d != "市辖区") {
+					_address += $(name).val();
+				}
+			});
+			$('#address .add-on').empty().text(_address);
+		}
     });
     });
 </script>
@@ -646,6 +656,21 @@
                                 {% for k,v in config['CONCERNS'].iteritems() %}
                                     <label class="inline checkbox"><input type="checkbox" name="concern" value="{{ k }}"/>{{ v }}</label>
                                 {% endfor %}
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">新老客户</label>
+
+                            <div class="controls">
+                                <label style="float:left; padding-right:15px;"><input name="is_new" value="0" type="radio">老客户</label><label><input name="is_new" value="1" type="radio">新客户</label><br />
+                                <label>复购次数:<input id="fugou" name="fugou" class="input-large" type="text" />新客户为0，可不填写</label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">病症</label>
+
+                            <div class="controls">
+                                <textarea name="disease" style="width:600px; height:120px;" class="input"></textarea>
                             </div>
                         </div>
                         <hr/>

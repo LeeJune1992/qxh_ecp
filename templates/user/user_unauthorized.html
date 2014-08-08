@@ -407,6 +407,22 @@ $(function () {
                             <td>{{ config['USER_INCOME_CONFIG'][user.income] }}</td>
                         </tr>
                         <tr>
+                            <td class="title">新老客户</td>
+                            <td>
+                                {% if user.is_new == 0 %}新客户
+								{%else%}老客户,复购次数{{ user.fugou }}
+								{%endif%}
+                            </td>
+                            <td class="title">病症</td>
+                            <td>{{ user.disease }}</td>
+                        </tr>
+                        {% if user.qxhdm_user_id > 0 %}
+						<tr>
+                            <td class="title">购买情况</td>
+                            <td colspan="3">{{ user.purchases }}</td>
+                        </tr>
+						{%endif%}
+                        <tr>
                             <td class="title">关心问题</td>
                             <td>
                                 {% for k in user.concerns %}

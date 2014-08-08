@@ -675,6 +675,37 @@ $(function () {
         });
         return false;
     });
+    dmstatus = 1;
+	$('a#dm_wx').click(function () {
+		dmstatus = 2;
+	});
+	$('a#dm_yx,a#dm_wx').click(function () {
+        var confirm_text = '确认该客户有效吗？';
+        bootbox.confirm(confirm_text, function (result) {
+            if (result != true) {
+                return;
+            }
+            var req = $.ajax({
+                url: '{{ url_for('admin.dmyx') }}',
+                dataType: "json",
+                type: 'POST',
+                data: {user_id: {{ user.user_id }},status:dmstatus}
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    window.location.href = "{{ url_for('admin.my_users') }}";
+                }
+                else {
+                    bootbox.alert('发生错误：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+        });
+        return false;
+    });
 
 
     $('a#sms_notify').click(function () {
@@ -1109,6 +1140,30 @@ $(function () {
                                         {% endfor %}
                                     </div>
                                 </div>
+                                {% if user.qxhdm_user_id > 0 %}
+								<div class="control-group">
+                                    <label class="control-label">购买情况</label>
+
+                                    <div class="controls">
+                                        {{ user.purchases }}
+                                    </div>
+                                </div>
+								{%endif%}
+                                <div class="control-group">
+                                    <label class="control-label">新老客户</label>
+
+                                    <div class="controls">
+                                        <label style="float:left; padding-right:15px;"><input name="is_new" value="0" {% if user.is_new == 0 %}checked{%endif%} type="radio">老客户</label><label><input name="is_new" value="1" {% if user.is_new == 1 %}checked{%endif%} type="radio">新客户</label><br />
+										<label>复购次数:<input id="fugou" name="fugou" class="input-large" type="text" value="{{user.fugou}}" />新客户为0，可不填写</label>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">病症</label>
+
+                                    <div class="controls">
+                                        <textarea name="disease" style="width:600px; height:120px;" class="input">{{user.disease}}</textarea>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -1176,6 +1231,10 @@ $(function () {
 
     <div class="navbar navbar-fixed-bottom menubar">
         <div class="container-fluid">
+            {% if user.qxhdm_user_id and user.is_valid < 1 %}
+                <a href="#" id="dm_yx" class="btn btn-primary btn-small">有效</a>
+                <a href="#" id="dm_wx" class="btn btn-danger btn-small">无效</a>
+            {% endif %}
         <button type="submit" class="btn btn-success btn-small">保存资料</button>
         <a href="{{ url_for('admin.add_order',phone=user.phone,name=user.name,user_id=user.user_id) }}" class="btn btn-primary btn-small" id="order_link">创建订单</a>
         {% if user.assign_operator_id == current_user.id %}
