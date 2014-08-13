@@ -446,7 +446,7 @@ USER_ASSIGN_HOURS = {
 
 ASSIGN_DEFAULT_HOURS = 72
 
-USER_INTENT_LEVELS = ['A','B','C','D','E','F']
+USER_INTENT_LEVELS = ['A','B','C','D','E','F','G','H']
 
 USER_STATUS = {
     0:u'全部',

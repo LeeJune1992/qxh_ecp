@@ -81,6 +81,8 @@
             {{ nav_link('admin.except_orders','差额订单调整') }}
             {{ nav_link('admin.search_order_phone','号码查询') }}
             {{ nav_link('admin.order_lhyd_yz','陆航韵达邮政录单') }}
+            {{ nav_link('admin.hasarrived','物流已到货') }}
+            {{ nav_link('admin.caiwuqr','财务确认') }}
         </ul>
     {% elif category=='user' %}
         <ul class="nav nav-list bs-docs-sidenav">
@@ -91,6 +93,7 @@
             {{ nav_link('admin.manage_users','客户管理') }}
             {{ nav_link('admin.public_new_users','公共库',num='新客户') }}
             {{ nav_link('admin.public_old_users','公共库',num='会员客户') }}
+            {{ nav_link('admin.qxhdm_users','公共库',num='地面客户') }}
             {{ nav_link('admin.giveup_users','放弃客户审核') }}
             {{ nav_link('admin.giveup_user_sq','我申请的放弃客户') }}
             {{ nav_link('admin.giveup_user_audit','我审核的放弃客户') }}

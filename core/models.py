@@ -1472,35 +1472,3 @@ class User_Voucher(db.Model):
     status = Column(db.Boolean,nullable=False,default=False)#状态
     order_id = Column(db.BigInteger(unsigned=True), db.ForeignKey('order.order_id'), nullable=True)#订单号
     order = db.relationship('Order', primaryjoin="(Order.order_id == User_Voucher.order_id)")#订单
-
-############################
-#   气血和地面
-############################
-class QXHDM_User(db.Model):
-    '''气血和地面用户信息表'''
-    __tablename__ = 'qxhdm_user'
-    id = Column(db.Integer)
-    user_id = Column(db.Integer)
-    name = Column(db.String(50), nullable=False)
-    phone = Column(db.String(15), nullable=False, unique=True)#手机号
-    phone2 = Column(db.String(15))#手机号2
-    gender = Column(db.String(10), nullable=False, default=u'保密')#性别
-    ages = Column(db.SmallInteger(unsigned=True),nullable=False,default=0)###客户年龄
-    area = Column(db.String(20), nullable=False)#区域
-    operator_id = Column(db.Integer)#操作人员
-    #operator = relationship('QXHDM_Operator', primaryjoin="(QXHDM_Operator.id == QXHDM_User.operator_id)")
-    created_operator_id = Column(db.Integer)#初始操作人员
-    is_lock = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#锁定(0:不锁定,1:锁定)
-    status = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#当前状态(0:未验证,1:有效,2:无效)
-    gmbigcount = Column(db.Integer, nullable=False)#购买数量
-    gmsmallcount = Column(db.Integer, nullable=False)#购买数量
-    gmaddress = Column(db.String(20), nullable=False)#购买地址
-    gmdate = Column(db.Date, default=datetime.now, nullable=False)#购买时间
-    created = Column(db.DateTime, default=datetime.now, nullable=False)#录入时间
-    is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效
-    is_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#是否新客户
-    fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
-    disease = Column(db.String(500))#病症
-    remark = Column(db.String(500))#备注
-    valid_time = Column(db.Date)#验证时间
-    ids = Column(db.Integer, primary_key=True)

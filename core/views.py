@@ -12,11 +12,13 @@ from sqlalchemy import desc,asc,func
 from sqlalchemy.orm import defer
 from flask.ext.sqlalchemy import Pagination
 from utils.tools import printException,des
-
+import pycurl
+from StringIO import StringIO
+from global_settings import DMURL
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import QXHDM_User,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -1654,7 +1656,28 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
     order_log.ip = request.remote_addr
     db.session.add(order_log)
     print order.assign_operator_id
+    if order.user.qxhdm_user_id > 0 and to_status == 6 and order.status == 5:
+        bigcount = 0
+        smallcount = 0
+        for oi in order.order_items:
+            if oi.sku_id == 10003:
+                bigcount += oi.quantity
+            if oi.sku_id == 10001:
+                smallcount += oi.quantity
+        if bigcount > 0 or smallcount > 0:
+            html = StringIO()
+            url = r'%supdateqxh?id=%s&order_id=%s&bigcount=%s&smallcount=%s'%(DMURL,order.user.qxhdm_user_id,order.order_id,bigcount,smallcount)
+            print url
+            c = pycurl.Curl()
+            c.setopt(pycurl.URL, url)
+            c.setopt(pycurl.SSL_VERIFYHOST, False)
+            c.setopt(pycurl.SSL_VERIFYPEER, False)
+            c.setopt(pycurl.WRITEFUNCTION, html.write)
+            c.setopt(pycurl.FOLLOWLOCATION, 1)
+            c.perform()
     order.update_status(to_status)
+
+        
     order.operate_log = remark
     order.modified = datetime.now()
     print 'ok'
@@ -2136,7 +2159,8 @@ def user_per_page():
 
 
 def user_conditions():
-    _conditions = []
+    _conditions = []    
+    #_conditions.append(User.qxhdm_user_id==0)    
     assign_operator_id = request.args.get('assign_operator_id','')
     if assign_operator_id:
         _conditions.append(User.assign_operator_id==int(assign_operator_id))
@@ -2904,7 +2928,6 @@ def giveup_user_no():
 @admin_required
 def giveup_users():
     _conditions = user_conditions()
-
     #仅允许管理本部门员工数据
     #if not current_user.is_admin and current_user.team:
     #    operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0))
@@ -3644,6 +3667,66 @@ def voucher_get():
 
         return jsonify(uservoucher=_uservoucher)
 #地面相关
+@admin.route('/getdmuser', methods=['GET', 'POST'])
+def getdmuser():
+    html = StringIO()
+    url = r'%sgetuser'%DMURL
+    print url
+    c = pycurl.Curl()
+    c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.SSL_VERIFYHOST, False)
+    c.setopt(pycurl.SSL_VERIFYPEER, False)
+    c.setopt(pycurl.WRITEFUNCTION, html.write)
+    c.setopt(pycurl.FOLLOWLOCATION, 1)
+    c.perform()
+    
+    ll = str(html.getvalue())
+    users = json.loads(ll)
+    for u in users:
+        user = User()
+        p = User_Phone.query.filter(db.or_(User_Phone.phone == u['phone'],User_Phone.phone == u['phone2'])).first()
+        if p:
+            user = User.query.get_or_404(p.user_id)
+            user.operator_id = 1
+            user.assign_operator_id = 1
+            purchases = u['name']+u'于'+u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒,备注：'+u['remark']+u',电话：'+u['phone']+','+u['phone2']+u',年龄：'+str(u['ages'])+u',性别：'+u['gender']
+            user.purchases = purchases
+            user.qxhdm_user_id = u['id']
+
+            db.session.add(user)
+
+        else:            
+            user.operator_id = 1
+            user.assign_operator_id = 1
+            user.name = u['name']
+            user.phone = u['phone']
+            user.phone2 = u['phone2']
+            user.gender = u['gender']
+            user.ages = u['ages']
+            user.is_new = u['is_new']
+            user.disease = u['disease']
+            user.fugou = u['fugou']
+            user.remark = u['remark']
+            purchases = u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒'
+            user.purchases = purchases
+            user.qxhdm_user_id = u['id']
+
+            db.session.add(user)
+            db.session.flush()
+
+        url = r'%supdateuser?id=%s&user_id=%s'%(DMURL,u['id'],user.user_id)
+        print url
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, url)
+        c.setopt(pycurl.SSL_VERIFYHOST, False)
+        c.setopt(pycurl.SSL_VERIFYPEER, False)
+        c.setopt(pycurl.WRITEFUNCTION, html.write)
+        c.setopt(pycurl.FOLLOWLOCATION, 1)
+        c.perform()
+
+        db.session.commit()
+    return ll
+
 @admin.route('/dm/status',methods=['POST'])
 @login_required
 def dmyx():
@@ -3653,12 +3736,19 @@ def dmyx():
         user = User.query.get_or_404(user_id)
         user.is_valid = status
         db.session.add(user)
-        dmuser = QXHDM_User.query.filter(QXHDM_User.user_id == user_id).first()
-        dmuser.is_valid = status
-        dmuser.valid_time = datetime.now().strftime('%Y-%m-%d')
-        db.session.add(dmuser)
-
         db.session.commit()
+        
+        html = StringIO()
+        url = r'%supdateyx?id=%s&is_valid=%s'%(DMURL,user.qxhdm_user_id,user.is_valid)
+        print url
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, url)
+        c.setopt(pycurl.SSL_VERIFYHOST, False)
+        c.setopt(pycurl.SSL_VERIFYPEER, False)
+        c.setopt(pycurl.WRITEFUNCTION, html.write)
+        c.setopt(pycurl.FOLLOWLOCATION, 1)
+        c.perform()
+
 
         return jsonify(result=True)
 
@@ -3666,16 +3756,18 @@ def dmyx():
 @admin.route('/user/qxhdm')
 @admin_required
 def qxhdm_users():
-    _conditions = user_conditions()
-    _conditions.append(User.user_type==user_type)
+    user_type = 0    
+    _conditions = []
+    _conditions.append(User.operator_id ==1 )
     _conditions.append(User.assign_operator_id == None)
+    _conditions.append(User.qxhdm_user_id > 0)
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
     if not is_order:order_by = asc(User.is_assigned)
     pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
-    return render_template('user/users.html',
+    return render_template('user/users_dm.html',
                            pagination=pagination,
                            show_label = True if user_type==1 else False,
                            operators=Operator.query.filter(Operator.assign_user_type==user_type),
-                           show_queries=['admin','username','phone','show_assign','user_origin','show_abandon'])
+                           show_queries=['admin'])
 
