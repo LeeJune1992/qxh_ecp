@@ -26,6 +26,7 @@ from flask import json
 def getdmuser():
     html = StringIO()
     url = r'%sgetuser'%DMURL
+    print datetime.now()
     print url
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url)
@@ -70,6 +71,9 @@ def getdmuser():
 
             db.session.add(user)
             db.session.flush()
+            db.session.add(User_Phone.add_phone(user.user_id,user.phone))
+            if user.phone2:
+                db.session.add(User_Phone.add_phone(user.user_id,user.phone2))
 
         url = r'%supdateuser?id=%s&user_id=%s'%(DMURL,u['id'],user.user_id)
         print url
@@ -82,6 +86,14 @@ def getdmuser():
         c.perform()
 
         db.session.commit()
+
+#@manager.command
+#def dmuserphone():
+#    users = User.query.filter(User.qxhdm_user_id > 0)
+#    for user in users:
+#        print user.user_id
+#        db.session.add(User_Phone.add_phone(user.user_id,user.phone))
+#    db.session.commit()
 
 
 if __name__ == "__main__":

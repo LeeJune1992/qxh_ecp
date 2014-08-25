@@ -1658,15 +1658,18 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
     print order.assign_operator_id
     if order.user.qxhdm_user_id > 0 and to_status == 6 and order.status == 5:
         bigcount = 0
+        mediumcount = 0
         smallcount = 0
         for oi in order.order_items:
             if oi.sku_id == 10003:
                 bigcount += oi.quantity
+            if oi.sku_id == 10002:
+                mediumcount += oi.quantity
             if oi.sku_id == 10001:
                 smallcount += oi.quantity
-        if bigcount > 0 or smallcount > 0:
+        if bigcount > 0 or mediumcount > 0 or smallcount > 0:
             html = StringIO()
-            url = r'%supdateqxh?id=%s&order_id=%s&bigcount=%s&smallcount=%s'%(DMURL,order.user.qxhdm_user_id,order.order_id,bigcount,smallcount)
+            url = r'%supdateqxh?id=%s&order_id=%s&bigcount=%s&mediumcount=%s&smallcount=%s'%(DMURL,order.user.qxhdm_user_id,order.order_id,bigcount,mediumcount,smallcount)
             print url
             c = pycurl.Curl()
             c.setopt(pycurl.URL, url)
@@ -3579,35 +3582,54 @@ def hasarrived():
 @admin.route('/order/caiwuqr')
 @admin_required
 def caiwuqr():
-    orders = request.form['orders'].split(',')
-    
-    p = re.compile(r"(\d{11}$)")
-    orders = [order for order in orders if order and p.match(order)]
-    print orders
-    if len(orders)==0:return jsonify(result=False,error=u'群发号码为空或错误！')
-    code = request.args.get('code','')
-    error = ''
-    phones = ''
-    if m:
-        order = Order.query.filter(Order.express_number==m).first()
-        while True:
-            if not order:
-                error = u'订单不存在！'
-                break
-            if order.code and code <> code:
-                error = u'查询码输入错误！'
-                break
-            if order.status<>5:
-                error = u'当前订单状态不允许查询号码！'
-                break
+    if request.method == 'POST':
+        op = request.form['op']
+        if op == '1':
+            orderids = request.form['orders']
+            orders = orderids.split(',')
+            orders1 = orders
+            p = re.compile(r"(\d{11}$)")
+            orders = [order for order in orders if order and p.match(order)]
+            if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
+         
+            page = int(request.args.get('page', 1))
+            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders
+            if orders.total<len(orders1):
+                return jsonify(result=False,error='订单号状态错误或重复！')
+            try:
+                for order in orders.items:
+                    result,desc = _manage_order(order,60,u'一键对帐')
+                    if result is not True:
+                        raise Exception(u'处理订单《%s》发生错误：%s'%(order.order_id,desc))
+                return jsonify(result=True)
+            except Exception,e:
+                current_app.logger.error('FAST Reconciliation ERROR.%s'%e)
+                return jsonify(result=False,error=e.message)
+        else:
+            orderids = request.form['orders']
+            #print orderids
+            orders = orderids.split('\r\n')
+            orders1 = orders
+            p = re.compile(r"(\d{11}$)")
+            orders = [order for order in orders if order and p.match(order)]
+            #print len(orders1)>len(orders)
+            msg = ''
+            if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
 
-            _phones = []
-            shipping_address = order.shipping_address
-            if shipping_address.phone:_phones.append(shipping_address.phone)
-            if shipping_address.tel:_phones.append(shipping_address.tel)
-            phones = '<br/>'.join(_phones)
-            break
-    return render_template('order/caiwuqr.html',error=error,phones=phones)
+            if msg:
+                return render_template('order/hasarrived.html',orderids=orderids,msg=msg)  
+            msg = ''
+            page = int(request.args.get('page', 1))
+            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders
+            if orders.total<len(orders1):
+                msg = '订单号状态错误或重复！'
+            return render_template('order/caiwuqr.html',orderids=orderids,msg=msg,orders=orders)    
+    else:
+        page = int(request.args.get('page', 1))
+        orders = Order.query.filter('1=2').paginate(page, per_page=user_per_page())
+        return render_template('order/caiwuqr.html',orders=orders)
 
 #add john 添加代金卷
 @admin.route('/user/voucher_add/<int:user_id>',methods=['POST'])
@@ -3756,6 +3778,12 @@ def dmyx():
 @admin.route('/user/qxhdm')
 @admin_required
 def qxhdm_users():
+    #仅允许管理本部门员工数据
+    if not current_user.is_admin and current_user.team:
+        operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0,Operator.status<>9))
+    else:
+        operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9)
+
     user_type = 0    
     _conditions = []
     _conditions.append(User.operator_id ==1 )
@@ -3768,6 +3796,6 @@ def qxhdm_users():
     return render_template('user/users_dm.html',
                            pagination=pagination,
                            show_label = True if user_type==1 else False,
-                           operators=Operator.query.filter(Operator.assign_user_type==user_type),
+                           operators=operators,
                            show_queries=['admin'])
 
