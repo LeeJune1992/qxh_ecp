@@ -3579,10 +3579,11 @@ def hasarrived():
         orders = Order.query.filter('1=2').paginate(page, per_page=user_per_page())
         return render_template('order/hasarrived.html',orders=orders)
 
-@admin.route('/order/caiwuqr')
+@admin.route('/order/caiwuqr',methods=['POST', 'GET'])
 @admin_required
 def caiwuqr():
     if request.method == 'POST':
+        print 'ok'
         op = request.form['op']
         if op == '1':
             orderids = request.form['orders']
@@ -3593,13 +3594,13 @@ def caiwuqr():
             if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
          
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
-            print orders
+            orders = Order.query.filter('status=60 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders.total
             if orders.total<len(orders1):
                 return jsonify(result=False,error='订单号状态错误或重复！')
             try:
                 for order in orders.items:
-                    result,desc = _manage_order(order,60,u'一键对帐')
+                    result,desc = _manage_order(order,100,u'一键财务确认')
                     if result is not True:
                         raise Exception(u'处理订单《%s》发生错误：%s'%(order.order_id,desc))
                 return jsonify(result=True)
@@ -3618,11 +3619,11 @@ def caiwuqr():
             if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
 
             if msg:
-                return render_template('order/hasarrived.html',orderids=orderids,msg=msg)  
+                return render_template('order/caiwuqr.html',orderids=orderids,msg=msg)  
             msg = ''
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
-            print orders
+            orders = Order.query.filter('status=60 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            print orders.total
             if orders.total<len(orders1):
                 msg = '订单号状态错误或重复！'
             return render_template('order/caiwuqr.html',orderids=orderids,msg=msg,orders=orders)    
