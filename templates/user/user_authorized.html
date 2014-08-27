@@ -645,11 +645,23 @@ $(function () {
         return false;
     });
     dmstatus = 1;
+	$('a#dm_yx').click(function () {
+		dmstatus = 1;
+	});
 	$('a#dm_wx').click(function () {
 		dmstatus = 2;
 	});
-	$('a#dm_yx,a#dm_wx').click(function () {
-        var confirm_text = '确认该客户有效吗？';
+	$('a#dm_wfqr').click(function () {
+		dmstatus = 3;
+	});
+	$('a#dm_yx,a#dm_wx,a#dm_wfqr').click(function () {
+        var confirm_text = '确认该客户有效吗？确认后将无法更改!';
+		if(dmstatus == 2){
+			confirm_text = '确认该客户无效吗？确认后将无法更改!';
+		}
+		if(dmstatus == 3){
+			confirm_text = '确认该客户无法确认吗？确认后将无法更改!';
+		}
         bootbox.confirm(confirm_text, function (result) {
             if (result != true) {
                 return;
@@ -1203,6 +1215,7 @@ $(function () {
             {% if user.qxhdm_user_id and user.is_valid < 1 %}
                 <a href="#" id="dm_yx" class="btn btn-primary btn-small">有效</a>
                 <a href="#" id="dm_wx" class="btn btn-danger btn-small">无效</a>
+                <a href="#" id="dm_wfqr" class="btn btn-danger btn-small">无法确认</a>
             {% endif %}
         <button type="submit" class="btn btn-success btn-small">保存资料</button>
         <a href="{{ url_for('admin.add_order',phone=user.phone,name=user.name,user_id=user.user_id) }}" class="btn btn-primary btn-small" id="order_link">创建订单</a>
