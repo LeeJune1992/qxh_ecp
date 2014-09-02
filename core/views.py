@@ -3536,18 +3536,18 @@ def hasarrived():
             orderids = request.form['orders']
             orders = orderids.split(',')
             orders1 = orders
-            p = re.compile(r"(\d{11}$)")
-            orders = [order for order in orders if order and p.match(order)]
-            if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
+#            p = re.compile(r"(\d{11}$)")
+#            orders = [order for order in orders if order and p.match(order)]
+#            if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
          
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            orders = Order.query.filter('status=6 and express_number in (\''+orderids.replace(',','\',\'')+'\')').paginate(page, per_page=user_per_page())
             print orders
             if orders.total<len(orders1):
                 return jsonify(result=False,error='订单号状态错误或重复！')
             try:
                 for order in orders.items:
-                    result,desc = _manage_order(order,60,u'一键对帐')
+                    result,desc = _manage_order(order,60,u'一键物流对帐')
                     if result is not True:
                         raise Exception(u'处理订单《%s》发生错误：%s'%(order.order_id,desc))
                 return jsonify(result=True)
@@ -3559,17 +3559,17 @@ def hasarrived():
             #print orderids
             orders = orderids.split('\r\n')
             orders1 = orders
-            p = re.compile(r"(\d{11}$)")
-            orders = [order for order in orders if order and p.match(order)]
+#            p = re.compile(r"(\d{11}$)")
+#            orders = [order for order in orders if order and p.match(order)]
             #print len(orders1)>len(orders)
             msg = ''
-            if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
+            #if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
 
             if msg:
                 return render_template('order/hasarrived.html',orderids=orderids,msg=msg)  
             msg = ''
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=6 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            orders = Order.query.filter('status=6 and express_number in (\''+orderids.replace('\r\n','\',\'')+'\')').paginate(page, per_page=user_per_page())
             print orders
             if orders.total<len(orders1):
                 msg = '订单号状态错误或重复！'
@@ -3589,12 +3589,15 @@ def caiwuqr():
             orderids = request.form['orders']
             orders = orderids.split(',')
             orders1 = orders
-            p = re.compile(r"(\d{11}$)")
-            orders = [order for order in orders if order and p.match(order)]
-            if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
+            #p = re.compile(r"(\d{11}$)")
+            #orders = [order for order in orders if order and p.match(order)]
+            #if len(orders)==0 or len(orders1)>len(orders):return jsonify(result=False,error=u'订单号格式错误！')
          
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=60 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+#            print orderids
+#            print 'status=60 and express_number in (\''+orderids.replace(',','\',\'')+'\')'
+#            return 'ok'
+            orders = Order.query.filter('status=60 and express_number in (\''+orderids.replace(',','\',\'')+'\')').paginate(page, per_page=user_per_page())
             print orders.total
             if orders.total<len(orders1):
                 return jsonify(result=False,error='订单号状态错误或重复！')
@@ -3612,17 +3615,17 @@ def caiwuqr():
             #print orderids
             orders = orderids.split('\r\n')
             orders1 = orders
-            p = re.compile(r"(\d{11}$)")
-            orders = [order for order in orders if order and p.match(order)]
+            #p = re.compile(r"(\d{11}$)")
+            #orders = [order for order in orders if order and p.match(order)]
             #print len(orders1)>len(orders)
             msg = ''
-            if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
+            #if len(orders)==0 or len(orders1)>len(orders):msg = '订单号格式错误！'#return jsonify(result=False,error=u'订单号为空或错误！')
 
             if msg:
                 return render_template('order/caiwuqr.html',orderids=orderids,msg=msg)  
             msg = ''
             page = int(request.args.get('page', 1))
-            orders = Order.query.filter('status=60 and order_id in ('+orderids.replace('\r\n',',')+')').paginate(page, per_page=user_per_page())
+            orders = Order.query.filter('status=60 and express_number in (\''+orderids.replace('\r\n','\',\'')+'\')').paginate(page, per_page=user_per_page())
             print orders.total
             if orders.total<len(orders1):
                 msg = '订单号状态错误或重复！'
@@ -3799,4 +3802,19 @@ def qxhdm_users():
                            show_label = True if user_type==1 else False,
                            operators=operators,
                            show_queries=['admin'])
+
+#重入库
+@admin.route('/order/repeatinsku',methods=['GET'])
+@admin_required
+def order_repeatinsku():
+    _sql1 = '''select * from (select count(order_id) as cc,order_id,DATE_FORMAT(operate_time,'%Y-%m-%d %H:%i') from order_log where to_status=104 group by order_id,DATE_FORMAT(operate_time,'%Y-%m-%d %H:%i') ) aa where cc>1 order by order_id desc; '''+str(current_user.store_id)+''') group by `order`.store_id,sku.name'''
+      
+    #return _sql2
+    totaljx = []#所有订单总额
+    #totalss = []#所有订单数
+    
+    #return _sql1
+    rows2 = db.session.execute(_sql1)
+    #totalss = db.session.execute(_sql2)
+    return render_template('order/repeatinsku.html',totaljx=totaljx,rows2=rows2)
 

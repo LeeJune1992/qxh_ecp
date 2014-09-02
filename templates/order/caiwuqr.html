@@ -25,7 +25,7 @@ $(function(){
 	$('#orderid').submit(function(){
 		var orders = $('#orders').val().replace(/ /g,'').replace(/\n/g,',');
 		if(orders == ''){
-			alert('订单号不允许为空！');
+			alert('快递单号不允许为空！');
 			$('#orders').focus();
 			return false;
 		}
@@ -51,7 +51,7 @@ $(function(){
 	$('#dzqr').click(function(){
 		var orders = $('#orders').val().replace(/ /g,'').replace(/\n/g,',');
 		if(orders == ''){
-			alert('订单号不允许为空！');
+			alert('快递单号不允许为空！');
 			$('#orders').focus();
 			return false;
 		}
@@ -93,7 +93,7 @@ $(function(){
     <div id="zje">{% if orders and orders.items %}总计金额：<strong>{{ orders.items|sum(attribute='item_fee') }}元{% endif %}</strong></div>
     <form method="POST" id="orderid" class="form-search inline well well-small">
         <input type="hidden" name="op" value="0" />
-        <textarea class="span12" style="height:290px" id="orders" name="orders" {% if orders and orders.items %} readonly="readonly"{% endif %} placeholder="订单号，多个订单号请换行,不要有空格等其它字符">{{ orderids }}</textarea>
+        <textarea class="span12" style="height:290px" id="orders" name="orders" {% if orders and orders.items %} readonly="readonly"{% endif %} placeholder="快递单号，多个快递单号请换行,不要有空格等其它字符">{{ orderids }}</textarea>
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
         {% if orders and orders.items %}<button type="button" id="dzqr" class="btn btn-primary"><i class="icon-white"></i>财务确认</button>{% endif %}
     </form>
