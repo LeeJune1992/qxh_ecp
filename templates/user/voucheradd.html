@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+{% set category='user' %}
+{% block title %}添加代金卷{% endblock %}
+{% block css %}
+{{ super() }}
+<style type="text/css">
+.phone{
+    color: orangered;
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 20px;
+    letter-spacing: 2px;
+}
+</style>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(function(){
+    function show_err(err) {
+        $('#error').show();
+        $('#error p').empty().html(err);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+	$('#orderid').submit(function(){
+		var orders = $('#orders').val().replace(/ /g,'').replace(/\n/g,',');
+		if(orders == ''){
+			alert('客户电话号码不允许为空！');
+			$('#orders').focus();
+			return false;
+		}
+        var confirm_text = '确认给这些客户添加代金卷？';
+        bootbox.prompt(confirm_text, function (result) {
+            if(result === null){
+				return;
+			}else if(result == ''){
+				bootbox.alert('原因为空,请填写原因!');
+				return;
+			}
+			var req = $.ajax({
+				url: '{{ url_for('admin.voucheradd') }}',
+				dataType: "json",
+				type: 'POST',
+				data: {orders:orders,'remark':result}
+			});
+			req.done(function (data) {
+				if (data.result == true) {
+					$('#orders').removeAttr("readonly");
+					$('#orders').empty();
+					bootbox.alert("操作成功!");
+				}
+				else {
+					bootbox.alert("操作失败：" + data.error);
+				}
+			});
+			req.fail(function (request, status, error) {
+				bootbox.alert('发生错误:' + error);
+			});
+		});
+		return false;
+	});
+	$('#dzqr').click(function(){
+		var orders = $('#orders').val().replace(/ /g,'').replace(/\n/g,',');
+		if(orders == ''){
+			alert('快递单号不允许为空！');
+			$('#orders').focus();
+			return false;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.caiwuqr') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {orders:orders,op:'1'}
+		});
+		req.done(function (data) {
+			if (data.result == true) {
+				$('#orders').removeAttr("readonly");
+				$('#orders').empty();
+				$('#zje').empty();
+				$('#dzqr').hide();
+				bootbox.alert("操作成功!");
+			}
+			else {
+				bootbox.alert("操作失败：" + data.error);
+				$('#orders').removeAttr("readonly");
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert('发生错误:' + error);
+			$('#orders').removeAttr("readonly");
+		});
+		return false;
+	});
+});
+</script>
+{% endblock %}
+{% block main %}
+    {% if msg %}
+    <div class="alert alert-block alert-error fade in" id="error">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p>{{ msg }}</p>
+    </div>
+    {% endif %}
+    <form method="POST" id="orderid" class="form-search inline well well-small">
+        <input type="hidden" name="op" value="0" />
+        <textarea class="span12" style="height:290px" id="orders" name="orders" {% if orders and orders.items %} readonly="readonly"{% endif %} placeholder="客户电话号码，多个客户电话号码请换行,不要有空格等其它字符">{{ orderids }}</textarea>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 添加代金卷</button>
+    </form>
+
+    {% if phones %}
+        <div class="alert alert-info">
+        <b>收方号码：</b>
+    <p class="phone">{{ phones|safe }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

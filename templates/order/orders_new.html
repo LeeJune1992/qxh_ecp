@@ -848,7 +848,7 @@
                             </tr>
                         {% endfor %}
                         {% if order.voucher_fee %}
-                        <tr data-item_id="99999"><td><span>代金卷(抵扣)</span></td><td><strong>1</strong>张</td><td>{{ order.voucher_fee }}</td>
+                        <tr data-item_id="99999"><td><span>代金卷(抵扣)</span></td><td><strong>{{ '%.0f'|format(order.voucher_fee/20) }}</strong>张</td><td>{{ order.voucher_fee }}</td>
                         {% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<td>1</td><td>0</td>{% endif %}
                         </tr>
                         {% endif %}

@@ -116,9 +116,9 @@
 							$.each(this, function (i, item) {
 								attrs += i + '="' + item + '" ';
 							});
-							html += "<li style='margin-right:35px'><input type='radio' value='"+this.id+"' id='djj"+this.id+"' name='djj' dprice='"+this.price+"'><label for='djj"+this.id+"'>代金卷(抵扣)"+this.price+"</label></li>";
+							html += "<li style='margin-right:35px'><label for='dff"+this.id+"'><input type='checkbox' value='"+this.id+"' id='dff"+this.id+"' dprice='"+this.price+"' name='djj' />代金卷(抵扣)"+this.price+','+this.created+"</label></li>";
 						});
-						html += "</ul><a name='onvoucher' href='#' onclick='javascipt:return false;'>取消</a>";
+						//html += "</ul><a name='onvoucher' href='#' onclick='javascipt:return false;'>取消</a>";
 						$('#uservoucher').html(html);
 						$('a[name="onvoucher"]').click(function () {
 							$("input:radio[name='djj']").attr("checked",false);
@@ -180,6 +180,10 @@
                 return false;
             }
 
+			if(djjs){
+                bootbox.alert('代金卷使用过多');
+                return false;
+			}
             var discount_fee = parseInt($('#discount_fee').val());
             if (isNaN(discount_fee)) {
                 discount_fee = 0;
@@ -189,6 +193,10 @@
                 bootbox.alert('优惠金额小于０');
                 return false;
             }
+			var djj=[];
+			$('input[type="checkbox"]:checked').each(function(){
+				djj.push($(this).val());
+			});
 
             //alert($(this).serialize());
             add_btn.attr('disabled', true);
@@ -201,6 +209,7 @@
             values.push({name: 'items', value: JSON.stringify(items)});
             values.push({name:'items_changed',value:items_changed});
             values.push({name: 'payment_type', value: payment_type});
+            values.push({name: 'djj2', value: JSON.stringify(djj)});
 
             var req = $.ajax({
                 url: "{{ request.path }}",
@@ -225,6 +234,7 @@
             return false;
         });
 
+		var djjs = 0;
         /*  订单商品  */
         var order = {
             refresh: function () {
@@ -255,9 +265,30 @@
                     //$sel.append('</table>');
 					if(totalfee>20){
 						$('#uservoucher').show();
-						var voucher = $("input:radio[name='djj']:checked").val();
-						if(voucher){
-							total_fee -= $("input:radio[name='djj']:checked").attr("dprice");
+						var vp = 0;
+						$('input[type="checkbox"]:checked').each(function(){
+							vp += 20;
+						});
+						djjs = 0;
+						switch(vp){
+							case 40:
+								if(total_fee<1000){
+									djjs = 1;
+								}
+								break;
+							case 60:
+								if(total_fee<1500){
+									djjs = 1;
+								}
+								break;
+							case 80:
+								if(total_fee<2000){
+									djjs = 1;
+								}
+								break;
+						}
+						if(vp){
+							total_fee -= vp;
 						}
 					}else{
 						$("input:radio[name='djj']").attr("checked",false);
@@ -310,10 +341,12 @@
         }
         $('#add-item').on('click',order.add);
         order.refresh();
-		{% if voucheruser and voucheruser.order_id  %}
-		 setTimeout(function(){$('#djj{{voucheruser.id}}').click();order.refresh();},1000);		 
+		{% if voucheruser  %}
+		{% for vu in voucheruser  %}
+		 setTimeout(function(){$("#dff{{vu.id}}").attr("checked",true);order.refresh();},1000);
+		{% endfor %}
 		{% endif %}
-    });
+    });//setTimeout(function(){$("#dff4").attr("checked",'true'); alert('ok');order.refresh();},1000);
     </script>
 {%- endblock %}
 

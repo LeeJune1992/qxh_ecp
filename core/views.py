@@ -14,7 +14,7 @@ from flask.ext.sqlalchemy import Pagination
 from utils.tools import printException,des
 import pycurl
 from StringIO import StringIO
-from global_settings import DMURL
+from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
@@ -995,6 +995,7 @@ def add_loss():
 
 def _add_order(operator, request):
     '''创建订单'''
+        #订单操作日志
     user_id = request.form['user_id']
     if not user_id: user_id = 0
     user_id = int(user_id)
@@ -1071,12 +1072,31 @@ def _add_order(operator, request):
             _sku_sets.append((_sku_set, quantity))
         
     #代金卷
-    djj = int(request.form.get('djj', 0))
-    print djj
-    if djj > 0:
-        voucheruser = User_Voucher.query.get(djj) 
-        if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'
+    #djj = int(request.form.get('djj', 0))
+    djj = json.loads(request.form['djj2'])
+    djjlen = len(djj)
 
+    djjtotle = 20*djjlen
+    isdjj = 0
+    if djjtotle == 20:
+        if totalitemfee<500:
+            isdjj = 1
+    elif djjtotle == 40:
+        if totalitemfee<1000:
+            isdjj = 1
+    elif djjtotle == 60:
+        if totalitemfee<1500:
+            isdjj = 1
+    elif djjtotle == 80:
+        if totalitemfee<2000:
+            isdjj = 1
+    if isdjj:
+        return False, '代金卷使用过多'
+    if djjlen > 0:
+        for djjm in djj:
+            voucheruser = User_Voucher.query.get(djjm)
+            if voucheruser.user_id<>user_id or voucheruser.order_id>0:return False, '不能使用该代金卷'
+    #return False, '不能使用该代金卷2'
     try:
         if user_id:
             try:
@@ -1149,22 +1169,18 @@ def _add_order(operator, request):
         order.team = operator.team
         order.update_status(1)
         
-        if djj>0:
-            order.item_fee -= voucheruser.price#订单减去代金卷
-            order.voucher_id = djj
-            print 'ok1'
-            print djj
-            print order.voucher_id
-            print 'ok'
-            order.voucher_fee = voucheruser.price
-            voucheruser.order_id = order.order_id
-            db.session.add(voucheruser)
-
+        if djjtotle>0:
+            order.item_fee -= djjtotle#订单减去代金卷
+            order.voucher_fee = djjtotle
+            for djjm in djj:
+                voucheruser = User_Voucher.query.get(djjm)
+                voucheruser.order_id = order.order_id
+                order.voucher_id = voucheruser.id
+                db.session.add(voucheruser)
 
         db.session.add(order)
         db.session.flush()
 
-        #订单操作日志
         log = Order_Log()
         log.operator_id = operator.id
         log.order_id = order.order_id
@@ -1655,7 +1671,6 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
     order_log.order_id = order.order_id
     order_log.ip = request.remote_addr
     db.session.add(order_log)
-    print order.assign_operator_id
     if order.user.qxhdm_user_id > 0 and to_status == 6 and order.status == 5:
         bigcount = 0
         mediumcount = 0
@@ -1678,6 +1693,28 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
             c.setopt(pycurl.WRITEFUNCTION, html.write)
             c.setopt(pycurl.FOLLOWLOCATION, 1)
             c.perform()
+    #DM单
+    if to_status == 6 and order.status == 5:
+        dmd = 0
+        #print 'ok'
+        for oi in order.order_items:
+            #print 'ok2'
+            if oi.sku_id == DMD_ID:
+                dmd = 1
+                #print 'ok3'
+                break
+        if dmd:            
+            #print 'ok4'
+            #print order.order_id
+            voucheruser = User_Voucher();
+            voucheruser.user_id = order.user_id
+            voucheruser.operator_id = 1
+            voucheruser.remark = order.order_id
+            voucheruser.price = 20
+            voucheruser.status = True
+            db.session.add(voucheruser)
+    print order.assign_operator_id
+
     order.update_status(to_status)
 
         
@@ -1884,9 +1921,24 @@ def _edit_order(order):
         is_xlj = False
         items_changed = int(request.form['items_changed'])
         #代金卷
-        djj = int(request.form.get('djj', 0))
-        if djj > 0:
-            voucheruser = User_Voucher.query.get(djj) 
+        _conditions = []
+        _conditions.append(User_Voucher.order_id == order.order_id)
+        voucherusers = User_Voucher.query.filter(db.and_(*_conditions)).all()
+        for vu in voucherusers:
+            vu.order_id = None
+            db.session.add(vu)
+        order.voucher_fee = 0
+        djj = json.loads(request.form['djj2'])
+        djjlen = len(djj)
+
+        djjtotle = 20*djjlen
+        order.voucher_fee = djjtotle
+        if djjlen > 0:
+            for djjm in djj:
+                voucheruser = User_Voucher.query.get(djjm)
+                if voucheruser.user_id<>order.user_id or voucheruser.order_id>0:return False, '不能使用该代金卷'
+                voucheruser.order_id = order.order_id
+
 
 
         if items_changed:
@@ -1982,49 +2034,21 @@ def _edit_order(order):
                 if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'                
                 #order.item_fee -= voucheruser.price #订单减去代金卷
 
-        if djj > 0:
-            if order.voucher_fee > 0:#以前有 现在有
-                if order.voucher_id == djj:
-                    if items_changed:
-                        order.item_fee -= voucheruser.price #订单减去代金卷
-                else:          
-                    if items_changed:
-                        order.item_fee -= voucheruser.price #订单减去代金卷          
-                    ordervoucher = User_Voucher.query.get(order.voucher_id)
-                    if ordervoucher:
-                        ordervoucher.order_id = None
-                        db.session.add(ordervoucher)
-                    print 'ok2'
-                    if voucheruser:
-                        order.voucher_id = djj
-                        order.voucher_fee = voucheruser.price
-                        voucheruser.order_id = order.order_id
-                        db.session.add(voucheruser)
-                    else:
-                        return False, '不能使用该代金卷2'   
-            else:#以前没有 现在有
-                if voucheruser:
-                    order.item_fee -= voucheruser.price #订单减去代金卷
-                    order.voucher_id = djj
-                    order.voucher_fee = voucheruser.price
-                    print 'ok'
-                    print order.order_id
-                    voucheruser.order_id = order.order_id
-                    db.session.add(voucheruser)
+        if djjlen > 0:
+            if voucherusers:#以前有 现在有
+                if items_changed:
+                    order.item_fee -= djjtotle #订单减去代金卷
                 else:
-                    return False, '不能使用该代金卷2'   
+                    order.item_fee -= (djjtotle-len(voucherusers)*20) 
+            else:#以前没有 现在有
+                order.item_fee -= djjtotle #订单减去代金卷 
         else:
-            if order.voucher_fee > 0:#以前有  现在没有
-                voucheruser = User_Voucher.query.get(order.voucher_id)
-                if voucheruser:                
-                    voucheruser.order_id = None
-                    db.session.add(voucheruser)
-                order.voucher_fee = 0
+            if voucherusers:#以前有  现在没有
                 order.voucher_id = 0
                 if items_changed:
                     pass
                 else:
-                    order.item_fee += voucheruser.price #订单增加代金卷
+                    order.item_fee += len(voucherusers)*20 #订单增加代金卷
 
 
         order.is_xlj = is_xlj
@@ -2059,7 +2083,7 @@ def edit_order(order_id):
     order = Order.query.get(order_id)
     _conditions = []
     _conditions.append(User_Voucher.order_id == order_id)
-    voucheruser = User_Voucher.query.filter(db.and_(*_conditions)).first()
+    voucheruser = User_Voucher.query.filter(db.and_(*_conditions))
 
 
     if request.method == 'POST':
@@ -3689,7 +3713,9 @@ def voucher_get():
         _uservoucher = []
         for vr in voucheruser:
             _uservoucher.append({'id': vr.id,
-                               'price': vr.price})
+                               'price': vr.price,
+                               'created': vr.created.strftime('%Y-%m-%d')
+                                })
 
         return jsonify(uservoucher=_uservoucher)
 #地面相关
@@ -3818,3 +3844,36 @@ def order_repeatinsku():
     #totalss = db.session.execute(_sql2)
     return render_template('order/repeatinsku.html',totaljx=totaljx,rows2=rows2)
 
+
+@admin.route('/user/voucheradd',methods=['POST', 'GET'])
+@admin_required
+def voucheradd():
+    if request.method == 'POST':
+        print 'ok'
+        orderids = request.form['orders']
+        remark = request.form.get('remark', None)
+        #print orderids
+        phones = orderids.split('\r\n')
+        try:
+            for phone in phones:
+                user_id = User_Phone.user_id_by_phone(phone)
+                print phone
+                if user_id:
+                    voucheruser = User_Voucher();
+                    voucheruser.user_id = user_id
+                    voucheruser.operator_id = current_user.id
+                    voucheruser.remark = remark
+                    voucheruser.price = 20
+                    voucheruser.status = True
+                    db.session.add(voucheruser)
+                    db.session.commit()
+                    current_app.logger.info('VOUCHER_USER|%s|%s|%s|%s'%(user_id,voucheruser.id,current_user.id,datetime.now()))
+        
+        except Exception,e:
+            db.session.rollback()
+            return jsonify(result=False,error=u'无法添加代金卷，%s'%e)
+        return jsonify(result=True)
+    else:
+        page = int(request.args.get('page', 1))
+        orders = Order.query.filter('1=2').paginate(page, per_page=user_per_page())
+        return render_template('user/voucheradd.html',orders=orders)
