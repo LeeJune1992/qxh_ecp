@@ -524,6 +524,60 @@ $(function () {
 
     show_sms();
 
+    var show_voucher = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_voucher',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>代金券</th><th>备注</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.status + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#voucher_history').html(html);
+                $('#voucher_nums').html(sms_list.length);
+            }
+            else {
+                $('#voucher_history').html('无代金券');
+                $('#voucher_nums').html(0);
+            }
+        });
+    };
+    show_voucher();
+	
+    var show_orderyf = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_orderyf',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#orderyf_history').html(html);
+                $('#orderyf_nums').html(sms_list.length);
+            }
+            else {
+                $('#orderyf_history').html('无药房预判');
+                $('#orderyf_nums').html(0);
+            }
+        });
+    };
+    show_orderyf();
+
     var Dialog = {
         update: function () {
             var req = $.ajax({
@@ -789,6 +843,37 @@ $(function () {
         return false;
     });
 
+    $('form#addyp-form').submit(function(){
+        var bigcount = $('#bigcount').val();
+        var mediumcount = $('#mediumcount').val();
+        var smallcount = $('#smallcount').val();
+        if (bigcount == 0 && mediumcount == 0 && smallcount == 0){
+            alert('数量不能小于0');
+            $('#bigcount').focus();
+            return false;
+        }
+
+        var req = $.ajax({
+            url: '{{ url_for('admin.add_dmyp',user_id=user.user_id) }}',
+            dataType: "json",
+            type: 'POST',
+            data: {bigcount: bigcount,mediumcount:mediumcount,smallcount:smallcount}
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#addypModal').modal('hide');
+                bootbox.alert('添加成功！');
+            }
+            else {
+                bootbox.alert('添加失败：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
 
     function update_order_link(){
         var _href = '/order/add?user_id='+'{{ user.user_id }}'+'&phone='+$('#user_phone').val()+'&name='+$('#name').val();
@@ -918,6 +1003,24 @@ $(function () {
         </div>
         <div class="modal-body">
             <textarea class="span12" style="height: 90px" id="sms_message" name="sms_message" placeholder="短信内容"></textarea>
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-success" type="submit">确认提交</button>
+        </div>
+
+    </div>
+    </form>
+    <form name="addyp-form" id="addyp-form">
+    <div id="addypModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <blockquote style="color:#ccc">提示：增加后不能修改,请确认后添加。</blockquote>
+        </div>
+        <div class="modal-body">
+           大盒数量: <input type="text" style="width: 55px" placeholder="大盒数量" name="bigcount" id="bigcount" value="0">
+			中盒数量:<input type="text" style="width: 55px" placeholder="中盒数量" name="mediumcount" id="mediumcount" value="0">
+			小盒数量:<input type="text" style="width: 55px" placeholder="小盒数量" name="smallcount" id="smallcount" value="0">
         </div>
         <div class="modal-footer" style="text-align: center">
             <button class="btn btn-success" type="submit">确认提交</button>
@@ -1217,6 +1320,9 @@ $(function () {
                 <a href="#" id="dm_wx" class="btn btn-danger btn-small">无效</a>
                 <a href="#" id="dm_wfqr" class="btn btn-danger btn-small">无法确认</a>
             {% endif %}
+            {% if user.qxhdm_user_id %}
+                <a href="#" id="dm_addyp" class="btn btn-primary btn-small" onclick="$('#addypModal').modal('show');">增加预判</a>
+            {% endif %}
         <button type="submit" class="btn btn-success btn-small">保存资料</button>
         <a href="{{ url_for('admin.add_order',phone=user.phone,name=user.name,user_id=user.user_id) }}" class="btn btn-primary btn-small" id="order_link">创建订单</a>
         {% if user.assign_operator_id == current_user.id %}
@@ -1367,8 +1473,39 @@ $(function () {
 
         </div>
     </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#voucherModule">
+                <i class="icon-chevron-down"></i> 代金券　(<span id="voucher_nums"></span>)
+            </a>
+        </div>
+        <div id="voucherModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div id="voucher_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                           border="0"/>正在费力加载中...
+                </div>
+            </div>
+
+        </div>
     </div>
 
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule">
+                <i class="icon-chevron-down"></i> 药房预判　(<span id="orderyf_nums"></span>)
+            </a>
+        </div>
+        <div id="orderyfModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div id="orderyf_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                           border="0"/>正在费力加载中...
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
 
 {%- endblock -%}
 

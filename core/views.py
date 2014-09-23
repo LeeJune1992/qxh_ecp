@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -2030,8 +2030,8 @@ def _edit_order(order):
                 db.session.add(_order_sku_set)
 
             order.item_fee = total_item_fee#TODO:优惠处理
-            if djj > 0:                
-                if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'                
+            #if djj > 0:                
+                #if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'                
                 #order.item_fee -= voucheruser.price #订单减去代金卷
 
         if djjlen > 0:
@@ -3877,3 +3877,61 @@ def voucheradd():
         page = int(request.args.get('page', 1))
         orders = Order.query.filter('1=2').paginate(page, per_page=user_per_page())
         return render_template('user/voucheradd.html',orders=orders)
+
+@admin.route('/user/dmyp/<int:user_id>', methods=['POST'])
+@login_required
+def add_dmyp(user_id):
+    if request.method == 'POST':
+        try:
+            user = User.query.get(user_id)
+            orderyf = QXHDM_Orderyf()
+            orderyf.user_id = user.user_id
+            orderyf.dm_user_id = user.qxhdm_user_id
+            bigcount = request.form['bigcount']
+            mediumcount = request.form['mediumcount']
+            smallcount = request.form['smallcount']
+            orderyf.bigcount = bigcount
+            orderyf.mediumcount = mediumcount
+            orderyf.smallcount = smallcount
+            html = StringIO()
+            url = r'%supdateyf?id=%s&bigcount=%s&mediumcount=%s&smallcount=%s'%(DMURL,user.qxhdm_user_id,bigcount,mediumcount,smallcount)
+            print url
+            c = pycurl.Curl()
+            c.setopt(pycurl.URL, url)
+            c.setopt(pycurl.SSL_VERIFYHOST, False)
+            c.setopt(pycurl.SSL_VERIFYPEER, False)
+            c.setopt(pycurl.WRITEFUNCTION, html.write)
+            c.setopt(pycurl.FOLLOWLOCATION, 1)
+            c.perform()
+
+            db.session.add(orderyf)
+            db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('ADD SMS ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/voucher/<int:user_id>')
+@login_required
+def user_voucher(user_id):
+    _objs = User_Voucher.query.filter(User_Voucher.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'message':sms.created,
+                         'status':sms.remark})
+    return jsonify(result=sms_list)
+
+@admin.route('/user/orderyf/<int:user_id>')
+@login_required
+def user_orderyf(user_id):
+    _objs = QXHDM_Orderyf.query.filter(QXHDM_Orderyf.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'message':str(sms.created),
+                         'bigcount':sms.bigcount,
+                         'mediumcount':sms.mediumcount,
+                         'smallcount':sms.smallcount
+
+})
+    return jsonify(result=sms_list)

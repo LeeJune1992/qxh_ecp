@@ -820,7 +820,7 @@ class User(db.Model):
     operator = db.relationship('Operator', primaryjoin="(Operator.id == User.operator_id)")
     assign_operator = db.relationship('Operator', primaryjoin="(Operator.id == User.assign_operator_id)")
     qxhdm_user_id = Column(db.Integer)#
-    is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效
+    is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效,3无法确认
     is_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#是否新客户
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
     purchases = Column(db.String(500))#购买情况
@@ -1369,7 +1369,7 @@ class Security_Code(db.Model):
 
     id = Column(db.Integer, primary_key=True)
     code = Column(db.String(8), nullable=False, unique=True)
-    created = Column(db.DateTime, nullable=False, default=datetime.now)
+    #created = Column(db.DateTime, nullable=False, default=datetime.now)
 
 class Security_Code_Log(db.Model):
     '''防伪码查询记录'''
@@ -1472,3 +1472,15 @@ class User_Voucher(db.Model):
     status = Column(db.Boolean,nullable=False,default=False)#状态
     order_id = Column(db.BigInteger(unsigned=True), db.ForeignKey('order.order_id'), nullable=True)#订单号
     order = db.relationship('Order', primaryjoin="(Order.order_id == User_Voucher.order_id)")#订单
+
+class QXHDM_Orderyf(db.Model):
+    '''地面预判断订单'''
+    __tablename__ = 'qxhdm_orderyf'
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    dm_user_id = Column(db.Integer, nullable=False)#地面
+    user = relationship('User', primaryjoin="(User.user_id == QXHDM_Orderyf.user_id)")
+    bigcount = Column(db.Integer(unsigned=True), default=0)#大数量
+    mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
+    smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
+    created = Column(db.DateTime, default=datetime.now, nullable=False)
