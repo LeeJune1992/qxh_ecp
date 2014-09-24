@@ -3185,12 +3185,12 @@ def manage_knowledge():
 def search_knowledge():
     q = request.args.get('q','none')
     if q:
-        return '1'
+        pass
     else:
         categorylist = Knowledge_Category.query.filter()
         for c in categorylist:
             bb = Knowledge.query.filter(Knowledge.category_id == c.id)
-    print categorylist
+        print categorylist
     news_list = Knowledge.query.join(Knowledge_Category,Knowledge_Category.id==Knowledge.category_id).filter('knowledge.title like \'%%'+q+'%%\' or knowledge_category.name =\''+q+'\'').order_by(desc(Knowledge.created))
     print news_list
     return render_template('knowledge/search.html', news_list=news_list)
@@ -3935,3 +3935,17 @@ def user_orderyf(user_id):
 
 })
     return jsonify(result=sms_list)
+
+@admin.route('/order/getuserinfobyeid',methods=['POST', 'GET'])
+@admin_required
+def getuserinfobyeid():
+    if request.method == 'POST':
+        print 'ok'
+        eid = request.form['eid']
+        if eid:
+            order = Order.query.filter(Order.express_number == eid).first()
+            if order:
+                return jsonify(result=True,order_id=order.order_id,express_number=order.express_number,name=order.publisher.nickname)
+        return jsonify(result=False,error=u'查询失败')
+    else:
+        return render_template('order/getuserinfobyeid.html')
