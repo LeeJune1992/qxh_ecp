@@ -875,6 +875,38 @@ $(function () {
         return false;
     });
 
+    $('form#khsldj-form').submit(function(){
+        var qxhcode = $('#qxhcode').val().replace(/ /g,'').replace(/\n/g,',');
+        var giftname = $('#giftname').val();
+        var pharmacyaddress = $('#pharmacyaddress').val();
+        if (qxhcode == ''){
+            alert('编码不能为空');
+            $('#qxhcode').focus();
+            return false;
+        }
+
+        var req = $.ajax({
+            url: '{{ url_for('admin.khsldj',user_id=user.user_id) }}',
+            dataType: "json",
+            type: 'POST',
+            data: {qxhcode: qxhcode,giftname:giftname,pharmacyaddress:pharmacyaddress}
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#khsldjModal').modal('hide');
+                bootbox.alert('添加成功！');
+            }
+            else {
+                bootbox.alert('添加失败：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
+
     function update_order_link(){
         var _href = '/order/add?user_id='+'{{ user.user_id }}'+'&phone='+$('#user_phone').val()+'&name='+$('#name').val();
         $('#order_link').attr('href',_href);
@@ -1021,6 +1053,24 @@ $(function () {
            大盒数量: <input type="text" style="width: 55px" placeholder="大盒数量" name="bigcount" id="bigcount" value="0">
 			中盒数量:<input type="text" style="width: 55px" placeholder="中盒数量" name="mediumcount" id="mediumcount" value="0">
 			小盒数量:<input type="text" style="width: 55px" placeholder="小盒数量" name="smallcount" id="smallcount" value="0">
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-success" type="submit">确认提交</button>
+        </div>
+
+    </div>
+    </form>
+    <form name="khsldj-form" id="khsldj-form">
+    <div id="khsldjModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <blockquote style="color:#ccc">提示：登记后不能修改,请确认后登记。</blockquote>
+        </div>
+        <div class="modal-body">
+           空盒编码:<textarea id="qxhcode" name="qxhcode" style="width: 105px; height:50" placeholder="空盒编码"></textarea>
+		   礼品名称: <input type="text" style="width: 105px" placeholder="礼品名称" name="giftname" id="giftname">
+		   药房地址: <input type="text" style="width: 105px" placeholder="药房地址" name="pharmacyaddress" id="pharmacyaddress">
         </div>
         <div class="modal-footer" style="text-align: center">
             <button class="btn btn-success" type="submit">确认提交</button>
@@ -1315,11 +1365,12 @@ $(function () {
 
     <div class="navbar navbar-fixed-bottom menubar">
         <div class="container-fluid">
-            {% if user.qxhdm_user_id and user.is_valid < 1 %}
+            {% if user.qxhdm_user_id and (user.is_valid < 1 or user.is_valid == 3) %}
                 <a href="#" id="dm_yx" class="btn btn-primary btn-small">有效</a>
                 <a href="#" id="dm_wx" class="btn btn-danger btn-small">无效</a>
                 <a href="#" id="dm_wfqr" class="btn btn-danger btn-small">无法确认</a>
             {% endif %}
+			<a href="#" id="khsldj" class="btn btn-primary btn-small" onclick="$('#khsldjModal').modal('show');">空盒送礼登记</a>
             {% if user.qxhdm_user_id %}
                 <a href="#" id="dm_addyp" class="btn btn-primary btn-small" onclick="$('#addypModal').modal('show');">增加预判</a>
             {% endif %}

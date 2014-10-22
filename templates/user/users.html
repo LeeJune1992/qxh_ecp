@@ -103,6 +103,11 @@
             placeholder:'意向等级',
             allowClear:true
         });
+        $('#product_intention').select2({
+            width:'100px',
+            placeholder:'产品意向',
+            allowClear:true
+        });
 
         {% if show_label %}
         $('#label_id').select2({
@@ -310,6 +315,13 @@
                 {%- endfor -%}
             </select>
         {% endif %}
+        <select id="product_intention" name="product_intention" class="select2">
+            <option></option>
+                {% set product_intention = request.args.get('product_intention',-1)|int %}
+                {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==product_intention %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+        </select>
         <select id="intent_level" name="intent_level" class="select2">
             <option></option>
             {% set intent_level = request.args.get('intent_level','') %}
@@ -408,6 +420,7 @@
             <th>分配时间</th>
             <th>剩余时长</th>
             <th>联系次数</th>
+            <th>省市</th>
             <th>最后联系时间</th>
 
         </tr>
@@ -448,6 +461,11 @@
                 <td>{{ user.assign_remain_info }}</td>
 
                 <td>{{ user.dialog_times }}</td>
+                <td>
+                {% for a in user.addresses %}
+                {{ a.province }}-{{ a.city }}
+                {% endfor %}
+                </td>
                 <td>
                     {{ user.last_dialog_time|default('',true) }}
                     {% if user.expect_time %}<br/>

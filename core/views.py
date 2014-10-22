@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -2207,6 +2207,10 @@ def user_conditions():
     if user_type:
         _conditions.append(User.user_type == int(user_type))
 
+    product_intention = request.args.get('product_intention', None)
+    if product_intention:
+        _conditions.append(User.product_intention == int(product_intention))
+
     label_id = request.args.get('label_id', 0)
     if label_id:
         _conditions.append(User.label_id == int(label_id))
@@ -3893,16 +3897,6 @@ def add_dmyp(user_id):
             orderyf.bigcount = bigcount
             orderyf.mediumcount = mediumcount
             orderyf.smallcount = smallcount
-            html = StringIO()
-            url = r'%supdateyf?id=%s&bigcount=%s&mediumcount=%s&smallcount=%s'%(DMURL,user.qxhdm_user_id,bigcount,mediumcount,smallcount)
-            print url
-            c = pycurl.Curl()
-            c.setopt(pycurl.URL, url)
-            c.setopt(pycurl.SSL_VERIFYHOST, False)
-            c.setopt(pycurl.SSL_VERIFYPEER, False)
-            c.setopt(pycurl.WRITEFUNCTION, html.write)
-            c.setopt(pycurl.FOLLOWLOCATION, 1)
-            c.perform()
 
             db.session.add(orderyf)
             db.session.commit()
@@ -3918,7 +3912,7 @@ def user_voucher(user_id):
     _objs = User_Voucher.query.filter(User_Voucher.user_id==user_id)
     sms_list = []
     for sms in _objs:
-        sms_list.append({'message':sms.created,
+        sms_list.append({'message':str(sms.created),
                          'status':sms.remark})
     return jsonify(result=sms_list)
 
@@ -3949,3 +3943,55 @@ def getuserinfobyeid():
         return jsonify(result=False,error=u'查询失败')
     else:
         return render_template('order/getuserinfobyeid.html')
+
+
+@admin.route('/order/securitycode_khbmcx',methods=['POST', 'GET'])
+@admin_required
+def securitycode_khbmcx():
+    if request.method == 'POST':
+        orderids = request.form['orders']
+        #print orderids
+        orders = orderids.split('\r\n')
+        orders1 = orders
+        orders = Security_Codekh.query.filter('code in (\''+orderids.replace('\r\n','\',\'')+'\')').all()
+        print orders
+        return render_template('securitycode/kxbmcx.html',orderids=orderids,orders=orders)    
+    else:
+        orders = Order.query.filter('1=2').all()
+        return render_template('securitycode/kxbmcx.html',orders=orders)
+
+@admin.route('/user/khsldj/<int:user_id>', methods=['POST'])
+@login_required
+def khsldj(user_id):
+    if request.method == 'POST':
+        try:
+            user = User.query.get(user_id)
+            qxhkjdj = QXHKHDJ()
+            qxhkjdj.user_id = user.user_id
+            qxhcode = request.form['qxhcode']
+            qxhcodes = qxhcode.split('\r\n')
+            page = int(request.args.get('page', 1))
+            codes = Security_Codekh.query.filter('qxhkjdj_id is null and code in (\''+qxhcode.replace('\r\n','\',\'')+'\')').paginate(page, per_page=user_per_page())
+            print codes.total
+            print len(qxhcodes)
+            if codes.total<len(qxhcodes):
+                return jsonify(result=False,error='空盒编码错误或已登记！')
+            giftname = request.form['giftname']
+            pharmacyaddress = request.form['pharmacyaddress']
+            qxhkjdj.qxhcode = qxhcode
+            qxhkjdj.giftname = giftname
+            qxhkjdj.pharmacyaddress = pharmacyaddress
+            _date = datetime.now().strftime('%y%m%d')
+            qxhkjdj.date = _date
+
+            db.session.add(qxhkjdj)
+            db.session.flush()
+            for c in codes.items:
+                c.qxhkjdj_id = qxhkjdj.id
+                db.session.add(c)
+            db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('ADD QXHKHHLDJ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)

@@ -825,6 +825,8 @@ class User(db.Model):
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
     purchases = Column(db.String(500))#购买情况
     disease = Column(db.String(500))#病症
+    pharmacy = Column(db.Integer)#药房
+    pharmacystores = Column(db.Integer)#分店
     @property
     def mobile_phones(self):
         _phones = []
@@ -1484,3 +1486,24 @@ class QXHDM_Orderyf(db.Model):
     mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
     smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
     created = Column(db.DateTime, default=datetime.now, nullable=False)
+
+class Security_Codekh(db.Model):
+    '''气血和编码'''
+    __tablename__ = 'security_codekh'
+
+    id = Column(db.Integer, primary_key=True)
+    code = Column(db.String(10), nullable=False, unique=True)
+    qxhkjdj_id = Column(db.Integer, db.ForeignKey('qxhkjdj.id'))
+
+class QXHKHDJ(db.Model):
+    '''气血和空盒登记'''
+    __tablename__ = 'qxhkjdj'
+    
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    date = Column(db.Integer(unsigned=True), nullable=False, index=True)
+    qxhcode = Column(db.String(100), nullable=False)
+    giftname = Column(db.String(100), nullable=False)
+    pharmacyaddress = Column(db.String(100), nullable=False)
+    qxhcodes = relationship('Security_Codekh', backref='qxhkjdj', lazy='dynamic')
+    status = Column(db.Boolean,nullable=False,default=False)#状态是否领取
