@@ -46,10 +46,10 @@
         ('report.sale_report_by_return_total','退货汇总表'),
         ('report.sale_report_by_user_total','会员客户数量统计'),
         ('report.jiexian_tongji','外呼统计'),
-        ('report.xlj_tongji','心力健统计'),
-        ('report.xlj_tongji2','心力健统计报表'),
+        ('report.xlj_sale_tongji','心力健销售统计'),
         ('report.xlj_mtjxqk','心力健媒体进线情况表'),
-        ('report.xlj_xsqkb','心力健销售情况表')] %}
+        ('report.xlj_xsqkb','心力健销售情况表'),
+        ('report.yy_khsl','空盒送礼登记表')] %}
 {#        {% if current_user.action() %}#}
             {% if endpoint == request.endpoint %}
                 <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>

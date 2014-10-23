@@ -578,6 +578,39 @@ $(function () {
     };
     show_orderyf();
 
+    var show_khsldj = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_show_khsldj',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>药房时间</th><th>登记时间</th><th>是否领取</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
+					if(sms.status){
+						html += '<td>已领取</td>';
+					}else{
+						html += "<td>未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a></td>";
+					}
+					html += '</tr>';
+                }
+                html += '</tbody></table>';
+                $('#khsldj_list').html(html);
+                $('#khsldj_nums').html(sms_list.length);
+            }
+            else {
+                $('#khsldj_list').html('无空盒送礼登记');
+                $('#khsldj_nums').html(0);
+            }
+        });
+    };
+    show_khsldj();
+	
     var Dialog = {
         update: function () {
             var req = $.ajax({
@@ -1021,6 +1054,31 @@ $(function () {
     });
 
 });
+function khsllq(id){
+	bootbox.confirm('确认客户已经领取了礼物吗,确认后将不能更改!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.khsllq') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
 </script>
 {{ place_auto_complete_js() }}
 {%- endblock %}
@@ -1556,6 +1614,23 @@ $(function () {
 
         </div>
     </div>
+	
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule">
+                <i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums"></span>)
+            </a>
+        </div>
+        <div id="khsldjModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                           border="0"/>正在费力加载中...
+                </div>
+            </div>
+
+        </div>
+    </div>
+	
     </div>
 
 {%- endblock -%}

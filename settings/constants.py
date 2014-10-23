@@ -217,10 +217,12 @@ ENDPOINTS = [
     ('order_fast_delivery',u'一键发货','A'),
     ('order_fast_delivery_detal',u'一键发货明细','A'),
     ('order_retransmission',u'重发订单','A'),
+    ('order_repeatinsku',u'重复入库','A'),
     ('except_orders',u'差额订单调整','A'),
     ('order_lhyd_yz',u'陆航韵达邮政录单','A'),
-    ('hasarrived',u'物流已到货','A'),
-    ('caiwuqr',u'财务确认','A'),
+    ('hasarrived',u'一键物流对帐','A'),
+    ('caiwuqr',u'一键财务对帐','A'),
+    ('getuserinfobyeid',u'快递单查归属','A'),
 
     ('my_users',u'我的客户库','B'),
     ('public_new_users',u'新客户公共库','B'),
@@ -246,6 +248,7 @@ ENDPOINTS = [
     ('sms_mass',u'短信群发','B'),
     ('sale_user_list',u'会员客户统计','B'),
     ('search_knowledge',u'知识查询','B'),
+    ('voucheradd',u'添加代金卷','B'),
 
 
     ('items',u'商品管理','C'),
@@ -344,6 +347,7 @@ ENDPOINTS = [
     
     ('securitycodes',u'防伪码查询','H'),
     ('securitycodelog',u'防伪码查询记录','H'),
+    ('securitycode_khbmcx',u'空盒编码查询','H'),
 
     ('categorys',u'知识类别管理','I'),
     ('manage_knowledge',u'知识管理','I'),
@@ -384,6 +388,7 @@ ORDER_TYPES = {
     101:u'样品订单',
     102:u'客情订单',
     103:u'调库订单',
+    104:u'抽奖活动订单',
     }
 
 ORDER_RELATED_STOCK_OUT_CATEGORIES = {
@@ -500,10 +505,12 @@ STOCK_OUT_CATEGORIES = {
     12:u'调库出库',
     13:u'客情出库',
     14:u'样品出库',
-    20:u'报损出库'
+    15:u'系统重入出库',
+    20:u'报损出库',
+    21:u'奖品出库'
 }
 
-STOCK_OUT_CATEGORIES_IDs = [12,13,14,20,11]
+STOCK_OUT_CATEGORIES_IDs = [12,13,14,15,20,11,21]
 
 #商品最小允许订购数量
 ITEM_QUANTITY_THRESHOLD = 200

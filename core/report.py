@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-
+from .models import QXHKHDJ
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -21,7 +21,7 @@ def sale_report():
 @report.route('/sale/ddxsmxtj')
 @admin_required
 def sale_report_by_ddxsmxtj():
-    _conditions = ['`order`.status<>103','`order`.status>1']
+    _conditions = ['`order`.status<>103','`order`.status>1','`order`.status<200']
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
@@ -317,7 +317,7 @@ GROUP BY t,dt'''%' AND '.join(_conditions)
 @admin_required
 def sale_report_by_ygxs():
     period = ''
-    _conditions = ['status NOT IN (1,103)']#['status IN (2,3,40,4,5,6,60,100)']
+    _conditions = ['status NOT IN (1,103)','status<200']#['status IN (2,3,40,4,5,6,60,100)']
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order_team` LIKE "'+current_user.team+'%"')
@@ -454,7 +454,7 @@ def sale_report_by_ygdhtj():
 @admin_required
 def sale_report_by_staff():
     period = ''
-    _conditions = ['`order`.status NOT IN (1,103)']#['`order`.status IN (2,3,40,4,5,6,60,100)']
+    _conditions = ['`order`.status NOT IN (1,103)','`order`.status<200']#['`order`.status IN (2,3,40,4,5,6,60,100)']
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
@@ -523,7 +523,7 @@ GROUP BY `order`.team,operator.id,operator.nickname,dt ORDER BY `order`.team,dt'
 @admin_required
 def sale_report_by_team():
     period = ''
-    _conditions = ['`order`.status NOT IN (1,103)']#['`order`.status IN (2,3,40,4,5,6,60,100)']
+    _conditions = ['`order`.status NOT IN (1,103)','`order`.status<200']#['`order`.status IN (2,3,40,4,5,6,60,100)']
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
@@ -582,7 +582,7 @@ GROUP BY t,dt'''%' AND '.join(_conditions)
 @admin_required
 def sale_report_by_item():
     period = ''
-    _conditions = ['`order`.status NOT IN (1,103)']#['`order`.status IN (2,3,40,4,5,6,60,100)']
+    _conditions = ['`order`.status NOT IN (1,103)','`order`.status<200']#['`order`.status IN (2,3,40,4,5,6,60,100)']
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
@@ -876,7 +876,7 @@ ORDER BY `order`.delivery_time'''%' AND '.join(_conditions)
 @admin_required
 def financial_report_by_paidan_tuihuo():
     period = ''
-    _conditions = ['`order`.status>100','`order`.order_type<100']
+    _conditions = ['`order`.status>100','`order`.order_type<100','`order`.status<200']
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order`.end_time>="%s"'%_start_date)
@@ -1010,7 +1010,7 @@ ORDER BY `order`.arrival_time'''%' AND '.join(_conditions)
 @admin_required
 def financial_report_by_qianshou_tuihuo():
     period = ''
-    _conditions = ['`order`.status>100','`order`.express_number IS NOT NULL','`order`.order_type<100']
+    _conditions = ['`order`.status>100','`order`.status<200','`order`.express_number IS NOT NULL','`order`.order_type<100']
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order`.end_time>="%s"'%_start_date)
@@ -1374,7 +1374,7 @@ GROUP BY `order`.team,`order`.express_id ORDER BY `order`.express_id,`order`.tea
 @report.route('/financial/paidan/tuihuo/tongji')
 @admin_required
 def financial_report_by_paidantuihuotongji():
-    _conditions = ['`order`.status>100','`order`.order_type<100']
+    _conditions = ['`order`.status>100','`order`.status<200','`order`.order_type<100']
     period = ''
     _start_date = request.args.get('start_date','')
     if _start_date:
@@ -1582,21 +1582,21 @@ def xlj_tongji():
  WHERE %s'''%' AND '.join(_conditions)
     
     _sql2 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 group by user_id) a where a.cc=1) AND %s'''%' AND '.join(_conditions)
+         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 and `order`.status<200 group by user_id) a where a.cc=1) AND %s'''%' AND '.join(_conditions)
     
     
     _sql3 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 group by user_id) a where a.cc=2) AND %s'''%' AND '.join(_conditions)
+         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 and `order`.status<200 group by user_id) a where a.cc=2) AND %s'''%' AND '.join(_conditions)
     
     _sql4 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 group by user_id) a where a.cc=3) AND %s'''%' AND '.join(_conditions)
+         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 and `order`.status<200 group by user_id) a where a.cc=3) AND %s'''%' AND '.join(_conditions)
     
     
     _sql5 = '''SELECT COUNT(distinct user.user_id) from `user` join `order` on user.user_id=`order`.user_id 
-         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 group by user_id) a where a.cc>3) AND %s'''%' AND '.join(_conditions)
+         WHERE user.user_id in (select a.user_id from (select count(*) as cc,user_id from `order` where is_xlj=1 and `order`.status>1 and `order`.status<200 group by user_id) a where a.cc>3) AND %s'''%' AND '.join(_conditions)
     
     _sql6 = '''SELECT COUNT(distinct user.user_id) from `user` 
-         WHERE user.user_id not in (select user_id from `order` where is_xlj=1 and `order`.status>1 ) AND %s'''%' AND '.join(_conditions)
+         WHERE user.user_id not in (select user_id from `order` where is_xlj=1 and `order`.status>1 and `order`.status<200 ) AND %s'''%' AND '.join(_conditions)
     
     
     
@@ -1637,47 +1637,47 @@ def xlj_sale_tongji():
 
 
     _sql1 = '''SELECT COUNT(distinct `order`.order_id) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
     #return _sql1
     _sql2 = '''SELECT COUNT(distinct `order`.order_id) from `order` join order_log on order_log.order_id=`order`.order_id join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
     #return _sql2
     
     _sql3 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
     #return _sql3
     _sql4 = '''SELECT COUNT(distinct `order`.order_id) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
     #return _sql4
     
     _sql5 = '''SELECT round(avg(`order`.item_fee-`order`.discount_fee),2) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
     #return _sql5
     _sql6 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `order` join order_log on order_log.order_id=`order`.order_id join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
 
     
     _sql7 = '''SELECT COUNT(distinct `order`.order_id) from `order` join order_log on order_log.order_id=`order`.order_id join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_log.to_status=6 AND %s'''%' AND '.join(_conditions)
 
     
     _sql8 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `order` join order_log on order_log.order_id=`order`.order_id join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND order_log.to_status in (9,10) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_log.to_status in (9,10) AND %s'''%' AND '.join(_conditions)
 
     
     _sql9 = '''SELECT COUNT(distinct `order`.order_id) from `order` join order_log on order_log.order_id=`order`.order_id join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) AND order_log.to_status in (9,10) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=15 AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_log.to_status in (9,10) AND %s'''%' AND '.join(_conditions)
 
     
     _sql10 = '''SELECT sum(`order`.item_fee-`order`.discount_fee) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
 
     _sql11 = '''SELECT COUNT(distinct `order`.order_id) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
 
 
     _sql12 = '''SELECT round(avg(`order`.item_fee-`order`.discount_fee),2) from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) AND %s'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=16 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s'''%' AND '.join(_conditions)
 
 
     _sql = _sql1+' union all '+_sql2+' union all '+_sql3+' union all '+_sql4+' union all '+_sql5+' union all '+_sql6+' union all '+_sql7+' union all '+_sql8+' union all '+_sql9+' union all '+_sql10+' union all '+_sql11+' union all '+_sql12
@@ -1709,13 +1709,13 @@ def xlj_mtjxqk():
  WHERE %s group by m1,m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
     #return _sql1
     _sql2 = '''SELECT COUNT(distinct `order`.order_id),`user`.m1,`user`.m2 from `order` join `user` on user.user_id=`order`.user_id 
-         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) AND %s group by `user`.m1,`user`.m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
+         WHERE `order`.order_type=14 AND `order`.status NOT IN (1,103) and `order`.status<200 AND %s group by `user`.m1,`user`.m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
 
     
     totaljx = []#所有订单总额
     totalss = []#所有订单数
     
-    #return _sql
+    #return _sql2
     rows = db.session.execute(_sql1)
     rows2 = db.session.execute(_sql2)
     return render_template('report/user_report_by_xljjxqkb.html',totaljx=totaljx,totalss=totalss,rows=rows,rows2=rows2,period=period)
@@ -1953,3 +1953,54 @@ def john_zz():
     #return _sql
     rows = db.session.execute(_sql)
     return render_template('report/user_report_by_xlj_sale.html',rows=rows,period=period)
+
+#气血和
+@report.route('/john/qxh')
+@admin_required
+def join_qxh():
+    goods='10001,10002,10003'
+    #保健品
+    goods='10029,10021,10028,10026,10024,10022,10025,10023,10027,10125,10127,10127,10123,10124'
+    #化妆品
+    goods='10062,10059,10058,10005,10006,10060,10007,10061,10016,10014,10015,10008,10013,10009,10011,10010,10012,10019,10018,10017,10020,10122,10030,10042'
+    _conditions = ["`order`.created>\'2014-01-01\'"]
+    _conditions.append('`order`.status NOT IN (1,103)','`order`.status<200')
+
+    _sql1 = '''SELECT COUNT(distinct user.user_id),m1,m2 user_ids FROM `user`
+ WHERE %s group by m1,m2 order by `user`.m1,`user`.m2'''%' AND '.join(_conditions)
+    #return _sql1
+    _sql2 = '''SELECT address.province,left(`order`.created,7),round(sum(`order`.item_fee),2),count(`order`.order_id) from `order` join order_item on order_item.order_id=`order`.order_id 
+    join address on address.id=`order`.shipping_address_id 
+         WHERE `order`.created>\'2014-01-01\' AND `order`.status NOT IN (1,103) and `order`.status<200 AND order_item.sku_id in ('''+goods+''') group by address.province,left(`order`.created,7) order by address.province'''
+
+    #return _sql2
+    totaljx = []#所有订单总额
+    totalss = []#所有订单数
+    
+    #return _sql
+    rows2 = db.session.execute(_sql2)
+    return render_template('report/user_report_by_diqu.html',totaljx=totaljx,totalss=totalss,rows2=rows2)
+
+#空盒送礼登记表
+@report.route('/yy/khsl')
+@admin_required
+def yy_khsl():
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`qxhkjdj`.date>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`qxhkjdj`.date<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`qxhkjdj`.date>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    rows = QXHKHDJ.query.filter(db.and_(*_conditions))
+    return render_template('report/yy_report_by_khsl.html',rows=rows,period=period)

@@ -3969,9 +3969,12 @@ def khsldj(user_id):
             qxhkjdj = QXHKHDJ()
             qxhkjdj.user_id = user.user_id
             qxhcode = request.form['qxhcode']
-            qxhcodes = qxhcode.split('\r\n')
+            qxhcodes = qxhcode.split(',')
             page = int(request.args.get('page', 1))
-            codes = Security_Codekh.query.filter('qxhkjdj_id is null and code in (\''+qxhcode.replace('\r\n','\',\'')+'\')').paginate(page, per_page=user_per_page())
+            print qxhcode
+            print qxhcode.replace(',','\',\'')
+            print 'qxhkjdj_id is null and code in (\''+qxhcode.replace('\r\n','\',\'')+'\')'
+            codes = Security_Codekh.query.filter('qxhkjdj_id is null and code in (\''+qxhcode.replace(',','\',\'')+'\')').paginate(page, per_page=user_per_page())
             print codes.total
             print len(qxhcodes)
             if codes.total<len(qxhcodes):
@@ -3981,7 +3984,7 @@ def khsldj(user_id):
             qxhkjdj.qxhcode = qxhcode
             qxhkjdj.giftname = giftname
             qxhkjdj.pharmacyaddress = pharmacyaddress
-            _date = datetime.now().strftime('%y%m%d')
+            _date = datetime.now().strftime('%Y-%m-%d')
             qxhkjdj.date = _date
 
             db.session.add(qxhkjdj)
@@ -3995,3 +3998,39 @@ def khsldj(user_id):
             db.session.rollback()
             current_app.logger.error('ADD QXHKHHLDJ ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
+
+
+@admin.route('/user/showkhsldj/<int:user_id>')
+@login_required
+def user_show_khsldj(user_id):
+    _objs = QXHKHDJ.query.filter(QXHKHDJ.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'qxhcode':str(sms.qxhcode),
+                         'giftname':sms.giftname,
+                         'pharmacyaddress':sms.pharmacyaddress,
+                         'date':str(sms.date),
+                         'status':sms.status,
+                         'id':sms.id
+
+})
+    return jsonify(result=sms_list)
+
+@admin.route('/user/khsllq', methods=['POST'])
+@login_required
+def khsllq():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            print id
+            qxhkdj = QXHKHDJ.query.get(id)
+            if qxhkdj:
+                qxhkdj.status = 1
+                db.session.add(qxhkdj)
+                db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+

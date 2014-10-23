@@ -1501,7 +1501,8 @@ class QXHKHDJ(db.Model):
     
     id = Column(db.Integer, primary_key=True)
     user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
-    date = Column(db.Integer(unsigned=True), nullable=False, index=True)
+    user = relationship('User', primaryjoin="(User.user_id == QXHKHDJ.user_id)")
+    date = Column(db.Date)
     qxhcode = Column(db.String(100), nullable=False)
     giftname = Column(db.String(100), nullable=False)
     pharmacyaddress = Column(db.String(100), nullable=False)
