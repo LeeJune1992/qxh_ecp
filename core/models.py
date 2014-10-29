@@ -1494,6 +1494,7 @@ class Security_Codekh(db.Model):
     id = Column(db.Integer, primary_key=True)
     code = Column(db.String(10), nullable=False, unique=True)
     qxhkjdj_id = Column(db.Integer, db.ForeignKey('qxhkjdj.id'))
+    #qxhkjdj = relationship('QXHKHDJ', primaryjoin="(QXHKHDJ.id == Security_Codekh.qxhkjdj_id)")
 
 class QXHKHDJ(db.Model):
     '''气血和空盒登记'''
@@ -1505,6 +1506,11 @@ class QXHKHDJ(db.Model):
     date = Column(db.Date)
     qxhcode = Column(db.String(100), nullable=False)
     giftname = Column(db.String(100), nullable=False)
+    giftcount = Column(db.Integer(unsigned=True), default=0)#礼品数量
+    province = Column(db.String(20))#省份
+    city = Column(db.String(20))#城市
+    district = Column(db.String(20))#所在区
     pharmacyaddress = Column(db.String(100), nullable=False)
     qxhcodes = relationship('Security_Codekh', backref='qxhkjdj', lazy='dynamic')
-    status = Column(db.Boolean,nullable=False,default=False)#状态是否领取
+    receive = Column(db.Boolean,nullable=False,default=False)#状态是否领取
+    status = Column(db.Boolean,nullable=False,default=True)#状态是否有效

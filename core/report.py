@@ -1985,7 +1985,7 @@ def join_qxh():
 @report.route('/yy/khsl')
 @admin_required
 def yy_khsl():
-    _conditions = []
+    _conditions = ['`qxhkjdj`.status=1']
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`qxhkjdj`.date>="%s"'%_start_date)

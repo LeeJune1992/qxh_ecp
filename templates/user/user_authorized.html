@@ -354,6 +354,8 @@ $(function () {
     };
 
     /*   地址查询   */
+    new PCAS("province2", "city2", "district2");
+    /*   地址查询   */
     new PCAS("province", "city", "district");
     $('#address select').change(function () {
         var _name = $(this).attr('name');
@@ -588,16 +590,21 @@ $(function () {
         req.done(function (data) {
             var sms_list = data.result;
             if (!$.isEmptyObject(sms_list)) {
-                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>药房时间</th><th>登记时间</th><th>是否领取</th></tr></thead><tbody>';
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>礼品数量</th><th>药房地址</th><th>登记时间</th><th>是否领取</th></tr></thead><tbody>';
                 for (var i in sms_list) {
                     sms = sms_list[i];
-                    html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
-					if(sms.status){
-						html += '<td>已领取</td>';
+                    html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.giftcount + '</td><td>' + sms.province + sms.city + sms.district + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
+					html += '<td>';
+					if(sms.receive){
+						html += '已领取';
 					}else{
-						html += "<td>未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a></td>";
+						if(!sms.status){
+							html += '无效';
+						}else{
+							html += "未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a>&nbsp;<a onclick='khsldjqx(" + sms.id + ")'>点此取消</a>";
+						}
 					}
-					html += '</tr>';
+					html += '</td></tr>';
                 }
                 html += '</tbody></table>';
                 $('#khsldj_list').html(html);
@@ -911,6 +918,10 @@ $(function () {
     $('form#khsldj-form').submit(function(){
         var qxhcode = $('#qxhcode').val().replace(/ /g,'').replace(/\n/g,',');
         var giftname = $('#giftname').val();
+        var giftcount = $('#giftcount').val();
+        var province = $('#province2').val();
+        var city = $('#city2').val();
+        var district = $('#district2').val();
         var pharmacyaddress = $('#pharmacyaddress').val();
         if (qxhcode == ''){
             alert('编码不能为空');
@@ -922,7 +933,7 @@ $(function () {
             url: '{{ url_for('admin.khsldj',user_id=user.user_id) }}',
             dataType: "json",
             type: 'POST',
-            data: {qxhcode: qxhcode,giftname:giftname,pharmacyaddress:pharmacyaddress}
+            data: {qxhcode: qxhcode,giftname:giftname,giftcount:giftcount,province:province,city:city,district:district,pharmacyaddress:pharmacyaddress}
         });
 
         req.done(function (data) {
@@ -1054,6 +1065,31 @@ $(function () {
     });
 
 });
+function khsldjqx(id){
+	bootbox.confirm('确认取消吗,确认取消后将不能更改!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.khsldjqx') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
 function khsllq(id){
 	bootbox.confirm('确认客户已经领取了礼物吗,确认后将不能更改!', function (result) {
 		if (result != true) {
@@ -1127,8 +1163,13 @@ function khsllq(id){
         </div>
         <div class="modal-body">
            空盒编码:<textarea id="qxhcode" name="qxhcode" style="width: 105px; height:50" placeholder="空盒编码"></textarea>
-		   礼品名称: <input type="text" style="width: 105px" placeholder="礼品名称" name="giftname" id="giftname">
-		   药房地址: <input type="text" style="width: 105px" placeholder="药房地址" name="pharmacyaddress" id="pharmacyaddress">
+		   礼品名称: <select id="giftname" name="giftname" class="select2" style="width: 105px"><option value="气血和(小盒)">气血和(小盒)</option><option value="四件套">四件套</option></select>
+		   礼品数量: <input type="text" style="width: 55px" placeholder="礼品数量" name="giftcount" id="giftcount">
+		   <br>药房地址:
+                                <select id="province2" name="province2" class="select2" style="width: 155px"></select>
+                                <select id="city2" name="city2" class="select2" style="width: 170px"></select>
+                                <select id="district2" name="district2" class="select2"
+                                        style="width: 160px"></select> <input type="text" style="width: 265px" placeholder="药房地址" name="pharmacyaddress" id="pharmacyaddress">
         </div>
         <div class="modal-footer" style="text-align: center">
             <button class="btn btn-success" type="submit">确认提交</button>

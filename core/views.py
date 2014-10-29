@@ -3787,27 +3787,30 @@ def getdmuser():
 @login_required
 def dmyx():
     if request.method=='POST':
-        user_id = request.form['user_id']
-        status = request.form['status']
-        user = User.query.get_or_404(user_id)
-        user.is_valid = status
-        db.session.add(user)
-        db.session.commit()
-        
-        html = StringIO()
-        url = r'%supdateyx?id=%s&is_valid=%s'%(DMURL,user.qxhdm_user_id,user.is_valid)
-        print url
-        c = pycurl.Curl()
-        c.setopt(pycurl.URL, url)
-        c.setopt(pycurl.SSL_VERIFYHOST, False)
-        c.setopt(pycurl.SSL_VERIFYPEER, False)
-        c.setopt(pycurl.WRITEFUNCTION, html.write)
-        c.setopt(pycurl.FOLLOWLOCATION, 1)
-        c.perform()
+        try:
+            user_id = request.form['user_id']
+            status = request.form['status']
+            user = User.query.get_or_404(user_id)
+            user.is_valid = status
+            db.session.add(user)
+            db.session.commit()
+            
+            html = StringIO()
+            url = r'%supdateyx?id=%s&is_valid=%s'%(DMURL,user.qxhdm_user_id,user.is_valid)
+            print url
+            c = pycurl.Curl()
+            c.setopt(pycurl.URL, url)
+            c.setopt(pycurl.SSL_VERIFYHOST, False)
+            c.setopt(pycurl.SSL_VERIFYPEER, False)
+            c.setopt(pycurl.WRITEFUNCTION, html.write)
+            c.setopt(pycurl.FOLLOWLOCATION, 1)
+            c.perform()
 
 
-        return jsonify(result=True)
-
+            return jsonify(result=True)
+        except:
+            db.session.rollback()
+            return jsonify(result=False, error=u'判断错误')
 
 @admin.route('/user/qxhdm')
 @admin_required
@@ -3980,9 +3983,17 @@ def khsldj(user_id):
             if codes.total<len(qxhcodes):
                 return jsonify(result=False,error='空盒编码错误或已登记！')
             giftname = request.form['giftname']
+            giftcount = request.form['giftcount']
+            province = request.form['province']
+            city = request.form['city']
+            district = request.form['district']
             pharmacyaddress = request.form['pharmacyaddress']
             qxhkjdj.qxhcode = qxhcode
             qxhkjdj.giftname = giftname
+            qxhkjdj.giftcount = giftcount
+            qxhkjdj.province = province
+            qxhkjdj.city = city
+            qxhkjdj.district = district
             qxhkjdj.pharmacyaddress = pharmacyaddress
             _date = datetime.now().strftime('%Y-%m-%d')
             qxhkjdj.date = _date
@@ -4008,8 +4019,13 @@ def user_show_khsldj(user_id):
     for sms in _objs:
         sms_list.append({'qxhcode':str(sms.qxhcode),
                          'giftname':sms.giftname,
+                         'giftcount':sms.giftcount,
+                         'province':sms.province,
+                         'city':sms.city,
+                         'district':sms.district,
                          'pharmacyaddress':sms.pharmacyaddress,
                          'date':str(sms.date),
+                         'receive':sms.receive,
                          'status':sms.status,
                          'id':sms.id
 
@@ -4025,9 +4041,32 @@ def khsllq():
             print id
             qxhkdj = QXHKHDJ.query.get(id)
             if qxhkdj:
-                qxhkdj.status = 1
+                qxhkdj.receive = 1
                 db.session.add(qxhkdj)
                 db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/khsldjqx', methods=['POST'])
+@login_required
+def khsldjqx():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            print id
+            qxhkdj = QXHKHDJ.query.get(id)
+            if qxhkdj:
+                qxhkdj.status = 0
+                db.session.add(qxhkdj)
+                db.session.commit()
+                for codes in qxhkdj.qxhcodes:
+                    codes.qxhkjdj_id = None
+                    db.session.add(qxhkdj)
+                    db.session.commit()
+
             return jsonify(result=True)
         except Exception,e:
             db.session.rollback()

@@ -27,7 +27,7 @@ EXPRESS_CONFIG = {
     9:{'name':u'陆航韵达','code':'luhangyunda','area_url':'','stores':[1]},
     10:{'name':u'EMS','code':'ems','area_url':'','stores':[3]},
     11:{'name':u'西安顺丰','code':'shunfeng','stores':[3],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
-    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2]}
+    99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2,3]}
 }
 
 LOSS_TYPES = {
@@ -295,7 +295,7 @@ ENDPOINTS = [
     ('xlj_sale_tongji',u'[营销]心力健销售统计','E'),
     ('xlj_mtjxqk',u'[营销]心力健媒体进线情况表','E'),
     ('xlj_xsqkb',u'[营销]心力健销售情况表','E'),
-
+    ('yy_khsl',u'[营销]空盒送礼登记表','E'),
 
 
     ('financial_report',u'财务报表','E'),
@@ -439,6 +439,8 @@ USER_ORIGINS = {
     16:u'维护老顾客抽奖',
     17:u'终端微信',
     18:u'终端提交',
+    19:u'空盒换大礼',
+    20:u'防伪码管理',
     99:u'其它',
 }
 
