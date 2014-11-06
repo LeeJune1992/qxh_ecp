@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% set category='report' %}
+{% block title %}药房报表{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+    <style type="text/css">
+        .table tr td{
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table tr th{
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript">
+        $(function(){
+            $('.timepicker').datetimepicker({
+                language: 'zh-CN',
+                format: 'yyyy-mm-dd hh:ii',
+                minuteStep: 5,
+                autoclose: true,
+                todayBtn: true
+            });
+
+            $('select').select2({
+                width:'150px'
+            })
+
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <ul class="breadcrumb">
+        <li class="pull-right"><blockquote style="color: #ccc">药房报表</blockquote></li>
+        <li> <i class="icon-hand-right"></i></li>
+        {% for endpoint,name in [
+        ('report.pharmacy_report_by_shuju','数据录入统计'),
+        ('report.pharmacy_report_by_shujufankui','数据反馈统计'),
+        ('report.pharmacy_report_by_fugou','复购统计报表')] %}
+            {% if endpoint == request.endpoint %}
+                <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% else %}
+                <li><a href="{{ url_for(endpoint) }}">{{ name }}</a> {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    {% block report %}
+    {% endblock %}
+{% endblock %}

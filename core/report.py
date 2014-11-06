@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-from .models import QXHKHDJ
+from .models import QXHKHDJ,User,QXHDM_Orderyf
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -2004,3 +2004,134 @@ def yy_khsl():
 
     rows = QXHKHDJ.query.filter(db.and_(*_conditions))
     return render_template('report/yy_report_by_khsl.html',rows=rows,period=period)
+
+
+@report.route('/pharmacy')
+@admin_required
+def financial_report():
+    return render_template('report/pharmacy_report.html')
+
+
+
+@report.route('/pharmacy/shuju')
+@admin_required
+def pharmacy_report_by_shuju():
+    _conditions = ['`user`.qxhdm_time > 0']
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.qxhdm_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.qxhdm_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.qxhdm_time>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = '''SELECT
+                user.qxhdm_time,
+                user.area,
+                user.promoters,
+                user.pharmacy,
+                user.pharmacystores,
+                user.name,
+                user.phone,
+                sum(`qxhdm_orderyf`.bigcount) bigcount,
+                sum(`qxhdm_orderyf`.smallcount) smallcount,
+                user.disease
+                 FROM `user` left join qxhdm_orderyf on qxhdm_orderyf.user_id=user.user_id
+                WHERE
+                %s
+                GROUP BY `user`.user_id
+                order BY `user`.qxhdm_time desc'''%' AND '.join(_conditions)
+    print _sql
+    data = db.session.execute(_sql)
+    return render_template('report/pharmacy_report_by_shuju.html',data=data,period=period)
+
+@report.route('/pharmacy/shujufankui')
+@admin_required
+def pharmacy_report_by_shujufankui():
+    _conditions = ['`user`.qxhdm_time > 0']
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.qxhdm_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.qxhdm_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.qxhdm_time>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = '''SELECT
+        user.area,
+        user.promoters,
+        user.pharmacy,
+        user.pharmacystores,
+        count(1) allusers,
+        count(case WHEN  is_valid = 1 then 1 end) as `validusers`,
+        count(case WHEN is_valid = 2 then 1 end) as `notvalidusers`
+        FROM `user`
+        WHERE
+        %s
+        GROUP BY user.area,
+        user.promoters,
+        user.pharmacy,
+        user.pharmacystores
+        ORDER BY user.area,
+        user.promoters,
+        user.pharmacy,
+        user.pharmacystores'''%' AND '.join(_conditions)
+    print _sql
+    data = db.session.execute(_sql)
+    return render_template('report/pharmacy_report_by_shujufankui.html',data=data,period=period)
+
+@report.route('/pharmacy/fugou')
+@admin_required
+def pharmacy_report_by_fugou():
+    _conditions = ['`user`.qxhdm_time > 0']
+    _conditions2 = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions2.append('`user`.qxhdm_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions2.append('`user`.qxhdm_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions2.append('`user`.qxhdm_time>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = '''SELECT
+        user.area,
+        user.pharmacy,
+        user.pharmacystores,
+        count(case WHEN %s then 1 end) as `validusers`,
+        count(1) allusers,
+        count(case WHEN qxhdm_orderyf.user_id = user.user_id then 1 end) as `fugou`,
+        count(case WHEN %s AND `user`.is_valid = 2 then 1 end) as `notvalidusers`
+        FROM `user` left join qxhdm_orderyf on qxhdm_orderyf.user_id=user.user_id
+        WHERE
+        %s
+        GROUP BY user.area,
+        user.pharmacy,
+        user.pharmacystores
+        ORDER BY user.area,
+        user.pharmacy,
+        user.pharmacystores'''%(' AND '.join(_conditions2),' AND '.join(_conditions2),' AND '.join(_conditions))
+
+    print _sql
+    data = db.session.execute(_sql)
+    return render_template('report/pharmacy_report_by_fugou.html',data=data,period=period)

@@ -819,14 +819,17 @@ class User(db.Model):
 
     operator = db.relationship('Operator', primaryjoin="(Operator.id == User.operator_id)")
     assign_operator = db.relationship('Operator', primaryjoin="(Operator.id == User.assign_operator_id)")
+    qxhdm_time = Column(db.Date)#录入时间
     qxhdm_user_id = Column(db.Integer)#
     is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效,3无法确认
     is_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#是否新客户
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
     purchases = Column(db.String(500))#购买情况
     disease = Column(db.String(500))#病症
-    pharmacy = Column(db.Integer)#药房
-    pharmacystores = Column(db.Integer)#分店
+    promoters = Column(db.String(20))#促销员
+    area = Column(db.String(20))#区域
+    pharmacy = Column(db.String(50))#药房
+    pharmacystores = Column(db.String(50))#分店
     @property
     def mobile_phones(self):
         _phones = []

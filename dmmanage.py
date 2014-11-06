@@ -41,15 +41,20 @@ def getdmuser():
     for u in users:
         user = User()
         p = User_Phone.query.filter(db.or_(User_Phone.phone == u['phone'],User_Phone.phone == u['phone2'])).first()
+        purchases = u['name']+u'于'+u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒,备注：'+u['remark']+u',电话：'+u['phone']+','+u['phone2']+u',年龄：'+str(u['ages'])+u',性别：'+u['gender']+u',区域：'+u['area']
         if p:
             user = User.query.get_or_404(p.user_id)
             user.operator_id = 1
             user.origin = 18
-            #user.assign_operator_id = 1
-            purchases = u['name']+u'于'+u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒,备注：'+u['remark']+u',电话：'+u['phone']+','+u['phone2']+u',年龄：'+str(u['ages'])+u',性别：'+u['gender']
-            user.purchases = purchases
+            #user.assign_operator_id = 1            
+            user.purchases = user.purchases+purchases
             user.qxhdm_user_id = u['id']
+            user.area = u['area']
+            user.pharmacy = u['pharmacy']
+            user.promoters = u['promoters']
+            user.pharmacystores = u['pharmacystores']
 
+            user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
             db.session.add(user)
 
         else:            
@@ -65,10 +70,14 @@ def getdmuser():
             user.disease = u['disease']
             user.fugou = u['fugou']
             user.remark = u['remark']
-            purchases = u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒'
+            user.area = u['area']
+            user.pharmacy = u['pharmacy']
+            user.promoters = u['promoters']
+            user.pharmacystores = u['pharmacystores']
             user.purchases = purchases
             user.qxhdm_user_id = u['id']
 
+            user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
             db.session.add(user)
             db.session.flush()
             db.session.add(User_Phone.add_phone(user.user_id,user.phone))
@@ -87,13 +96,16 @@ def getdmuser():
 
         db.session.commit()
 
-#@manager.command
-#def dmuserphone():
-#    users = User.query.filter(User.qxhdm_user_id > 0)
-#    for user in users:
-#        print user.user_id
-#        db.session.add(User_Phone.add_phone(user.user_id,user.phone))
-#    db.session.commit()
+@manager.command
+def dmuserphone():
+    users = User.query.filter(User.qxhdm_user_id > 0)
+    for user in users:
+        if User_Phone.query.filter(User_Phone.phone == user.phone).first():
+            pass
+        else:
+            print user.user_id
+            db.session.add(User_Phone.add_phone(user.user_id,user.phone))
+    db.session.commit()
 
 
 if __name__ == "__main__":

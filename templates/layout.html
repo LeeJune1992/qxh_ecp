@@ -99,6 +99,9 @@
                             {% if current_user.action('analytics_report') %}
                                 <li><a href="{{ url_for('analytics.analytics_report_by_medium') }}"><i class="icon-globe"></i> 广告统计</a></li>
                             {% endif %}
+                            {% if current_user.action('financial_report') %}
+                                <li><a href="{{ url_for('report.financial_report') }}"><i class="icon-globe"></i> 药房报表</a></li>
+                            {% endif %}
                         </ul>
                         </li>
                     {% endif %}
