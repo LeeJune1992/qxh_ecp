@@ -46,6 +46,7 @@ def getdmuser():
             user = User.query.get_or_404(p.user_id)
             user.operator_id = 1
             user.origin = 18
+            user.user_type = 5#服务客户
             #user.assign_operator_id = 1            
             user.purchases = user.purchases+purchases
             user.qxhdm_user_id = u['id']
@@ -60,6 +61,7 @@ def getdmuser():
         else:            
             user.operator_id = 1
             user.origin = 18
+            user.user_type = 5#服务客户
             #user.assign_operator_id = 1
             user.name = u['name']
             user.phone = u['phone']

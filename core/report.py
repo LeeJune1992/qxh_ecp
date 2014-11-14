@@ -2106,9 +2106,8 @@ def pharmacy_report_by_fugou():
     _end_date = request.args.get('end_date','')
     if _end_date:
         _conditions2.append('`user`.qxhdm_time<="%s"'%_end_date)
-
-    if not _start_date and not _end_date:
-        _today = datetime.now().strftime('%Y-%m-%d')
+    _today = datetime.now().strftime('%Y-%m-%d')
+    if not _start_date and not _end_date:        
         _conditions2.append('`user`.qxhdm_time>="%s"'%_today)
         period = _today
     else:
@@ -2120,9 +2119,9 @@ def pharmacy_report_by_fugou():
         user.pharmacystores,
         count(case WHEN %s then 1 end) as `validusers`,
         count(1) allusers,
-        count(case WHEN qxhdm_orderyf.user_id = user.user_id then 1 end) as `fugou`,
-        count(case WHEN %s AND `user`.is_valid = 2 then 1 end) as `notvalidusers`
-        FROM `user` left join qxhdm_orderyf on qxhdm_orderyf.user_id=user.user_id
+        count(case WHEN `user`.lastfugou_time > 0 then 1 end) as `fugou`,
+        count(case WHEN `user`.is_isable = 1 then 1 end) as `notvalidusers`
+        FROM `user`
         WHERE
         %s
         GROUP BY user.area,
@@ -2130,7 +2129,7 @@ def pharmacy_report_by_fugou():
         user.pharmacystores
         ORDER BY user.area,
         user.pharmacy,
-        user.pharmacystores'''%(' AND '.join(_conditions2),' AND '.join(_conditions2),' AND '.join(_conditions))
+        user.pharmacystores'''%(' AND '.join(_conditions2),' AND '.join(_conditions))
 
     print _sql
     data = db.session.execute(_sql)

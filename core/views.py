@@ -2304,6 +2304,12 @@ def public_new_users():
 def public_old_users():
     return public_users(2)
 
+@admin.route('/user/public/service')
+@admin_required
+def public_service_users():
+    return public_users(5)
+
+
 @admin.route('/user/search')
 @admin_required
 def search_user():
@@ -3894,14 +3900,18 @@ def add_dmyp(user_id):
             orderyf = QXHDM_Orderyf()
             orderyf.user_id = user.user_id
             orderyf.dm_user_id = user.qxhdm_user_id
-            bigcount = request.form['bigcount']
-            mediumcount = request.form['mediumcount']
-            smallcount = request.form['smallcount']
+            bigcount = int(request.form['bigcount'])
+            mediumcount = int(request.form['mediumcount'])
+            smallcount = int(request.form['smallcount'])
             orderyf.bigcount = bigcount
             orderyf.mediumcount = mediumcount
             orderyf.smallcount = smallcount
 
             db.session.add(orderyf)
+            user.lastfugou_time = datetime.now().strftime('%Y-%m-%d')
+            user.fugou_bigcount += bigcount
+            user.fugou_mediumcount += mediumcount
+            user.fugou_smallcount += smallcount
             db.session.commit()
             return jsonify(result=True)
         except Exception,e:
@@ -4073,3 +4083,20 @@ def khsldjqx():
             current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
 
+
+@admin.route('/user/servicetype/<int:user_id>', methods=['POST'])
+@login_required
+def user_servicetype(user_id):
+    if request.method == 'POST':
+        try:
+            user = User.query.get(user_id)
+            is_isable = int(request.form['servicetype'])
+            isable_reason = request.form['isable_reason']
+            user.is_isable = is_isable
+            user.isable_reason = isable_reason
+            db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('USERSERVICE ISABLE ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)

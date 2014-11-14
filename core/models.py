@@ -824,6 +824,13 @@ class User(db.Model):
     is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效,3无法确认
     is_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#是否新客户
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
+    
+    lastfugou_time = Column(db.Date)#最后复购时间
+    fugou_bigcount = Column(db.Integer(unsigned=True), default=0)#复购大数量
+    fugou_mediumcount = Column(db.Integer(unsigned=True), default=0)#复购中数量
+    fugou_smallcount = Column(db.Integer(unsigned=True), default=0)#复购小数量
+    is_isable = Column(db.Integer(unsigned=True), default=0)#是否停用
+    isable_reason = Column(db.String(50))#原因
     purchases = Column(db.String(500))#购买情况
     disease = Column(db.String(500))#病症
     promoters = Column(db.String(20))#促销员
@@ -917,6 +924,7 @@ class User(db.Model):
         if self.user_type==1:return u'新客户'
         if self.user_type==2:return u'会员客户'
         if self.user_type==4:return u'黑名单'
+        if self.user_type==5:return u'服务客户'
         return u''
 
     @hybrid_property

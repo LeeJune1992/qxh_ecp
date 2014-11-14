@@ -27,6 +27,7 @@ EXPRESS_CONFIG = {
     9:{'name':u'陆航韵达','code':'luhangyunda','area_url':'','stores':[1]},
     10:{'name':u'EMS','code':'ems','area_url':'','stores':[3]},
     11:{'name':u'西安顺丰','code':'shunfeng','stores':[3],'area_url':'http://www.sf-express.com/cn/sc/delivery_step/enquiry/coverageArea.html'},
+    12:{'name':u'百世汇通','code':'htky','stores':[3],'area_url':'http://www.htky365.com/Site/Query'},
     99:{'name':u'客户自提','code':'kfzq','area_url':'','stores':[1,2,3]}
 }
 
@@ -227,6 +228,7 @@ ENDPOINTS = [
     ('my_users',u'我的客户库','B'),
     ('public_new_users',u'新客户公共库','B'),
     ('public_old_users',u'会员公共库','B'),
+    ('public_service_users',u'服务公共库','B'),
     ('qxhdm_users',u'地面公共库','B'),
     ('search_user_form',u'客户检索输入框','B'),
     ('search_user',u'客户检索','B'),
@@ -532,6 +534,7 @@ OPEARTOR_ASSIGN_USER_TYPES = {
     0:u'无',
     1:u'新客户',
     2:u'会员客户',
+    5:u'会员服务',
     #3:u'新客户+会员客户'
 }
 
@@ -539,6 +542,7 @@ OPEARTOR_ASSIGN_USER_TYPES = {
 USER_TYPES = {
     1:u'新客户',
     2:u'会员客户',
+    5:u'会员服务',
     4:u'黑名单',
 }
 
