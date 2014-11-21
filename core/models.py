@@ -1525,3 +1525,43 @@ class QXHKHDJ(db.Model):
     qxhcodes = relationship('Security_Codekh', backref='qxhkjdj', lazy='dynamic')
     receive = Column(db.Boolean,nullable=False,default=False)#状态是否领取
     status = Column(db.Boolean,nullable=False,default=True)#状态是否有效
+
+
+class User_Isable(db.Model):
+
+    __tablename__ = 'user_isable'
+
+    id = Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    user = db.relationship('User', primaryjoin="(User.user_id == User_Isable.user_id)")
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
+    created = Column(db.DateTime, default=datetime.now)
+    audit_operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#审核操作员
+    audit_time = Column(db.DateTime, default=datetime.now)#操作时间
+    status = Column(db.Integer, default=0)#状态1通过,2未通过
+    reason = Column(db.String(150))#原因
+    is_isable = Column(db.Integer(unsigned=True), default=0)#是否停用
+    remarks = Column(db.String(150))#备注
+
+class Weihu(db.Model):
+
+    __tablename__ = 'report_weihu'
+
+    id = Column(db.Integer, primary_key=True)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
+    operator = db.relationship('Operator', primaryjoin="(Weihu.operator_id == Operator.id)")
+    date = Column(db.Date)
+    usercount = Column(db.Integer, default=0)#用户量
+    usersales = Column(db.Integer, default=0)#业绩
+    last_usercount = Column(db.Integer, default=0)#上月用户量
+    last_usersales = Column(db.Integer, default=0)#上月业绩
+    callusers = Column(db.Integer, default=0)#拨打数据
+    nocallusers = Column(db.Integer, default=0)#未拨打数据
+    silenceusers = Column(db.Integer, default=0)#沉默用户量
+    newusers = Column(db.Integer, default=0)#新进用户量
+    ordercount = Column(db.Integer, default=0)#订单数
+    tuihuoorders = Column(db.Integer, default=0)#退货订单数
+    tuihuosales = Column(db.Integer, default=0)#退货总额
+    yaopinsales = Column(db.Integer, default=0)#药品业绩
+    baojianpinsales = Column(db.Integer, default=0)#保健品业绩
+    huazhuangpinsales = Column(db.Integer, default=0)#化妆品业绩

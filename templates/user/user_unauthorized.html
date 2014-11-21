@@ -267,12 +267,51 @@ $(function () {
                 $('#orderyf_nums').html(sms_list.length);
             }
             else {
-                $('#orderyf_history').html('无药房预判');
+                $('#orderyf_history').html('无药房复购预判');
                 $('#orderyf_nums').html(0);
             }
         });
     };
     show_orderyf();
+
+    var show_khsldj = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_show_khsldj',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>礼品数量</th><th>药房地址</th><th>登记时间</th><th>是否领取</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.giftcount + '</td><td>' + sms.province + sms.city + sms.district + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
+					html += '<td>';
+					if(sms.receive){
+						html += '已领取';
+					}else{
+						if(!sms.status){
+							html += '无效';
+						}else{
+							html += "未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a>&nbsp;<a onclick='khsldjqx(" + sms.id + ")'>点此取消</a>";
+						}
+					}
+					html += '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#khsldj_list').html(html);
+                $('#khsldj_nums').html(sms_list.length);
+            }
+            else {
+                $('#khsldj_list').html('无空盒送礼登记');
+                $('#khsldj_nums').html(0);
+            }
+        });
+    };
+    show_khsldj();
+	
     var Dialog = {
         update: function () {
             var req = $.ajax({
@@ -603,12 +642,27 @@ $(function () {
 		<div class="accordion-group">
 			<div class="accordion-heading">
 				<a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule">
-					<i class="icon-chevron-down"></i> 药房预判　(<span id="orderyf_nums"></span>)
+					<i class="icon-chevron-down"></i> 药房复购预判　(<span id="orderyf_nums"></span>)
 				</a>
 			</div>
 			<div id="orderyfModule" class="accordion-body collapse in">
 				<div class="accordion-inner">
 					<div id="orderyf_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+											   border="0"/>正在费力加载中...
+					</div>
+				</div>
+	
+			</div>
+		</div>
+		<div class="accordion-group">
+			<div class="accordion-heading">
+				<a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule">
+					<i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums"></span>)
+				</a>
+			</div>
+			<div id="khsldjModule" class="accordion-body collapse in">
+				<div class="accordion-inner">
+					<div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
 											   border="0"/>正在费力加载中...
 					</div>
 				</div>

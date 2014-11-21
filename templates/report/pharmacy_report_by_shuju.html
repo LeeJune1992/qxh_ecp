@@ -3,6 +3,21 @@
 {{ super() }}
 <script type="text/javascript">
     $(function(){
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域',
+			allowClear:true
+        });
+        $('#promoters').select2({
+            width:'120px',
+            placeholder:'促销员',
+			allowClear:true
+        });
+        $('#pharmacy').select2({
+            width:'120px',
+            placeholder:'药房',
+			allowClear:true
+        });
 		$('.timepicker').datepicker({
 			language: 'zh-CN',
 			format: 'yyyy-mm-dd',
@@ -14,6 +29,30 @@
 {% endblock %}
 {% block report %}
     <form action="" method="get" class="form-search inline">
+        <select id="area" name="area">
+            <option></option>
+            <option value="">所有</option>
+            {% set area = request.args.get('area') %}
+            {% for a in areas %}
+            <option value="{{ a[0] }}" {% if a[0]==area %}selected="selected"{% endif %}>{{ a[0] }}</option>
+            {% endfor %}
+        </select>
+        <select id="promoters" name="promoters">
+            <option></option>
+            <option value="">所有</option>
+            {% set promoters = request.args.get('promoters') %}
+            {% for a in promoterss %}
+            <option value="{{ a[0] }}" {% if a[0]==promoters %}selected="selected"{% endif %}>{{ a[0] }}</option>
+            {% endfor %}
+        </select>
+        <select id="pharmacy" name="pharmacy">
+            <option></option>
+            <option value="">所有</option>
+            {% set pharmacy = request.args.get('pharmacy') %}
+            {% for a in pharmacys %}
+            <option value="{{ a[0] }}" {% if a[0]==pharmacy %}selected="selected"{% endif %}>{{ a[0] }}</option>
+            {% endfor %}
+        </select>
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i

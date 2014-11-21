@@ -237,6 +237,12 @@ ENDPOINTS = [
     ('giveup_user_no',u'放弃客户不通过审核','B'),
     ('giveup_user_sq',u'我申请的放弃客户','B'),
     ('giveup_user_audit',u'我审核的放弃客户','B'),
+    ('servicetype_users',u'停用启用客户审核','B'),
+    ('servicetype_user_ok',u'停用启用客户通过审核','B'),
+    ('servicetype_user_no',u'停用启用客户不通过审核','B'),
+    ('servicetype_user_sq',u'我申请的停用启用客户','B'),
+    ('servicetype_user_audit',u'我审核的停用启用客户','B'),
+
     ('manage_users',u'客户管理','B'),
     ('change_user_op',u'变更客户归属','B'),
     ('change_user_type',u'变更客户类型','B'),
@@ -321,6 +327,12 @@ ENDPOINTS = [
     ('logistics_report_by_wlfhhz',u'[物流]物流发货汇总表','E'),
     ('logistics_report_by_io',u'[物流]商品出入库明细表','E'),
     ('logistics_report_by_loss',u'[物流]报损汇总表','E'),
+
+    ('pharmacy_report',u'药房报表','E'),
+    ('pharmacy_report_by_shuju',u'[药房]数据录入统计 ','E'),
+    ('pharmacy_report_by_shujufankui',u'[药房]数据反馈统计','E'),
+    ('pharmacy_report_by_fugou',u'[药房]复购统计报表','E'),
+
 
 
     ('analytics_report',u'广告统计','E'),
@@ -756,6 +768,7 @@ PRODUCT_INTENTION = {
     3:u'化妆品',
     5:u'心力健',
     6:u'心力健其它',
+    7:u'新会员',
     4:u'其它'
 }
 #心力健媒体

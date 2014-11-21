@@ -573,7 +573,7 @@ $(function () {
                 $('#orderyf_nums').html(sms_list.length);
             }
             else {
-                $('#orderyf_history').html('无药房预判');
+                $('#orderyf_history').html('无药房复购预判');
                 $('#orderyf_nums').html(0);
             }
         });
@@ -1210,7 +1210,7 @@ function khsllq(id){
         </div>
         <div class="modal-body">
            空盒编码:<textarea id="qxhcode" name="qxhcode" style="width: 105px; height:50" placeholder="空盒编码"></textarea>
-		   礼品名称: <select id="giftname" name="giftname" class="select2" style="width: 105px"><option value="气血和(小盒)">气血和(小盒)</option><option value="四件套">四件套</option></select>
+		   礼品名称: <select id="giftname" name="giftname" class="select2" style="width: 105px"><option value="气血和(小盒)">气血和(小盒)</option><option value="四件套">四件套</option>><option value="面膜">面膜</option></select>
 		   礼品数量: <input type="text" style="width: 55px" placeholder="礼品数量" name="giftcount" id="giftcount">
 		   <br>药房地址:
                                 <select id="province2" name="province2" class="select2" style="width: 155px"></select>
@@ -1518,7 +1518,7 @@ function khsllq(id){
             {% endif %}
 			<a href="#" id="khsldj" class="btn btn-primary btn-small" onclick="$('#khsldjModal').modal('show');">空盒送礼登记</a>
             {% if user.qxhdm_user_id %}
-                <a href="#" id="dm_addyp" class="btn btn-primary btn-small" onclick="$('#addypModal').modal('show');">增加预判</a>
+                <a href="#" id="dm_addyp" class="btn btn-primary btn-small" onclick="$('#addypModal').modal('show');">复购预判</a>
 				{% if user.is_isable %}
 				<a href="#" id="service_qy" class="btn btn-primary btn-small" onclick="$('#servicetype').val(0);$('#serviceModal').modal('show');">启用</a>
 				{% else %}
@@ -1695,7 +1695,7 @@ function khsllq(id){
     <div class="accordion-group">
         <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule">
-                <i class="icon-chevron-down"></i> 药房预判　(<span id="orderyf_nums"></span>)
+                <i class="icon-chevron-down"></i> 药房复购预判　(<span id="orderyf_nums"></span>)
             </a>
         </div>
         <div id="orderyfModule" class="accordion-body collapse in">

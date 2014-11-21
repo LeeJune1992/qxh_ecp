@@ -49,29 +49,6 @@
             autoclose: true,
             todayBtn: true
         });
-		{% if 'service' in show_queries %}
-        $('#area').select2({
-            width:'120px',
-            placeholder:'区域',
-			allowClear:true
-        });
-        $('#promoters').select2({
-            width:'120px',
-            placeholder:'促销员',
-			allowClear:true
-        });
-        $('#pharmacy').select2({
-            width:'120px',
-            placeholder:'药房',
-			allowClear:true
-        });
-		{% endif %}
-		{% if 'list_type' in show_queries %}
-        $('#list_type').select2({
-            width:'120px',
-            placeholder:'会员类型'
-        });
-		{% endif %}
 
         {% if 'op' in show_queries %}
         $('#assign_operator_id').select2({
@@ -87,8 +64,7 @@
         {% if 'user_type' in show_queries %}
         $('#user_type').select2({
             width:'100px',
-            placeholder:'客户类型',
-            allowClear:true
+            placeholder:'客户类型'
         });
         {% endif %}
 
@@ -120,29 +96,11 @@
             placeholder:'意向等级',
             allowClear:true
         });
-        $('#product_intention').select2({
-            width:'100px',
-            placeholder:'产品意向',
-            allowClear:true
-        });
 
         {% if show_label %}
         $('#label_id').select2({
             width:'100px',
             placeholder:'客户标签',
-            allowClear:true
-        });
-        {% endif %}
-
-        {% if allowed_admin %}
-        $('#to_user_type').select2({
-            width:'150px',
-            placeholder:'变更客户类型',
-            allowClear:true
-        });
-        $('#to_operator_id').select2({
-            width:'150px',
-            placeholder:'变更归属员工',
             allowClear:true
         });
         {% endif %}
@@ -184,86 +142,65 @@
             return _ids;
         };
 
-        $('#to_operator_id').on('change',function(){
-            var to_operator_id = parseInt($('#to_operator_id').val());
-            if (to_operator_id == 0|| isNaN(to_operator_id)){
-                return;
-            }
+        $('#giveupuserok').click(function(){
             var sel_ids = selected_ids();
             if ($.isEmptyObject(sel_ids)){
-                bootbox.alert('请勾选要变更归属的客户');
+                bootbox.alert('请勾选要审核通过的客户');
                 return;
             }
-            var confirm_text = '是否确认将选中的<font color="blue"> 客户归属 </font>变更为员工 <font color="red">'+$('#to_operator_id option:selected').text()+'</font>？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            var confirm_text = '是否确认将选中的客户放弃？（合计：<strong>'+sel_ids.length+'</strong> 位）';
             bootbox.confirm(confirm_text, function(result) {
-                if (result!=true){
-                    $('#to_operator_id').select2('val','');
-                    return;
-                }
-
-                var req = $.ajax({
-                    url: '{{ url_for('admin.change_user_op') }}',
-                    dataType: "json",
-                    type: 'POST',
-                    traditional: true,
-                    data:{ids:JSON.stringify(sel_ids),op_id:to_operator_id}
-                });
-                req.done(function (data) {
-                    if (data.result == true) {
-                        window.location.reload(true);
-                    }
-                    else {
-                        bootbox.alert("操作失败：" + data.error);
-                    }
-                });
-                req.fail(function (request, status, error) {
-                    bootbox.alert('发生错误:' + error);
-                });
-                req.always(function(){
-                    $('#to_operator_id').select2('val','');
-                });
+                if(result){
+					var req = $.ajax({
+						url: '{{ url_for('admin.servicetype_user_ok') }}',
+						dataType: "json",
+						type: 'POST',
+						traditional: true,
+						data:{ids:JSON.stringify(sel_ids),remarks:$('#giveupuser_remark').val()}
+					});
+					req.done(function (data) {
+						if (data.result == true) {
+							window.location.reload(true);
+						}
+						else {
+							bootbox.alert("操作失败：" + data.error);
+						}
+					});
+					req.fail(function (request, status, error) {
+						bootbox.alert('发生错误:' + error);
+					});
+				}
             });
             return false;
         });
-
-        $('#to_user_type').on('change',function(){
-            var to_user_type = parseInt($('#to_user_type').val());
-            if (to_user_type == 0|| isNaN(to_user_type)){
-                return;
-            }
+        $('#giveupuserno').click(function(){
             var sel_ids = selected_ids();
             if ($.isEmptyObject(sel_ids)){
-                bootbox.alert('请勾选要变更类型的客户');
+                bootbox.alert('请勾选要审核不通过的客户');
                 return;
             }
-            var confirm_text = '是否确认将选中的<font color="blue"> 客户类型 </font>变更为 <font color="red">'+$('#to_user_type option:selected').text()+'</font>？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            var confirm_text = '是否确认将选中的客户放弃审核不通过？（合计：<strong>'+sel_ids.length+'</strong> 位）';
             bootbox.confirm(confirm_text, function(result) {
-                if (result!=true){
-                    $('#to_user_type').select2('val','');
-                    return;
-                }
-
-                var req = $.ajax({
-                    url: '{{ url_for('admin.change_user_type') }}',
-                    dataType: "json",
-                    type: 'POST',
-                    traditional: true,
-                    data:{ids:JSON.stringify(sel_ids),user_type:to_user_type}
-                });
-                req.done(function (data) {
-                    if (data.result == true) {
-                        window.location.reload(true);
-                    }
-                    else {
-                        bootbox.alert("操作失败：" + data.error);
-                    }
-                });
-                req.fail(function (request, status, error) {
-                    bootbox.alert('发生错误:' + error);
-                });
-                req.always(function(){
-                    $('#to_user_type').select2('val','');
-                });
+                if(result){
+					var req = $.ajax({
+						url: '{{ url_for('admin.servicetype_user_no') }}',
+						dataType: "json",
+						type: 'POST',
+						traditional: true,
+						data:{ids:JSON.stringify(sel_ids),remarks:$('#giveupuser_remark').val()}
+					});
+					req.done(function (data) {
+						if (data.result == true) {
+							window.location.reload(true);
+						}
+						else {
+							bootbox.alert("操作失败：" + data.error);
+						}
+					});
+					req.fail(function (request, status, error) {
+						bootbox.alert('发生错误:' + error);
+					});
+				}
             });
             return false;
         });
@@ -275,14 +212,6 @@
 
 {% block main %}
     <form action="" method="get" class="form-search inline well well-small">
-        {% if 'list_type' in show_queries %}
-        <select id="list_type" name="list_type" class="select2">
-        	<option value="3"></option>
-            <option value="3">客户类型</option>
-            <option value="1" {% if list_type==1 %}selected="selected"{% endif %}>活跃客户</option>
-        	<option value="0" {% if list_type==0 %}selected="selected"{% endif %}>沉默客户</option>
-        </select>
-        {% endif %}
         {% if 'op' in show_queries %}
         <select id="assign_operator_id" name="assign_operator_id">
             <option></option>
@@ -332,39 +261,6 @@
                 {%- endfor -%}
             </select>
         {% endif %}
-        {% if 'service' in show_queries %}
-        <select id="area" name="area">
-            <option></option>
-            <option value="">所有</option>
-            {% set area = request.args.get('area') %}
-            {% for a in areas %}
-            <option value="{{ a[0] }}" {% if a[0]==area %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
-        </select>
-        <select id="promoters" name="promoters">
-            <option></option>
-            <option value="">所有</option>
-            {% set promoters = request.args.get('promoters') %}
-            {% for a in promoterss %}
-            <option value="{{ a[0] }}" {% if a[0]==promoters %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
-        </select>
-        <select id="pharmacy" name="pharmacy">
-            <option></option>
-            <option value="">所有</option>
-            {% set pharmacy = request.args.get('pharmacy') %}
-            {% for a in pharmacys %}
-            <option value="{{ a[0] }}" {% if a[0]==pharmacy %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
-        </select>
-        {% endif %}
-        <select id="product_intention" name="product_intention" class="select2">
-            <option></option>
-                {% set product_intention = request.args.get('product_intention','')|int %}
-                {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
-                    <option value="{{ k }}" {% if k==product_intention %}selected="selected"{% endif %}>{{ v }}</option>
-                {%- endfor -%}
-        </select>
         <select id="intent_level" name="intent_level" class="select2">
             <option></option>
             {% set intent_level = request.args.get('intent_level','') %}
@@ -422,23 +318,14 @@
     </form>
     {% if allowed_admin %}
         <div class="alert" id="admin-panel" style="display:none;margin-bottom: -3px;min-height: 30px">
-            {% if current_user.action('change_user_op') %}
-            <select id="to_operator_id" name="to_operator_id">
-                <option></option>
-                {% for op in operators %}
-                    <option value="{{ op.id }}">{{ op.nickname }}</option>
-                {% endfor %}
-            </select>
+            {% if current_user.action('giveup_user_ok') or current_user.action('giveup_user_no') %}
+            <input type="text" class="input-small" id="giveupuser_remark" placeholder="备注" }}>
             {% endif %}
-
-            {% if current_user.action('change_user_type') %}
-            <select id="to_user_type" name="to_user_type" class="select2">
-                <option></option>
-                {% set user_type = request.args.get('user_type',0)|int %}
-                {%- for k,v in config['USER_TYPES'].iteritems() -%}
-                    <option value="{{ k }}">{{ v }}</option>
-                {%- endfor -%}
-            </select>
+            {% if current_user.action('giveup_user_ok') %}
+            <button class="btn btn-primary" id="giveupuserok">审核通过</button>
+            {% endif %}
+            {% if current_user.action('giveup_user_no') %}
+            <button class="btn btn-primary" id="giveupuserno">审核不通过</button>
             {% endif %}
         </div>
     {% endif %}
@@ -450,6 +337,8 @@
         {% endif %}
             <th>编号</th>
             <th>客户姓名</th>
+            <th>原因</th>
+            <th>类型</th>
             {% if show_label %}
             <th>标签</th>
             {% endif %}
@@ -463,58 +352,44 @@
             <th>分配时间</th>
             <th>剩余时长</th>
             <th>联系次数</th>
-            <th>省市</th>
-            <th>最后联系时间</th>
-
         </tr>
         </thead>
         <tbody>
         {% for user in pagination.items %}
-            {% set link_url = url_for('admin.user',user_id=user.user_id,token=user.user_token) %}
+            {% set link_url = url_for('admin.user',user_id=user.user.user_id,token=user.user.user_token) %}
             <tr data-link-url="{{ link_url }}">
             {% if allowed_admin %}
-                <td style="text-align: center" unallowed-click="false"><input type="checkbox" id="sel_ids" name="sel_ids" value="{{ user.user_id }}"> </td>
+                <td style="text-align: center" unallowed-click="false"><input type="checkbox" id="sel_ids" name="sel_ids" value="{{ user.user.user_id }}"> </td>
              {% endif %}
-                <td><a href="{{ link_url }}" {% if current_user.team[0] == 'A' and user.operator_id!=user.assign_operator_id %}style="color:#FF0000; font-weight:bold;"{% endif %}>{{ user.user_id }}</a>
-                </td>
+                <td><a href="{{ link_url }}">{{ user.user.user_id }}</a></td>
                 <td>
-                
-                    {% if user.is_abandon %}
-                    <strike>{{ user.name }}</strike>
+                    {% if user.user.is_abandon %}
+                    <strike>{{ user.user.name }}</strike>
                     {% else %}
-                    {{ user.name }}
+                    {{ user.user.name }}
                     {% endif %}
-                    {% if user.remark %}
-                        <code>{{ user.remark }}</code>
+                    {% if user.user.remark %}
+                        <code>{{ user.user.remark }}</code>
                     {% endif %}
                 </td>
+                <td>{{ user.reason }}</td>
+                <td>{% if user.is_isable %}<code>停用</code>{% else %}启用{% endif %}</td>
                 {% if show_label %}
-                <td>{% if user.label %}<code>{{ user.label }}</code>{% endif %}</td>
+                <td>{% if user.user.label %}<code>{{ user.user.label }}</code>{% endif %}</td>
                 {% endif %}
-                <td>{{ user.phones|join('<br/>')|safe }}</td>
-                <td>{{ user.tels|join('<br/>')|safe }}</td>
-                <td>{{ user.intent_level }}</td>
-                <td>{{ user.join_time |format_date}}</td>
-                <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
-                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code></td>
+                <td>{{ user.user.phones|join('<br/>')|safe }}</td>
+                <td>{{ user.user.tels|join('<br/>')|safe }}</td>
+                <td>{{ user.user.intent_level }}</td>
+                <td>{{ user.user.join_time |format_date}}</td>
+                <td>{{ config['USER_ORIGINS'][user.user.origin] }}</td>
+                <td><code {% if user.user.user_type==2 %}style="color:darkcyan"{% elif user.user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.user.type_name }}</code></td>
                 <td>
-                    {{ user.assign_operator.nickname if user.assign_operator_id else '' }}
+                    {{ user.user.assign_operator.nickname if user.user.assign_operator_id else '' }}
                 </td>
-                <td>{{ user.assign_time }}</td>
-                <td>{{ user.assign_remain_info }}</td>
+                <td>{{ user.user.assign_time }}</td>
+                <td>{{ user.user.assign_remain_info }}</td>
 
-                <td>{{ user.dialog_times }}</td>
-                <td>
-                {% for a in user.addresses %}
-                {{ a.province }}-{{ a.city }}
-                {% endfor %}
-                </td>
-                <td>
-                    {{ user.last_dialog_time|default('',true) }}
-                    {% if user.expect_time %}<br/>
-                        <code style="color: blue">{{ user.expect_time|format_date('%m-%d %H:%M') }}</code>
-                    {% endif %}
-
+                <td>{{ user.user.dialog_times }}</td>
             </tr>
         {% endfor %}
         </tbody>

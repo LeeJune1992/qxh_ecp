@@ -2008,7 +2008,7 @@ def yy_khsl():
 
 @report.route('/pharmacy')
 @admin_required
-def financial_report():
+def pharmacy_report():
     return render_template('report/pharmacy_report.html')
 
 
@@ -2016,7 +2016,20 @@ def financial_report():
 @report.route('/pharmacy/shuju')
 @admin_required
 def pharmacy_report_by_shuju():
+    areas = db.session.execute('select distinct area from user where qxhdm_time > 0')
+    promoterss = db.session.execute('select distinct promoters from user where qxhdm_time > 0')
+    pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
     _conditions = ['`user`.qxhdm_time > 0']
+    area = request.args.get('area','')
+    if area:
+        _conditions.append('`user`.area="%s"'%area)
+    promoters = request.args.get('promoters','')
+    if promoters:
+        _conditions.append('`user`.promoters="%s"'%promoters)
+    pharmacy = request.args.get('pharmacy','')
+    if pharmacy:
+        _conditions.append('`user`.pharmacy="%s"'%pharmacy)
+
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`user`.qxhdm_time>="%s"'%_start_date)
@@ -2050,12 +2063,25 @@ def pharmacy_report_by_shuju():
                 order BY `user`.qxhdm_time desc'''%' AND '.join(_conditions)
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_shuju.html',data=data,period=period)
+    return render_template('report/pharmacy_report_by_shuju.html',areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
 
 @report.route('/pharmacy/shujufankui')
 @admin_required
 def pharmacy_report_by_shujufankui():
+    areas = db.session.execute('select distinct area from user where qxhdm_time > 0')
+    promoterss = db.session.execute('select distinct promoters from user where qxhdm_time > 0')
+    pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
     _conditions = ['`user`.qxhdm_time > 0']
+    area = request.args.get('area','')
+    if area:
+        _conditions.append('`user`.area="%s"'%area)
+    promoters = request.args.get('promoters','')
+    if promoters:
+        _conditions.append('`user`.promoters="%s"'%promoters)
+    pharmacy = request.args.get('pharmacy','')
+    if pharmacy:
+        _conditions.append('`user`.pharmacy="%s"'%pharmacy)
+
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`user`.qxhdm_time>="%s"'%_start_date)
@@ -2092,13 +2118,23 @@ def pharmacy_report_by_shujufankui():
         user.pharmacystores'''%' AND '.join(_conditions)
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_shujufankui.html',data=data,period=period)
+    return render_template('report/pharmacy_report_by_shujufankui.html',areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
 
 @report.route('/pharmacy/fugou')
 @admin_required
 def pharmacy_report_by_fugou():
+    areas = db.session.execute('select distinct area from user where qxhdm_time > 0')
+    pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
     _conditions = ['`user`.qxhdm_time > 0']
     _conditions2 = []
+    area = request.args.get('area','')
+    if area:
+        _conditions.append('`user`.area="%s"'%area)
+    pharmacy = request.args.get('pharmacy','')
+    if pharmacy:
+        _conditions.append('`user`.pharmacy="%s"'%pharmacy)
+
+
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions2.append('`user`.qxhdm_time>="%s"'%_start_date)
@@ -2119,7 +2155,7 @@ def pharmacy_report_by_fugou():
         user.pharmacystores,
         count(case WHEN %s then 1 end) as `validusers`,
         count(1) allusers,
-        count(case WHEN `user`.lastfugou_time > 0 then 1 end) as `fugou`,
+        count(case WHEN %s then 1 end) as `fugou`,
         count(case WHEN `user`.is_isable = 1 then 1 end) as `notvalidusers`
         FROM `user`
         WHERE
@@ -2129,8 +2165,8 @@ def pharmacy_report_by_fugou():
         user.pharmacystores
         ORDER BY user.area,
         user.pharmacy,
-        user.pharmacystores'''%(' AND '.join(_conditions2),' AND '.join(_conditions))
+        user.pharmacystores'''%(' AND '.join(_conditions2),' AND '.join(_conditions2).replace('qxhdm_time','lastfugou_time'),' AND '.join(_conditions))
 
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_fugou.html',data=data,period=period)
+    return render_template('report/pharmacy_report_by_fugou.html',areas=areas,pharmacys=pharmacys,data=data,period=period)

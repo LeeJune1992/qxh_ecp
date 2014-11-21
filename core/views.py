@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -2284,15 +2284,35 @@ def public_users(user_type):
     _conditions = user_conditions()
     _conditions.append(User.user_type==user_type)
     _conditions.append(User.assign_operator_id == None)
+    if user_type==5:
+        area = request.args.get('area','')
+        if area:
+            _conditions.append('`user`.area="%s"'%area)
+        promoters = request.args.get('promoters','')
+        if promoters:
+            _conditions.append('`user`.promoters="%s"'%promoters)
+        pharmacy = request.args.get('pharmacy','')
+        if pharmacy:
+            _conditions.append('`user`.pharmacy="%s"'%pharmacy)
+
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
     if not is_order:order_by = asc(User.is_assigned)
     pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+    show_queries=['admin','username','phone','show_assign','user_origin','show_abandon']
+    areas = ''
+    promoterss = ''
+    pharmacys = ''
+    if user_type==5:
+        areas = db.session.execute('select distinct area from user where qxhdm_time > 0')
+        promoterss = db.session.execute('select distinct promoters from user where qxhdm_time > 0')
+        pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
+        show_queries=['admin','service','username','phone','show_assign','user_origin','show_abandon']
     return render_template('user/users.html',
                            pagination=pagination,
                            show_label = True if user_type==1 else False,
                            operators=Operator.query.filter(Operator.assign_user_type==user_type),
-                           show_queries=['admin','username','phone','show_assign','user_origin','show_abandon'])
+                           show_queries=show_queries,areas=areas,pharmacys=pharmacys,promoterss=promoterss)
 
 @admin.route('/user/public/new')
 @admin_required
@@ -4084,19 +4104,197 @@ def khsldjqx():
             return jsonify(result=False,error=e.message)
 
 
-@admin.route('/user/servicetype/<int:user_id>', methods=['POST'])
+#@admin.route('/user/servicetype/<int:user_id>', methods=['POST'])
+#@login_required
+#def user_servicetype(user_id):
+#    if request.method == 'POST':
+#        try:
+#            user = User.query.get(user_id)
+#            is_isable = int(request.form['servicetype'])
+#            isable_reason = request.form['isable_reason']
+#            user.is_isable = is_isable
+#            user.isable_reason = isable_reason
+#            db.session.commit()
+#            return jsonify(result=True)
+#        except Exception,e:
+#            db.session.rollback()
+#            current_app.logger.error('USERSERVICE ISABLE ERROR,%s'%e)
+#            return jsonify(result=False,error=e.message)
+
+
+@admin.route('/user/servicetype/<int:user_id>',methods=['POST'])
 @login_required
 def user_servicetype(user_id):
-    if request.method == 'POST':
+    if request.method=='POST':
+        user = User.query.get_or_404(user_id)
+        #reason = request.form['reason']
+        is_isable = int(request.form['servicetype'])
+        if is_isable:
+            ss = '停用'
+        else:
+            ss = '启用'
+        isable_reason = request.form['isable_reason']
+        if user.assign_operator_id<>current_user.id:
+            return jsonify(result=False,error=u'该客户不归属于你，无法%s。'%ss)
+        _conditions = []
+        _conditions.append(User_Isable.user_id == user_id)
+        _conditions.append(User_Isable.status == 0)
+        giveupuserdata = User_Isable.query.filter(db.and_(*_conditions)).limit(1)
+        giveupusers = []
+        for g in giveupuserdata:
+            giveupusers.append(g.id)
+        if len(giveupusers) > 0:
+            return jsonify(result=False,error=u'该客户正在%s审核中。'%ss)
         try:
-            user = User.query.get(user_id)
-            is_isable = int(request.form['servicetype'])
-            isable_reason = request.form['isable_reason']
-            user.is_isable = is_isable
-            user.isable_reason = isable_reason
+            giveupuser = User_Isable();
+            giveupuser.user_id = user_id
+            giveupuser.operator_id = current_user.id
+            giveupuser.reason = isable_reason
+            giveupuser.is_isable = is_isable
+            db.session.add(giveupuser)
             db.session.commit()
+            current_app.logger.info('USERSERVICE ISABLE|%s|%s|%s|%s'%(user.user_id,is_isable,current_user.id,datetime.now()))
             return jsonify(result=True)
         except Exception,e:
             db.session.rollback()
-            current_app.logger.error('USERSERVICE ISABLE ERROR,%s'%e)
-            return jsonify(result=False,error=e.message)
+            return jsonify(result=False,error=u'无法%s该客户，%s'%(ss,e))
+
+
+@admin.route('/user/servicetypeok',methods=['POST'])
+@admin_required
+def servicetype_user_ok():
+    try:
+        sel_ids = json.loads(request.form['ids'])
+        user_ids = map(lambda s:int(s),sel_ids)
+        remarks = request.form['remarks']
+        if len(user_ids)==0:return jsonify(result=False,error=u'请先选择要放弃归属的客户！')
+        users = User.query.filter(User.user_id.in_(user_ids))
+        # for u in users:
+        #     if not op.assign_user_type&u.user_type:
+        #         return jsonify(result=False,error=u'员工《%s》指派类型和客户《%s》当前类型不匹配！'%(op.nickname,u.name))
+
+#        for u in users:
+#            u.assign_operator_id = None
+#            u.assign_retain_time = 0
+#            u.is_abandon = True
+#            u.assign_op(None,current_user.id,True)
+#
+#            current_app.logger.info('DROP_USER|%s|%s|%s|%s'%(current_user.id,current_user.id,u.user_id,u.assign_operator_id))
+
+        servicetypes = User_Isable.query.filter(db.and_(User_Isable.user_id.in_(user_ids),User_Isable.status == 0)).all()
+        for give in servicetypes:
+            give.status = 1
+            give.audit_operator_id = current_user.id
+            give.audit_time = datetime.now()
+            give.remarks = remarks
+
+            give.user.is_isable = give.is_isable
+            give.user.isable_reason = give.remarks
+            current_app.logger.info('USERSERVICEOK ISABLE|%s|%s|%s|%s'%(give.user_id,give.is_isable,current_user.id,datetime.now()))
+        #db.session.query(User_Giveup).filter(User_Giveup.user_id.in_(user_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        return jsonify(result=True)
+    except Exception,e:
+        printException()
+        db.session.rollback()
+        current_app.logger.error('DROP_USER ERROR.%s'%e)
+        return jsonify(result=False,error=e.message)
+
+@admin.route('/user/servicetypeno',methods=['POST'])
+@admin_required
+def servicetype_user_no():
+    try:
+        sel_ids = json.loads(request.form['ids'])
+        user_ids = map(lambda s:int(s),sel_ids)
+        remarks = request.form['remarks']
+        if len(user_ids)==0:return jsonify(result=False,error=u'请先选择要放弃归属的客户！')
+        users = User.query.filter(User.user_id.in_(user_ids))
+        # for u in users:
+        #     if not op.assign_user_type&u.user_type:
+        #         return jsonify(result=False,error=u'员工《%s》指派类型和客户《%s》当前类型不匹配！'%(op.nickname,u.name))
+
+#        for u in users:
+#            current_app.logger.info('DROP_USERNO|%s|%s|%s|%s'%(current_user.id,current_user.id,u.user_id,u.assign_operator_id))
+
+        servicetypes = User_Isable.query.filter(db.and_(User_Isable.user_id.in_(user_ids),User_Isable.status == 0)).all()
+        for give in servicetypes:
+            give.status = 2
+            give.audit_operator_id = current_user.id
+            give.audit_time = datetime.now()
+            give.remarks = remarks
+
+            current_app.logger.info('USERSERVICENO ISABLE|%s|%s|%s|%s'%(give.user_id,give.is_isable,current_user.id,datetime.now()))
+
+        
+        db.session.commit()
+        return jsonify(result=True)
+    except Exception,e:
+        printException()
+        db.session.rollback()
+        current_app.logger.error('DROP_USER ERROR.%s'%e)
+        return jsonify(result=False,error=e.message)
+
+
+
+@admin.route('/user/servicetypes')
+@admin_required
+def servicetype_users():
+    _conditions = user_conditions()
+    #仅允许管理本部门员工数据
+    #if not current_user.is_admin and current_user.team:
+    #    operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0))
+    #    op_ids = [op.id for op in operators]
+    #    _conditions.append(User.assign_operator_id.in_(op_ids))
+    #else:
+    operators = Operator.query.filter(Operator.assign_user_type>0)
+
+    page = int(request.args.get('page', 1))
+    _conditions.append(User_Isable.status==0)
+    is_order,order_by = user_order_by()
+    if not is_order:order_by = desc(User.join_time)
+    if len(_conditions) > 0:
+        pagination = User_Isable.query.filter(db.and_(*_conditions)).join(User,User.user_id==User_Isable.user_id).order_by(order_by).paginate(page, per_page=user_per_page())
+    else:
+        pagination = User_Isable.query.filter(db.and_(User_Isable.status == 0)).join(User,User.user_id==User_Isable.user_id).order_by(order_by).paginate(page, per_page=user_per_page())
+    return render_template('user/servicetype_fq.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon'])
+
+
+@admin.route('/user/servicetype_sq')
+@admin_required
+def servicetype_user_sq():
+    _conditions = user_conditions()
+    operators = Operator.query.filter(Operator.assign_user_type>0)
+
+    page = int(request.args.get('page', 1))
+    _conditions.append(User_Isable.operator_id == current_user.id)
+    is_order,order_by = user_order_by()
+    if not is_order:order_by = desc(User_Isable.created)
+    if len(_conditions) > 0:
+        pagination = User_Isable.query.filter(db.and_(*_conditions)).join(User,User.user_id==User_Isable.user_id).order_by(order_by).paginate(page, per_page=user_per_page())
+    else:
+        pagination = User_Isable.query.filter(db.and_(User_Giveup.status == 0)).join(User,User.user_id==User_Isable.user_id).order_by(order_by).paginate(page, per_page=user_per_page())
+    return render_template('user/servicetype_sq.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon'])
+
+@admin.route('/user/servicetype_audit')
+@admin_required
+def servicetype_user_audit():
+    _conditions = user_conditions()
+    operators = Operator.query.filter(Operator.assign_user_type>0)
+
+    page = int(request.args.get('page', 1))
+    _conditions.append(User_Isable.audit_operator_id == current_user.id)
+    is_order,order_by = user_order_by()
+    if not is_order:order_by = desc(User_Isable.created)
+    #_conditions.append(User_Isable.status == 0)
+    pagination = User_Isable.query.filter(db.and_(*_conditions)).join(User,User.user_id==User_Isable.user_id).order_by(order_by).paginate(page, per_page=user_per_page())
+    
+    return render_template('user/servicetype_sq.html',
+                           pagination=pagination,
+                           operators=operators,
+                           show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon'])
