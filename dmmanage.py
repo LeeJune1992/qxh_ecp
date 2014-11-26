@@ -17,7 +17,7 @@ manager = Manager(_app)
 
 from extensions import db
 
-from core.models import User,User_Phone
+from core.models import User,User_Phone,User_Assign_Log
 import pycurl
 from StringIO import StringIO
 from global_settings import DMURL
@@ -45,10 +45,10 @@ def getdmuser():
         if p:
             user = User.query.get_or_404(p.user_id)
             user.operator_id = 1
-            user.origin = 18
+            user.origin = int(u['origin'])
             user.user_type = 5#服务客户
             #user.assign_operator_id = 1            
-            user.purchases = user.purchases+purchases
+            user.purchases = str(user.purchases)+purchases
             user.qxhdm_user_id = u['id']
             user.area = u['area']
             user.pharmacy = u['pharmacy']
@@ -57,10 +57,19 @@ def getdmuser():
 
             user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
             db.session.add(user)
+            
+            #分配记录
+            assign_log = User_Assign_Log()
+            assign_log.user_id = user.user_id
+            assign_log.assign_operator_id = None
+            assign_log.operator_id = 1
+            assign_log.user_type = user.user_type
+            db.session.add(assign_log)
+
 
         else:            
             user.operator_id = 1
-            user.origin = 18
+            user.origin = int(u['origin'])
             user.user_type = 5#服务客户
             #user.assign_operator_id = 1
             user.name = u['name']
@@ -82,6 +91,15 @@ def getdmuser():
             user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
             db.session.add(user)
             db.session.flush()
+
+            #分配记录
+            assign_log = User_Assign_Log()
+            assign_log.user_id = user.user_id
+            assign_log.assign_operator_id = None
+            assign_log.operator_id = 1
+            assign_log.user_type = user.user_type
+            db.session.add(assign_log)
+
             db.session.add(User_Phone.add_phone(user.user_id,user.phone))
             if user.phone2:
                 db.session.add(User_Phone.add_phone(user.user_id,user.phone2))

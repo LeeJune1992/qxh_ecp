@@ -824,7 +824,9 @@ class User(db.Model):
     is_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#是否有效1有效，2无效,3无法确认
     is_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#是否新客户
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
-    
+
+    record_time = Column(db.Date)#最后录音时间
+
     lastfugou_time = Column(db.Date)#最后复购时间
     fugou_bigcount = Column(db.Integer(unsigned=True), default=0)#复购大数量
     fugou_mediumcount = Column(db.Integer(unsigned=True), default=0)#复购中数量
@@ -1078,6 +1080,7 @@ class User_Dialog(db.Model):
     id = Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
     solution = db.Column(db.String(1000))
+    record_number = db.Column(db.String(50))
     type = db.Column(db.SmallInteger,nullable=False,default=1)#--->DIALOG_TYPES
     content = db.Column(db.Text)
     operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)
@@ -1085,14 +1088,15 @@ class User_Dialog(db.Model):
     created = Column(db.DateTime, default=datetime.now)
 
     @classmethod
-    def add_dialog(cls,op_id,user_id,solution,type,content):
+    def add_dialog(cls,op_id,user_id,solution,type,content,record_number):
         obj = cls()
         obj.user_id = user_id
         obj.operator_id = op_id
         obj.solution = solution
+        obj.record_number = record_number
         obj.type = type
         obj.content = content
-        User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now()})
+        User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now(),'record_time':datetime.now()})
         return obj
 
 
