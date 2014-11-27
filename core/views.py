@@ -2594,6 +2594,7 @@ def user_dialogs(user_id):
                        'solution':dialog.solution,
                        'type_name':DIALOG_TYPES[dialog.type],
                        'content':dialog.content,
+                       'record_number':dialog.record_number,
                        'op_name':dialog.operator.nickname,
                        'created':dialog.created.strftime('%Y-%m-%d %H:%M')})
     return jsonify(result = _datas)
@@ -2607,8 +2608,9 @@ def add_dialog(user_id):
             content = request.form['content']
             solution = request.form['solution']
             dialog_type = request.form['type']
+            record_number = request.form['record_number']
             if not dialog_type:dialog_type=99
-            obj = User_Dialog.add_dialog(current_user.id,user_id,solution,int(dialog_type),content)
+            obj = User_Dialog.add_dialog(current_user.id,user_id,solution,int(dialog_type),content,record_number)
             db.session.add(obj)
             db.session.commit()
             return jsonify(result=True)
@@ -2617,7 +2619,7 @@ def add_dialog(user_id):
             current_app.logger.error('ADD USER DIALOG ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
 
-
+user_dialogs
 def format_phone(phone):
     '''格式化电话号码'''
     if not phone:return ''
@@ -2811,6 +2813,7 @@ def _add_user():
 
         #通话记录
         dialog_content = request.form['dialog_content']
+        record_number = request.form['record_number']
         if dialog_content:
             dialog_solution = request.form['dialog_solution']
             dialog_type = request.form['dialog_type']
@@ -2858,6 +2861,8 @@ def _add_user():
         if dialog_content:
             user.dialog_times = 1
             user.last_dialog_time = datetime.now()
+            if record_number:
+                user.record_time = datetime.now()
 
         user.entries = entries
         user.habits_customs = request.form['habits_customs']
@@ -2889,7 +2894,7 @@ def _add_user():
             db.session.flush()
 
         if dialog_content:
-            db.session.add(User_Dialog.add_dialog(current_user.id,user.user_id,dialog_solution,dialog_type,dialog_content))
+            db.session.add(User_Dialog.add_dialog(current_user.id,user.user_id,dialog_solution,dialog_type,dialog_content,record_number))
         db.session.commit()
         return True,{'user_id':user.user_id,'token':des.user_token(user.user_id)}
     except Exception,e:

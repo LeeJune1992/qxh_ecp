@@ -386,7 +386,7 @@
             req.done(function (data) {
                 if (data.result == true) {
                     var data=data.error;
-                    window.location.href = "/user/detail/"+data.user_id;
+                    window.location.href = "/user/detail/"+data.user_id+'/'+data.token;
                 }
                 else {
                     show_err(data.error);
@@ -662,7 +662,7 @@
                             <label class="control-label">新老客户</label>
 
                             <div class="controls">
-                                <label style="float:left; padding-right:15px;"><input name="is_new" value="0" type="radio">老客户</label><label><input name="is_new" value="1" type="radio">新客户</label><br />
+                                <label style="float:left; padding-right:15px;"><input name="is_new" value="0" type="radio">老客户</label><label><input name="is_new" value="1" type="radio" checked="checked">新客户</label><br />
                                 <label>复购次数:<input id="fugou" name="fugou" class="input-large" type="text" />新客户为0，可不填写</label>
                             </div>
                         </div>
@@ -853,6 +853,10 @@
                         <div class="input-prepend space">
                             <span class="add-on">客户说：</span>
                             <input name="kh" type="text" data-person="客户" class="say">
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">录音编号：</span>
+                            <input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">
                         </div>
                         <button type="submit" class="btn btn-primary">保存客户</button>
 

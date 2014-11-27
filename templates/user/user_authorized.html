@@ -120,7 +120,7 @@
         .menubar{
             text-align: right;
             background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#f1f1f1), to(#ffffff));
-            height: 45px;
+            height: 85px;
             margin-bottom: 165px;
         }
 
@@ -629,10 +629,10 @@ $(function () {
             req.done(function (data) {
                 var dialogs = data.result;
                 if (!$.isEmptyObject(dialogs)) {
-                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
                     for (var i in dialogs) {
                         dialog = dialogs[i];
-                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.op_name + '</td></tr>';
+                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
                     }
                     html += '</tbody></table>';
                     $('#dialog_history').html(html);
@@ -647,6 +647,7 @@ $(function () {
         add: function () {
             var solution = escape_html($('#dialog_solution').val());
             var content = escape_html($('#dialog_content').val());
+            var record_number = escape_html($('#record_number').val());
             var type = $('#dialog_type').val();
 
             if (content == '') {
@@ -663,7 +664,7 @@ $(function () {
                 url: '{{ url_for('admin.add_dialog',user_id=user.user_id) }}',
                 dataType: "json",
                 type: 'POST',
-                data: {solution: solution, content: content, type: type}
+                data: {solution: solution, content: content, type: type,record_number: record_number}
             });
 
             req.done(function (data) {
@@ -671,6 +672,7 @@ $(function () {
                     Dialog.update();
                     $('#dialog_solution').val(null);
                     $('#dialog_content').val(null);
+                    $('#record_number').val(null);
                     show_success('沟通记录已保存！');
                 }
                 else {
@@ -1764,6 +1766,10 @@ function khsllq(id){
                             <span class="add-on">客户说：</span>
                             <input name="kh" type="text" data-person="客户" class="say"
                                    style="background-color: #fff">
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">录音编号：</span>
+                            <input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">
                         </div>
                         <a href="#" class="btn btn-success btn-mini" id="add_dialog">添加沟通记录</a>
                     </div>
