@@ -304,6 +304,7 @@ ENDPOINTS = [
     ('xlj_mtjxqk',u'[营销]心力健媒体进线情况表','E'),
     ('xlj_xsqkb',u'[营销]心力健销售情况表','E'),
     ('yy_khsl',u'[营销]空盒送礼登记表','E'),
+    ('yy_fgtj',u'[营销]复购统计','E'),
 
 
     ('financial_report',u'财务报表','E'),
@@ -432,6 +433,14 @@ ORDER_MODES = {
 ORDER_PAYMENTS = {
     1:u'货到付款',
     2:u'先款后货',
+}
+
+AREA = {
+    u'山东':u'山东',
+    u'四川':u'四川',
+    u'黑龙江':u'黑龙江',
+    u'陕西':u'陕西',
+    u'广东':u'广东'
 }
 
 USER_ORIGINS = {

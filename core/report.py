@@ -2170,3 +2170,45 @@ def pharmacy_report_by_fugou():
     print _sql
     data = db.session.execute(_sql)
     return render_template('report/pharmacy_report_by_fugou.html',areas=areas,pharmacys=pharmacys,data=data,period=period)
+
+#复购统计
+@report.route('/yy/fgtj')
+@admin_required
+def yy_fgtj():
+    _conditions2 = []
+    _conditions = []
+    area = request.args.get('area','')
+    if area:
+        _conditions2.append('area="%s"'%area)
+    user_origin = request.args.get('user_origin','')
+    if user_origin:
+        _conditions2.append('origin=%s'%user_origin)
+    user_where = ' AND '.join(_conditions2)
+    if user_where:
+        user_where = ' AND '+user_where
+    #print user_where
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('created>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('created<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('created>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _sql = 'select nickname,id from operator where assign_user_type=5'
+    rows = db.session.execute(_sql)
+    _sql = ''
+    for r in rows:
+        _sql += ''' UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount) from user_tjfg where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
+         UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount) from qxhdm_orderyf where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
+'''%(r[0],r[1],user_where,' AND '.join(_conditions),r[0],r[1],user_where,' AND '.join(_conditions))
+    #return _sql[10:]
+    rows = db.session.execute(_sql[10:])
+    return render_template('report/user_report_by_fwfg.html',rows=rows,period=period)

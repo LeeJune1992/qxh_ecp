@@ -311,6 +311,33 @@ $(function () {
         });
     };
     show_khsldj();
+
+    var show_fwtjfg = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_show_fwtjfg',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#fwtjfg_list').html(html);
+                $('#fwtjfg_nums').html(sms_list.length);
+            }
+            else {
+                $('#fwtjfg_list').html('无推荐复购');
+                $('#fwtjfg_nums').html(0);
+            }
+        });
+    };
+    show_fwtjfg();
 	
     var Dialog = {
         update: function () {
@@ -664,6 +691,21 @@ $(function () {
 			<div id="khsldjModule" class="accordion-body collapse in">
 				<div class="accordion-inner">
 					<div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+											   border="0"/>正在费力加载中...
+					</div>
+				</div>
+	
+			</div>
+		</div>
+		<div class="accordion-group">
+			<div class="accordion-heading">
+				<a class="accordion-toggle" data-toggle="collapse" href="#fwtjfgModule">
+					<i class="icon-chevron-down"></i> 推荐复购　(<span id="fwtjfg_nums"></span>)
+				</a>
+			</div>
+			<div id="fwtjfgModule" class="accordion-body collapse in">
+				<div class="accordion-inner">
+					<div id="fwtjfg_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
 											   border="0"/>正在费力加载中...
 					</div>
 				</div>

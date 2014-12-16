@@ -147,7 +147,7 @@ class Order(db.Model):
             user = self.user
             if user.user_type == 1:
                 user.label_id = 99
-                if self.actual_fee>0 or user.origin not in NEED_PAID_USER_ORIGINS:#检测是否为付费订单扭转的来源客户 (2013.08.20)
+                if self.actual_fee>0:#有金额的才流转到会员客户20141210 or (user.origin not in NEED_PAID_USER_ORIGINS):# and user.product_intention <> 7检测是否为付费订单扭转的来源客户 (2013.08.20)
                     user.user_type = 2
                     user.member_time = datetime.now()#成为会员客户的时间更新add john 20131120
                     _assign_op = None
@@ -1096,7 +1096,10 @@ class User_Dialog(db.Model):
         obj.record_number = record_number
         obj.type = type
         obj.content = content
-        User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now(),'record_time':datetime.now()})
+        if record_number:
+            User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now(),'record_time':datetime.now()})
+        else:
+            User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now()})
         return obj
 
 
@@ -1287,6 +1290,8 @@ class Operator(db.Model, UserMixin):
             _users.append(u'新客户')
         if self.assign_user_type&2:
             _users.append(u'会员客户')
+        if self.assign_user_type&5:
+            _users.append(u'会员服务')
         return _users
 
     @property
@@ -1552,9 +1557,9 @@ class Weihu(db.Model):
     __tablename__ = 'report_weihu'
 
     id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date)
     operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
     operator = db.relationship('Operator', primaryjoin="(Weihu.operator_id == Operator.id)")
-    date = Column(db.Date)
     usercount = Column(db.Integer, default=0)#用户量
     usersales = Column(db.Integer, default=0)#业绩
     last_usercount = Column(db.Integer, default=0)#上月用户量
@@ -1569,3 +1574,15 @@ class Weihu(db.Model):
     yaopinsales = Column(db.Integer, default=0)#药品业绩
     baojianpinsales = Column(db.Integer, default=0)#保健品业绩
     huazhuangpinsales = Column(db.Integer, default=0)#化妆品业绩
+
+class User_tjfg(db.Model):
+    '''服务推荐复购'''
+    __tablename__ = 'user_tjfg'
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    dm_user_id = Column(db.Integer, nullable=False)#地面
+    user = relationship('User', primaryjoin="(User.user_id == User_tjfg.user_id)")
+    bigcount = Column(db.Integer(unsigned=True), default=0)#大数量
+    mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
+    smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
+    created = Column(db.DateTime, default=datetime.now, nullable=False)

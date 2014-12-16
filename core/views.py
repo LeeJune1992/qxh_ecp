@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -3113,24 +3113,27 @@ def securitycodes():
     sc = None
     page = int(request.args.get('page', 1))
     if code:
+        scc = None
         sc = Security_Code.query.filter(db.and_(Security_Code.code == code)).first()
-        pagination = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == code)).paginate(page, per_page=20)
-        scl = Security_Code_Log()
-        scl.operator_id = current_user.id
-        scl.code = code
-        scl.username = username
-        scl.tel = tel
-        scl.province = province
-        scl.city = city
-        scl.district = district
-        scl.street = street
-        scl.ip = request.remote_addr
-        db.session.add(scl)
-        db.session.commit()
+        if sc:
+            scc = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == code)).first()
+        if not scc:
+            scl = Security_Code_Log()
+            scl.operator_id = current_user.id
+            scl.code = code
+    #        scl.username = username
+    #        scl.tel = tel
+    #        scl.province = province
+    #        scl.city = city
+    #        scl.district = district
+    #        scl.street = street
+            scl.ip = request.remote_addr
+            db.session.add(scl)
+            db.session.commit()
     else:
         pagination = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == '11')).paginate(page, per_page=20)
 
-    return render_template('securitycode/search.html', pagination=pagination,sc=sc)
+    return render_template('securitycode/search.html', scc=scc,sc=sc)
 @admin.route('/securitycode/searchlog', methods=['GET', 'POST'])
 @admin_required
 def securitycodelog():
@@ -3924,7 +3927,10 @@ def add_dmyp(user_id):
             user = User.query.get(user_id)
             orderyf = QXHDM_Orderyf()
             orderyf.user_id = user.user_id
-            orderyf.dm_user_id = user.qxhdm_user_id
+            orderyf.dm_user_id = 0
+            if user.qxhdm_user_id:
+                orderyf.dm_user_id = user.qxhdm_user_id
+
             bigcount = int(request.form['bigcount'])
             mediumcount = int(request.form['mediumcount'])
             smallcount = int(request.form['smallcount'])
@@ -3942,6 +3948,37 @@ def add_dmyp(user_id):
         except Exception,e:
             db.session.rollback()
             current_app.logger.error('ADD SMS ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+#服务推荐复购
+@admin.route('/user/fwtjfg/<int:user_id>', methods=['POST'])
+@login_required
+def user_fwtjfg(user_id):
+    if request.method == 'POST':
+        try:
+            user = User.query.get(user_id)
+            #print 'ok.....................'
+            orderyf = User_tjfg()
+            orderyf.user_id = user.user_id
+            orderyf.dm_user_id = 0
+            if user.qxhdm_user_id:
+                orderyf.dm_user_id = user.qxhdm_user_id
+            bigcount = int(request.form['bigcount'])
+            mediumcount = int(request.form['mediumcount'])
+            smallcount = int(request.form['smallcount'])
+            orderyf.bigcount = bigcount
+            orderyf.mediumcount = mediumcount
+            orderyf.smallcount = smallcount
+
+            db.session.add(orderyf)
+#            user.lastfugou_time = datetime.now().strftime('%Y-%m-%d')
+#            user.fugou_bigcount += bigcount
+#            user.fugou_mediumcount += mediumcount
+#            user.fugou_smallcount += smallcount
+            db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('ADD USERTJFG ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
 
 @admin.route('/user/voucher/<int:user_id>')
@@ -4303,3 +4340,18 @@ def servicetype_user_audit():
                            pagination=pagination,
                            operators=operators,
                            show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon'])
+
+@admin.route('/user/showfwtjfg/<int:user_id>')
+@login_required
+def user_show_fwtjfg(user_id):
+    _objs = User_tjfg.query.filter(User_tjfg.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'message':str(sms.created),
+                         'bigcount':sms.bigcount,
+                         'mediumcount':sms.mediumcount,
+                         'smallcount':sms.smallcount
+
+})
+
+    return jsonify(result=sms_list)
