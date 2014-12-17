@@ -48,36 +48,36 @@
 			$('#code').focus();
 			return false;
 		}
-		var username = $('#username').val();
-		if (username==null || username==''){
-			bootbox.alert('姓名不能为空!');
-			$('#username').focus();
-			return false;
-		}
-		var tel = $('#tel').val();
-		if (tel==null || tel==''){
-			bootbox.alert('电话不能为空!');
-			$('#tel').focus();
-			return false;
-		}
-		var province = $('#province').val();
-		if (province==null || province==''){
-			bootbox.alert('省不能为空!');
-			$('#province').focus();
-			return false;
-		}
-		var city = $('#city').val();
-		if (city==null || city==''){
-			bootbox.alert('市不能为空!');
-			$('#city').focus();
-			return false;
-		}
-		var district = $('#district').val();
-		if (district==null || district==''){
-			bootbox.alert('地区不能为空!');
-			$('#district').focus();
-			return false;
-		}
+//		var username = $('#username').val();
+//		if (username==null || username==''){
+//			bootbox.alert('姓名不能为空!');
+//			$('#username').focus();
+//			return false;
+//		}
+//		var tel = $('#tel').val();
+//		if (tel==null || tel==''){
+//			bootbox.alert('电话不能为空!');
+//			$('#tel').focus();
+//			return false;
+//		}
+//		var province = $('#province').val();
+//		if (province==null || province==''){
+//			bootbox.alert('省不能为空!');
+//			$('#province').focus();
+//			return false;
+//		}
+//		var city = $('#city').val();
+//		if (city==null || city==''){
+//			bootbox.alert('市不能为空!');
+//			$('#city').focus();
+//			return false;
+//		}
+//		var district = $('#district').val();
+//		if (district==null || district==''){
+//			bootbox.alert('地区不能为空!');
+//			$('#district').focus();
+//			return false;
+//		}
 	});
     </script>
 {% endblock %}
@@ -88,7 +88,7 @@
         <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
         <p></p>
     </div>
-        <input type="text" class="input-medium" name="code" id="code" value="{{ request.args.get('code','') }}" placeholder="搜索防伪码">
+        <input type="text" class="input-medium" name="code" id="code" value="{{ request.args.get('code','') }}" placeholder="搜索防伪码"><!--
         <input type="text" class="input-medium" name="username" id="username" value="{{ request.args.get('username','') }}" placeholder="姓名">
         <input type="text" class="input-medium" name="tel" id="tel" value="{{ request.args.get('tel','') }}" placeholder="电话">
         <select id="province" name="province" style="width: 135px"></select>
@@ -96,36 +96,21 @@
                                 <select id="district" name="district" style="width: 150px"></select>
 
                                 <input type="text" id="street" name="street" class="input input-large"
-                                       style="width: 340px" placeholder="详细地址"/>
+                                       style="width: 340px" placeholder="详细地址"/>-->
         <button type="submit" class="btn"><i class="icon-search icon-black"></i> 查询</button>
     </form>
-	<div style="text-align:center; font-size:14px; padding:5px; color:#FF0000;">{% if sc.code %}防伪码真实{% else %}防伪码不存在{%  endif %}</div>
-    <table class="table table-bordered table-hover table-condensed">
-        <thead>
-        <tr>
-            <th>操作员</th>
-            <th>防伪码</th>
-            <th>姓名</th>
-            <th>电话</th>
-            <th>地址</th>
-            <th>查询时间</th>
-            <th>IP</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for operator in pagination.items %}
-            <tr>
-                <td>{{ operator.operator.nickname }}</td>
-                <td>{{ operator.code }}</td>
-                <td>{{ operator.username }}</td>
-                <td>{{ operator.tel }}</td>
-                <td>{{ operator.province }}{{ operator.city }}{{ operator.district }}{{ operator.street }}</td>
-                <td>{{ operator.created }}</td>
-                <td>{{ operator.ip }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-	{{ render_pagination(pagination) }}
+	<div style="font-size:14px; padding:5px; color:#FF0000;">
+    {% if code %}
+        {% if scc and sc.code %}
+        防伪码正确,已验证过
+        {% else %}
+            {% if sc.code %}
+            防伪码验证通过
+            {% else %}
+            防伪码错误
+            {%  endif %}
+        {%  endif %}
+    {%  endif %}
+    </div>
 
 {% endblock %}

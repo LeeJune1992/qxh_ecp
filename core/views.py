@@ -3110,10 +3110,9 @@ def securitycodes():
     city = request.args.get('city', None)
     district = request.args.get('district', None)
     street = request.args.get('street', None)
-    sc = None
-    page = int(request.args.get('page', 1))
-    if code:
-        scc = None
+    sc = None    
+    scc = None
+    if code:        
         sc = Security_Code.query.filter(db.and_(Security_Code.code == code)).first()
         if sc:
             scc = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == code)).first()
@@ -3130,10 +3129,7 @@ def securitycodes():
             scl.ip = request.remote_addr
             db.session.add(scl)
             db.session.commit()
-    else:
-        pagination = Security_Code_Log.query.filter(db.and_(Security_Code_Log.code == '11')).paginate(page, per_page=20)
-
-    return render_template('securitycode/search.html', scc=scc,sc=sc)
+    return render_template('securitycode/search.html', scc=scc,sc=sc,code=code)
 @admin.route('/securitycode/searchlog', methods=['GET', 'POST'])
 @admin_required
 def securitycodelog():
