@@ -43,28 +43,29 @@ def getdmuser():
         p = User_Phone.query.filter(db.or_(User_Phone.phone == u['phone'],User_Phone.phone == u['phone2'])).first()
         purchases = u['name']+u'于'+u['gmdate']+u' 在 '+u['gmaddress']+u' 购买了大盒'+str(u['gmbigcount'])+u'盒，小盒'+str(u['gmsmallcount'])+u'盒,备注：'+u['remark']+u',电话：'+u['phone']+','+u['phone2']+u',年龄：'+str(u['ages'])+u',性别：'+u['gender']+u',区域：'+u['area']
         if p:
-            user = User.query.get_or_404(p.user_id)
-            user.operator_id = 1
-            user.origin = int(u['origin'])
-            user.user_type = 5#服务客户
-            #user.assign_operator_id = 1            
-            user.purchases = str(user.purchases)+purchases
-            user.qxhdm_user_id = u['id']
-            user.area = u['area']
-            user.pharmacy = u['pharmacy']
-            user.promoters = u['promoters']
-            user.pharmacystores = u['pharmacystores']
-
-            user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
-            db.session.add(user)
-            
-            #分配记录
-            assign_log = User_Assign_Log()
-            assign_log.user_id = user.user_id
-            assign_log.assign_operator_id = None
-            assign_log.operator_id = 1
-            assign_log.user_type = user.user_type
-            db.session.add(assign_log)
+            pass#如果存在,不处理20141224
+#            user = User.query.get_or_404(p.user_id)
+#            user.operator_id = 1
+#            user.origin = int(u['origin'])
+#            user.user_type = 5#服务客户
+#            #user.assign_operator_id = 1            
+#            user.purchases = str(user.purchases)+purchases
+#            user.qxhdm_user_id = u['id']
+#            user.area = u['area']
+#            user.pharmacy = u['pharmacy']
+#            user.promoters = u['promoters']
+#            user.pharmacystores = u['pharmacystores']
+#
+#            user.qxhdm_time = datetime.now().strftime('%Y-%m-%d')
+#            db.session.add(user)
+#            
+#            #分配记录
+#            assign_log = User_Assign_Log()
+#            assign_log.user_id = user.user_id
+#            assign_log.assign_operator_id = None
+#            assign_log.operator_id = 1
+#            assign_log.user_type = user.user_type
+#            db.session.add(assign_log)
 
 
         else:            
