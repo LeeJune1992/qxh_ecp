@@ -3733,23 +3733,23 @@ def voucher_add(user_id):
 @login_required
 def voucher_get():
     if request.method=='POST':
-        user_id = request.form['user_id']
-        user = User.query.get_or_404(user_id)
-        _conditions = []
-        _conditions.append(User_Voucher.user_id == user_id)    
-        _conditions.append(User_Voucher.status == True)
-        order_id = request.form['order_id']
-        if order_id:
-            _conditions.append(db.or_(User_Voucher.order_id == None,User_Voucher.order_id == int(order_id)))
-        else:
-            _conditions.append(User_Voucher.order_id == None)
-        voucheruser = User_Voucher.query.filter(db.and_(*_conditions))
+#        user_id = request.form['user_id']
+#        user = User.query.get_or_404(user_id)
+#        _conditions = []
+#        _conditions.append(User_Voucher.user_id == user_id)    
+#        _conditions.append(User_Voucher.status == True)
+#        order_id = request.form['order_id']
+#        if order_id:
+#            _conditions.append(db.or_(User_Voucher.order_id == None,User_Voucher.order_id == int(order_id)))
+#        else:
+#            _conditions.append(User_Voucher.order_id == None)
+#        voucheruser = User_Voucher.query.filter(db.and_(*_conditions))
         _uservoucher = []
-        for vr in voucheruser:
-            _uservoucher.append({'id': vr.id,
-                               'price': vr.price,
-                               'created': vr.created.strftime('%Y-%m-%d')
-                                })
+#        for vr in voucheruser:
+#            _uservoucher.append({'id': vr.id,
+#                               'price': vr.price,
+#                               'created': vr.created.strftime('%Y-%m-%d')
+#                                })
 
         return jsonify(uservoucher=_uservoucher)
 #地面相关
@@ -4112,6 +4112,29 @@ def khsllq():
                 qxhkdj.receive = 1
                 db.session.add(qxhkdj)
                 db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/khsljjlq', methods=['POST'])
+@login_required
+def khsljjlq():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            print id
+            qxhkdj = QXHKHDJ.query.get(id)
+            if qxhkdj:
+                qxhkdj.receive = 2
+                db.session.add(qxhkdj)
+                db.session.commit()
+                for codes in qxhkdj.qxhcodes:
+                    codes.qxhkjdj_id = None
+                    db.session.add(qxhkdj)
+                    db.session.commit()
+
             return jsonify(result=True)
         except Exception,e:
             db.session.rollback()
