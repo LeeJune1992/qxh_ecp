@@ -2841,7 +2841,7 @@ def _add_user():
         if expect_time:
             user.expect_time = datetime.strptime(expect_time[:16],'%Y-%m-%d %H:%M')
 
-
+        user.concerns = json.loads(request.form['concerns'])
         user.m1 = request.form['m1']
         user.m2 = request.form['m2']
         user.m3 = request.form['m3']
