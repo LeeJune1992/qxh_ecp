@@ -371,6 +371,13 @@
                     return false;
                 }
             }
+            //验证媒体
+            var m1 = $('#m1').val();
+            if(m1==''||m1==null){
+                show_err('请选择媒体来源');
+                $('#m1').focus();
+                return false;
+            }
 
             add_btn.attr('disabled', true);
             //validate form
