@@ -2096,7 +2096,7 @@ def edit_order(order_id):
 @admin.route('/order/user/<int:user_id>')
 @login_required
 def user_orders(user_id):
-    orders = Order.query.filter(db.and_(Order.user_id==user_id,Order.status<=100)).order_by(desc(Order.created))
+    orders = Order.query.filter(db.and_(Order.user_id==user_id)).order_by(desc(Order.created))#订购记录显示完整,Order.status<=100
     _datas = []
     for o in orders:
         _datas.append({'id':o.order_id,
