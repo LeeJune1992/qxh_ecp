@@ -71,8 +71,17 @@
             <td>{{ d['allusers'] }}</td>
             <td>{{ d['fugou'] }}</td>
             <td>{{ d['notvalidusers'] }}</td>
-            </tr>
+            </tr><font style="display:none">{{ validusers.append(d['validusers']) }}{{ allusers.append(d['allusers']) }}{{ fugou.append(d['fugou']) }}{{ notvalidusers.append(d['notvalidusers']) }}</font>
         {% endfor %}
+            <tr>
+            <td>合计</td>
+            <td></td>
+            <td></td>
+            <td>{{ validusers|sum }}</td>
+            <td>{{ allusers|sum }}</td>
+            <td>{{ fugou|sum }}</td>
+            <td>{{ notvalidusers|sum }}</td>
+            </tr>
         </tbody>
     </table>
     <div class="alert alert-success">

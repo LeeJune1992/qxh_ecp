@@ -55,14 +55,14 @@
             placeholder:'区域',
 			allowClear:true
         });
-        $('#promoters').select2({
+        $('#effectiveness').select2({
             width:'120px',
-            placeholder:'促销员',
+            placeholder:'有效性',
 			allowClear:true
         });
-        $('#pharmacy').select2({
+        $('#isable').select2({
             width:'120px',
-            placeholder:'药房',
+            placeholder:'是否停用',
 			allowClear:true
         });
 		{% endif %}
@@ -70,6 +70,12 @@
         $('#list_type').select2({
             width:'120px',
             placeholder:'会员类型'
+        });
+		{% endif %}
+		{% if 'area' in show_queries %}
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域'
         });
 		{% endif %}
 
@@ -333,35 +339,35 @@
             </select>
         {% endif %}
         {% if 'service' in show_queries %}
-        <select id="area" name="area">
-            <option></option>
-            <option value="">所有</option>
-            {% set area = request.args.get('area') %}
-            {% for a in areas %}
-            <option value="{{ a[0] }}" {% if a[0]==area %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
+        <select id="area" name="area" class="select2">
+                <option></option>
+                <option value="">所有区域</option>
+                {% set area = request.args.get('area') %}
+                {%- for k,v in config['AREA'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==area %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
         </select>
-        <select id="promoters" name="promoters">
+        <select id="effectiveness" name="effectiveness">
             <option></option>
             <option value="">所有</option>
-            {% set promoters = request.args.get('promoters') %}
-            {% for a in promoterss %}
-            <option value="{{ a[0] }}" {% if a[0]==promoters %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
+            {% set effectiveness = request.args.get('effectiveness') %}
+            <option value="1" {% if effectiveness=='1' %}selected="selected"{% endif %}>有效</option>
+        	<option value="2" {% if effectiveness=='2' %}selected="selected"{% endif %}>无效</option>
+        	<option value="3" {% if effectiveness=='3' %}selected="selected"{% endif %}>无法确认</option>
         </select>
-        <select id="pharmacy" name="pharmacy">
+        <select id="isable" name="isable">
             <option></option>
             <option value="">所有</option>
-            {% set pharmacy = request.args.get('pharmacy') %}
-            {% for a in pharmacys %}
-            <option value="{{ a[0] }}" {% if a[0]==pharmacy %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
+            {% set isable = request.args.get('isable') %}
+            <option value="1" {% if isable=='1' %}selected="selected"{% endif %}>是</option>
+        	<option value="0" {% if isable=='0' %}selected="selected"{% endif %}>否</option>
         </select>
         {% endif %}
         <select id="product_intention" name="product_intention" class="select2">
             <option></option>
-                {% set product_intention = request.args.get('product_intention','')|int %}
+                {% set product_intention = request.args.get('product_intention') %}
                 {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
+                {% set k = '%d'%k %}
                     <option value="{{ k }}" {% if k==product_intention %}selected="selected"{% endif %}>{{ v }}</option>
                 {%- endfor -%}
         </select>
@@ -459,6 +465,9 @@
             <th>创建日期</th>
             <th>来源</th>
             <th>客户类型</th>
+            <th>区域</th>
+            <th>有效性</th>
+            <th>是否停用</th>
             <th>归属</th>
             <th>分配时间</th>
             <th>剩余时长</th>
@@ -497,6 +506,16 @@
                 <td>{{ user.join_time |format_date}}</td>
                 <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
                 <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code></td>
+                <td>{{ user.area }}</td>
+                <td>{% if user.is_valid==1 %}
+                <code style="color:darkcyan">有效</code>
+                {% elif user.is_valid==2 %}
+                <code style="color:000000">无效</code>
+                {% elif user.is_valid==3 %}
+                <code style="color:000000">无法确认</code>
+                {% endif %}
+                </td>
+                <td>{% if user.is_isable==1 %}<code style="color:darkcyan">是</code>{% else %}否{% endif %}</td>
                 <td>
                     {{ user.assign_operator.nickname if user.assign_operator_id else '' }}
                 </td>

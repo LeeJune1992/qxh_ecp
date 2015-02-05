@@ -2187,6 +2187,18 @@ def user_per_page():
 
 def user_conditions():
     _conditions = []    
+    area = request.args.get('area','')
+    if area:
+        _conditions.append(User.area==area)
+    effectiveness = request.args.get('effectiveness','')
+    if effectiveness:
+        _conditions.append(User.is_valid==int(effectiveness))
+    isable = request.args.get('isable','')
+    if isable:
+        _conditions.append(User.is_isable==int(isable))
+
+
+
     #_conditions.append(User.qxhdm_user_id==0)    
     assign_operator_id = request.args.get('assign_operator_id','')
     if assign_operator_id:
@@ -2267,7 +2279,9 @@ def my_users():
     show_queries = ['list_type','username','phone','user_origin']
     if current_user.id==4:
         show_queries = ['admin','list_type','username','phone','user_origin']
-
+    if current_user.team == 'C3':
+        show_queries=['service','list_type','username','phone','user_origin']
+    
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
     if not is_order:order_by = desc(User.expect_time)
@@ -2375,10 +2389,13 @@ def manage_users():
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     else:
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
+    show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
+    if current_user.team == 'C3' or current_user.is_admin:
+        show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
     return render_template('user/users.html',
                            pagination=pagination,
                            operators=operators,
-                           show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon'])
+                           show_queries=show_queries)
 
 
 
@@ -3930,9 +3947,11 @@ def add_dmyp(user_id):
             bigcount = int(request.form['bigcount'])
             mediumcount = int(request.form['mediumcount'])
             smallcount = int(request.form['smallcount'])
+            qizaocount = int(request.form['qizaocount'])
             orderyf.bigcount = bigcount
             orderyf.mediumcount = mediumcount
             orderyf.smallcount = smallcount
+            orderyf.qizaocount = qizaocount
 
             db.session.add(orderyf)
             user.lastfugou_time = datetime.now().strftime('%Y-%m-%d')
@@ -3996,7 +4015,8 @@ def user_orderyf(user_id):
         sms_list.append({'message':str(sms.created),
                          'bigcount':sms.bigcount,
                          'mediumcount':sms.mediumcount,
-                         'smallcount':sms.smallcount
+                         'smallcount':sms.smallcount,
+                         'qizaocount':sms.qizaocount
 
 })
     return jsonify(result=sms_list)

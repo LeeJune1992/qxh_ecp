@@ -8,11 +8,6 @@
             placeholder:'区域',
 			allowClear:true
         });
-        $('#promoters').select2({
-            width:'120px',
-            placeholder:'促销员',
-			allowClear:true
-        });
         $('#pharmacy').select2({
             width:'120px',
             placeholder:'药房',
@@ -31,19 +26,11 @@
     <form action="" method="get" class="form-search inline">
         <select id="area" name="area">
             <option></option>
-            <option value="">所有</option>
+            <option value="">所有区域</option>
             {% set area = request.args.get('area') %}
-            {% for a in areas %}
-            <option value="{{ a[0] }}" {% if a[0]==area %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
-        </select>
-        <select id="promoters" name="promoters">
-            <option></option>
-            <option value="">所有</option>
-            {% set promoters = request.args.get('promoters') %}
-            {% for a in promoterss %}
-            <option value="{{ a[0] }}" {% if a[0]==promoters %}selected="selected"{% endif %}>{{ a[0] }}</option>
-            {% endfor %}
+            {%- for k,v in config['AREA'].iteritems() -%}
+                <option value="{{ k }}" {% if k==area %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
         </select>
         <select id="pharmacy" name="pharmacy">
             <option></option>
@@ -66,34 +53,37 @@
         <thead>
         <tr>
             <th>区域</th>
-            <th>促销员</th>
             <th>药房名称</th>
             <th>分店名称</th>
-            <th>提报总数</th>
-            <th>有效客户数</th>
-            <th>无效客户数</th>
+            <th>员工</th>
+            <th>客户电话</th>
+            <th>大盒</th>
+            <th>小盒</th>
+            <th>芪枣</th>
         </tr>
         </thead>
         <tbody>
         {% for d in data %}
             <tr>
-            <td>{{ d['area'] }}</td>
-            <td>{{ d['promoters'] }}</td>
-            <td>{{ d['pharmacy'] }}</td>
-            <td>{{ d['pharmacystores'] }}</td>
-            <td>{{ d['allusers'] }}</td>
-            <td>{{ d['validusers'] }}</td>
-            <td>{{ d['notvalidusers'] }}</td>
-            </tr><font style="display:none">{{ allusers.append(d['allusers']) }}{{ validusers.append(d['validusers']) }}{{ notvalidusers.append(d['notvalidusers']) }}</font>
+            <td>{{ d.user.area }}</td>
+            <td>{{ d.user.pharmacy }}</td>
+            <td>{{ d.user.pharmacystores }}</td>
+            <td>{{ d.user.operator.truename }}</td>
+            <td>{{ d.user.phone }}</td>
+            <td>{{ d.bigcount }}</td>
+            <td>{{ d.smallcount }}</td>
+            <td>{{ d.qizaocount }}</td>
+            </tr>
         {% endfor %}
             <tr>
             <td>合计</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>{{ allusers|sum }}</td>
-            <td>{{ validusers|sum }}</td>
-            <td>{{ notvalidusers|sum }}</td>
+            <td></td>
+            <td>{{ data|sum(attribute='bigcount') }}</td>
+            <td>{{ data|sum(attribute='smallcount') }}</td>
+            <td>{{ data|sum(attribute='qizaocount') }}</td>
             </tr>
         </tbody>
     </table>

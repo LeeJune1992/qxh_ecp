@@ -43,7 +43,8 @@
         {% for endpoint,name in [
         ('report.pharmacy_report_by_shuju','数据录入统计'),
         ('report.pharmacy_report_by_shujufankui','数据反馈统计'),
-        ('report.pharmacy_report_by_fugou','复购统计报表')] %}
+        ('report.pharmacy_report_by_fugou','复购统计报表'),
+        ('report.pharmacy_report_by_fugouypmx','复购预判明细统计')] %}
             {% if endpoint == request.endpoint %}
                 <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>
             {% else %}

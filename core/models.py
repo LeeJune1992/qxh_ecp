@@ -141,6 +141,13 @@ class Order(db.Model):
         else:
             self.assign_operator_id = None
             self.need_assign = False
+        
+        #激活数据再次订单->会员
+        if self.status == 1 and to_status == 2:
+            user = self.user            
+            if user.user_label == 3:
+                user.hy_time = datetime.now()
+                user.user_label = 2
 
         #变更客户类型(新客户 -> 会员客户)
         if self.status == 5 and to_status in (6,100):
@@ -810,7 +817,7 @@ class User(db.Model):
     status = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#当前状态(1:正常,2:冻结)
     join_time = Column(db.DateTime, default=datetime.now)#加入日期
     ext_fields = Column(fields.Dict(500))#扩展信息
-    entries = deferred(Column(fields.Json(2000)))
+    entries = deferred(Column(fields.Json(3000)))
     
     habits_customs = Column(db.String(500))#生活习惯
     
@@ -826,7 +833,8 @@ class User(db.Model):
     fugou = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#
 
     record_time = Column(db.Date)#最后录音时间
-
+    user_label = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#1常规,2会员,3激活
+    hy_time = Column(db.Date)#成为会员时间
     lastfugou_time = Column(db.Date)#最后复购时间
     fugou_bigcount = Column(db.Integer(unsigned=True), default=0)#复购大数量
     fugou_mediumcount = Column(db.Integer(unsigned=True), default=0)#复购中数量
@@ -1505,6 +1513,7 @@ class QXHDM_Orderyf(db.Model):
     bigcount = Column(db.Integer(unsigned=True), default=0)#大数量
     mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
     smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
+    qizaocount = Column(db.Integer(unsigned=True), default=0)#芪枣数量
     created = Column(db.DateTime, default=datetime.now, nullable=False)
 
 class Security_Codekh(db.Model):
@@ -1532,7 +1541,7 @@ class QXHKHDJ(db.Model):
     district = Column(db.String(20))#所在区
     pharmacyaddress = Column(db.String(100), nullable=False)
     qxhcodes = relationship('Security_Codekh', backref='qxhkjdj', lazy='dynamic')
-    receive = Column(db.Boolean,nullable=False,default=False)#状态是否领取
+    receive = Column(db.Integer,nullable=False,default=0)#状态是否领取
     status = Column(db.Boolean,nullable=False,default=True)#状态是否有效
 
 
@@ -1552,29 +1561,6 @@ class User_Isable(db.Model):
     is_isable = Column(db.Integer(unsigned=True), default=0)#是否停用
     remarks = Column(db.String(150))#备注
 
-class Weihu(db.Model):
-
-    __tablename__ = 'report_weihu'
-
-    id = Column(db.Integer, primary_key=True)
-    date = Column(db.Date)
-    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
-    operator = db.relationship('Operator', primaryjoin="(Weihu.operator_id == Operator.id)")
-    usercount = Column(db.Integer, default=0)#用户量
-    usersales = Column(db.Integer, default=0)#业绩
-    last_usercount = Column(db.Integer, default=0)#上月用户量
-    last_usersales = Column(db.Integer, default=0)#上月业绩
-    callusers = Column(db.Integer, default=0)#拨打数据
-    nocallusers = Column(db.Integer, default=0)#未拨打数据
-    silenceusers = Column(db.Integer, default=0)#沉默用户量
-    newusers = Column(db.Integer, default=0)#新进用户量
-    ordercount = Column(db.Integer, default=0)#订单数
-    tuihuoorders = Column(db.Integer, default=0)#退货订单数
-    tuihuosales = Column(db.Integer, default=0)#退货总额
-    yaopinsales = Column(db.Integer, default=0)#药品业绩
-    baojianpinsales = Column(db.Integer, default=0)#保健品业绩
-    huazhuangpinsales = Column(db.Integer, default=0)#化妆品业绩
-
 class User_tjfg(db.Model):
     '''服务推荐复购'''
     __tablename__ = 'user_tjfg'
@@ -1586,3 +1572,191 @@ class User_tjfg(db.Model):
     mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
     smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
     created = Column(db.DateTime, default=datetime.now, nullable=False)
+
+
+class Weihu(db.Model):
+    '''维护'''
+    __tablename__ = 'report_weihu'
+
+    id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date, nullable=False)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)#操作员
+    operator = db.relationship('Operator', primaryjoin="(Weihu.operator_id == Operator.id)")
+    usercount = Column(db.Integer, default=0, nullable=False)#用户量
+    usersales = Column(db.Integer, default=0, nullable=False)#业绩
+    last_usercount = Column(db.Integer, default=0, nullable=False)#上月用户量
+    last_usersales = Column(db.Integer, default=0, nullable=False)#上月业绩
+    callusers = Column(db.Integer, default=0, nullable=False)#拨打数据
+    nocallusers = Column(db.Integer, default=0, nullable=False)#未拨打数据
+    silenceusers = Column(db.Integer, default=0, nullable=False)#沉默用户量
+    newusers = Column(db.Integer, default=0, nullable=False)#新进用户量
+    giveupusers = Column(db.Integer, default=0, nullable=False)#放弃用户量
+    ordercount = Column(db.Integer, default=0, nullable=False)#订单数
+    tuihuoorders = Column(db.Integer, default=0, nullable=False)#退货订单数
+    tuihuosales = Column(db.Integer, default=0, nullable=False)#退货总额
+    yaopinsales = Column(db.Integer, default=0, nullable=False)#药品业绩
+    baojianpinsales = Column(db.Integer, default=0, nullable=False)#保健品业绩
+    huazhuangpinsales = Column(db.Integer, default=0, nullable=False)#化妆品业绩
+
+class Waihu(db.Model):
+    '''外呼'''
+    __tablename__ = 'report_waihu'
+
+    id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date, nullable=False)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)#操作员
+    operator = db.relationship('Operator', primaryjoin="(Waihu.operator_id == Operator.id)")
+    usercount = Column(db.Integer, default=0, nullable=False)#用户量
+    cjusercount = Column(db.Integer, default=0, nullable=False)#成交用户量
+    usercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量
+    usercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    usercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    usercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    usercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    jxusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量接线
+    jxusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    jxusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    jxusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    jxusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    tqusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量TQ
+    tqusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    tqusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    tqusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    tqusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    qtusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量其他
+    qtusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    qtusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    qtusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    qtusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    
+    jxusercount = Column(db.Integer, default=0, nullable=False)#用户量接线
+    tqusercount = Column(db.Integer, default=0, nullable=False)#用户量tq
+#成交
+    jxcjusercount = Column(db.Integer, default=0, nullable=False)#用户量接线
+    tqcjusercount = Column(db.Integer, default=0, nullable=False)#用户量tq
+
+    jxcjusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量接线
+    jxcjusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    jxcjusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    jxcjusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    jxcjusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    tqcjusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量TQ
+    tqcjusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    tqcjusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    tqcjusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    tqcjusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+    qtcjusercount1 = Column(db.Integer, default=0, nullable=False)#1月内用户量其他
+    qtcjusercount3 = Column(db.Integer, default=0, nullable=False)#1-3月用户量
+    qtcjusercount6 = Column(db.Integer, default=0, nullable=False)#3-6月用户量
+    qtcjusercount12 = Column(db.Integer, default=0, nullable=False)#6-12月用户量
+    qtcjusercount1n = Column(db.Integer, default=0, nullable=False)#一年以上用户量
+
+
+    usersales = Column(db.Integer, default=0, nullable=False)#业绩
+    jxusersales1 = Column(db.Integer, default=0, nullable=False)#1月内业绩接线
+    jxusersales3 = Column(db.Integer, default=0, nullable=False)#1-3月业绩
+    jxusersales6 = Column(db.Integer, default=0, nullable=False)#3-6月业绩
+    jxusersales12 = Column(db.Integer, default=0, nullable=False)#6-12月业绩
+    jxusersales1n = Column(db.Integer, default=0, nullable=False)#一年以上业绩
+    tqusersales1 = Column(db.Integer, default=0, nullable=False)#1月内业绩TQ
+    tqusersales3 = Column(db.Integer, default=0, nullable=False)#1-3月业绩
+    tqusersales6 = Column(db.Integer, default=0, nullable=False)#3-6月业绩
+    tqusersales12 = Column(db.Integer, default=0, nullable=False)#6-12月业绩
+    tqusersales1n = Column(db.Integer, default=0, nullable=False)#一年以上业绩
+    qtusersales1 = Column(db.Integer, default=0, nullable=False)#1月内业绩其他
+    qtusersales3 = Column(db.Integer, default=0, nullable=False)#1-3月业绩
+    qtusersales6 = Column(db.Integer, default=0, nullable=False)#3-6月业绩
+    qtusersales12 = Column(db.Integer, default=0, nullable=False)#6-12月业绩
+    qtusersales1n = Column(db.Integer, default=0, nullable=False)#一年以上业绩
+
+    ordercount = Column(db.Integer, default=0, nullable=False)#订单数
+    jxordercount1 = Column(db.Integer, default=0, nullable=False)#1月内订单数接线
+    jxordercount3 = Column(db.Integer, default=0, nullable=False)#1-3月订单数
+    jxordercount6 = Column(db.Integer, default=0, nullable=False)#3-6月订单数
+    jxordercount12 = Column(db.Integer, default=0, nullable=False)#6-12月订单数
+    jxordercount1n = Column(db.Integer, default=0, nullable=False)#一年以上订单数
+    tqordercount1 = Column(db.Integer, default=0, nullable=False)#1月内订单数TQ
+    tqordercount3 = Column(db.Integer, default=0, nullable=False)#1-3月订单数
+    tqordercount6 = Column(db.Integer, default=0, nullable=False)#3-6月订单数
+    tqordercount12 = Column(db.Integer, default=0, nullable=False)#6-12月订单数
+    tqordercount1n = Column(db.Integer, default=0, nullable=False)#一年以上订单数
+    qtordercount1 = Column(db.Integer, default=0, nullable=False)#1月内订单数其他
+    qtordercount3 = Column(db.Integer, default=0, nullable=False)#1-3月订单数
+    qtordercount6 = Column(db.Integer, default=0, nullable=False)#3-6月订单数
+    qtordercount12 = Column(db.Integer, default=0, nullable=False)#6-12月订单数
+    qtordercount1n = Column(db.Integer, default=0, nullable=False)#一年以上订单数
+
+    qsusersales = Column(db.Integer, default=0, nullable=False)#签收业绩
+    qsorders = Column(db.Integer, default=0, nullable=False)#签收订单数
+
+    last_jxusercount = Column(db.Integer, default=0, nullable=False)#用户量接线
+    last_tqusercount = Column(db.Integer, default=0, nullable=False)#用户量tq
+#成交
+    last_jxcjusercount = Column(db.Integer, default=0, nullable=False)#用户量接线
+    last_tqcjusercount = Column(db.Integer, default=0, nullable=False)#用户量tq
+
+    last_usercount = Column(db.Integer, default=0, nullable=False)#上月用户量
+    last_cjusercount = Column(db.Integer, default=0, nullable=False)#上月成交用户量
+    last_usersales = Column(db.Integer, default=0, nullable=False)#上月业绩
+    callusers = Column(db.Integer, default=0, nullable=False)#拨打数据
+    nocallusers = Column(db.Integer, default=0, nullable=False)#未拨打数据
+    silenceusers = Column(db.Integer, default=0, nullable=False)#沉默用户量
+    newusers = Column(db.Integer, default=0, nullable=False)#新进用户量
+    giveupusers = Column(db.Integer, default=0, nullable=False)#放弃用户量
+    ordercount = Column(db.Integer, default=0, nullable=False)#订单数
+    tuihuoorders = Column(db.Integer, default=0, nullable=False)#退货订单数
+    tuihuosales = Column(db.Integer, default=0, nullable=False)#退货总额
+
+class Jiexian(db.Model):
+    '''接线'''
+    __tablename__ = 'report_jiexian'
+
+    id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date, nullable=False)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)#操作员
+    operator = db.relationship('Operator', primaryjoin="(Jiexian.operator_id == Operator.id)")
+    usercount = Column(db.Integer, default=0, nullable=False)#用户量
+    cjusercount = Column(db.Integer, default=0, nullable=False)#成交用户量
+    usersales = Column(db.Integer, default=0, nullable=False)#业绩
+    last_usercount = Column(db.Integer, default=0, nullable=False)#上月用户量
+    last_usersales = Column(db.Integer, default=0, nullable=False)#上月业绩
+    last_cjusercount = Column(db.Integer, default=0, nullable=False)#成交用户量    
+    ordercount = Column(db.Integer, default=0, nullable=False)#订单数
+    jxusersales = Column(db.Integer, default=0, nullable=False)#接线业绩
+    jxordercount = Column(db.Integer, default=0, nullable=False)#接线订单数
+    wfusersales = Column(db.Integer, default=0, nullable=False)#外呼业绩
+    wfordercount = Column(db.Integer, default=0, nullable=False)#外呼订单数
+
+
+class Fuwu(db.Model):
+    '''服务'''
+    __tablename__ = 'report_fuwu'
+
+    id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date, nullable=False)
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)#操作员
+    operator = db.relationship('Operator', primaryjoin="(Fuwu.operator_id == Operator.id)")
+    usercount = Column(db.Integer, default=0, nullable=False)#用户量
+    usersales = Column(db.Integer, default=0, nullable=False)#业绩
+    last_usercount = Column(db.Integer, default=0, nullable=False)#上月用户量
+    last_usersales = Column(db.Integer, default=0, nullable=False)#上月业绩
+    callusers = Column(db.Integer, default=0, nullable=False)#拨打数据
+    nocallusers = Column(db.Integer, default=0, nullable=False)#未拨打数据
+    silenceusers = Column(db.Integer, default=0, nullable=False)#沉默用户量
+    isableeusers = Column(db.Integer, default=0, nullable=False)#停用用户量
+    newusers = Column(db.Integer, default=0, nullable=False)#新进用户量
+    giveupusers = Column(db.Integer, default=0, nullable=False)#放弃用户量
+    fugouusercount = Column(db.Integer, default=0, nullable=False)#复购用户量
+    fugousales = Column(db.Integer, default=0, nullable=False)#复购总额
+
+class Fuwu2(db.Model):
+    '''服务2'''
+    __tablename__ = 'report_fuwu2'
+
+    id = Column(db.Integer, primary_key=True)
+    date = Column(db.Date, nullable=False)
+    area = Column(db.String(150))#区域
+    usercount = Column(db.Integer, default=0, nullable=False)#用户量
+    youxiao = Column(db.Integer, default=0, nullable=False)#
+    wuxiao = Column(db.Integer, default=0, nullable=False)#
+    usersum = Column(db.Integer, default=0, nullable=False)#

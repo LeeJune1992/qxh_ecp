@@ -63,6 +63,7 @@
                     <th>复购大盒</th>
                     <th>复购中盒</th>
                     <th>复购小盒</th>
+                    <th>复购芪枣</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -72,18 +73,31 @@
                 	{% set cc = cc+1 %}
                 	{% if cc %2 == 1 %}
                     <td>{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
-                    <td>{{ row[2] }}</td>
-                    <td>{{ row[3] }}</td>
-                    <td>{{ row[4] }}</td>
+                    <td>{{ row[1]|int }}</td>
+                    <td>{{ row[2]|int }}</td>
+                    <td>{{ row[3]|int }}</td>
+                    <td>{{ row[4]|int }}</td><font style="display:none">{{ tjcount.append(row[1]|int) }}{{ tjbig.append(row[2]|int) }}{{ tjme.append(row[3]|int) }}{{ tjsmall.append(row[4]|int) }}</font>
                 	{% else %}
-                    <td>{{ row[1] }}</td>
-                    <td>{{ row[2] }}</td>
-                    <td>{{ row[3] }}</td>
-                    <td>{{ row[4] }}</td>
+                    <td>{{ row[1]|int }}</td>
+                    <td>{{ row[2]|int }}</td>
+                    <td>{{ row[3]|int }}</td>
+                    <td>{{ row[4]|int }}</td>
+                    <td>{{ row[5]|int }}</td><font style="display:none">{{ fgcount.append(row[1]|int) }}{{ fgbig.append(row[2]|int) }}{{ fgme.append(row[3]|int) }}{{ fgsmall.append(row[4]|int) }}{{ fgqizao.append(row[5]|int) }}</font>
                     </tr><tr>
                 	{% endif %}
                 {% endfor %}
+                    <tr>
+                    <td>合计</td>
+                    <td>{{ tjcount|sum }}</td>
+                    <td>{{ tjbig|sum }}</td>
+                    <td>{{ tjme|sum }}</td>
+                    <td>{{ tjsmall|sum }}</td>
+                    <td>{{ fgcount|sum }}</td>
+                    <td>{{ fgbig|sum }}</td>
+                    <td>{{ fgme|sum }}</td>
+                    <td>{{ fgsmall|sum }}</td>
+                    <td>{{ fgqizao|sum }}</td>
+                    </tr>
                     </tr>
                 </tbody>
             </table>

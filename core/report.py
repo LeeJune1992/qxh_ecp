@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-from .models import QXHKHDJ,User,QXHDM_Orderyf
+from .models import Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -2055,6 +2055,7 @@ def pharmacy_report_by_shuju():
                 user.phone,
                 sum(`qxhdm_orderyf`.bigcount) bigcount,
                 sum(`qxhdm_orderyf`.smallcount) smallcount,
+                sum(`qxhdm_orderyf`.qizaocount) qizaocount,
                 user.disease
                  FROM `user` left join qxhdm_orderyf on qxhdm_orderyf.user_id=user.user_id
                 WHERE
@@ -2063,7 +2064,10 @@ def pharmacy_report_by_shuju():
                 order BY `user`.qxhdm_time desc'''%' AND '.join(_conditions)
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_shuju.html',areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
+    bigcounts = []
+    smallcounts = []
+    qizaocounts = []
+    return render_template('report/pharmacy_report_by_shuju.html',qizaocounts=qizaocounts,smallcounts=smallcounts,bigcounts=bigcounts,areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
 
 @report.route('/pharmacy/shujufankui')
 @admin_required
@@ -2118,7 +2122,10 @@ def pharmacy_report_by_shujufankui():
         user.pharmacystores'''%' AND '.join(_conditions)
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_shujufankui.html',areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
+    allusers = []
+    validusers = []
+    notvalidusers = []
+    return render_template('report/pharmacy_report_by_shujufankui.html',notvalidusers=notvalidusers,validusers=validusers,allusers=allusers,areas=areas,pharmacys=pharmacys,promoterss=promoterss,data=data,period=period)
 
 @report.route('/pharmacy/fugou')
 @admin_required
@@ -2169,7 +2176,44 @@ def pharmacy_report_by_fugou():
 
     print _sql
     data = db.session.execute(_sql)
-    return render_template('report/pharmacy_report_by_fugou.html',areas=areas,pharmacys=pharmacys,data=data,period=period)
+    validusers = []
+    allusers = []
+    fugou = []
+    notvalidusers = []
+    return render_template('report/pharmacy_report_by_fugou.html',notvalidusers=notvalidusers,fugou=fugou,allusers=allusers,validusers=validusers,areas=areas,pharmacys=pharmacys,data=data,period=period)
+#复购预判明细
+@report.route('/pharmacy/fugouypmx')
+@admin_required
+def pharmacy_report_by_fugouypmx():
+    #areas = db.session.execute('select distinct area from user where qxhdm_time > 0')
+    pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
+    _conditions = ['`user`.qxhdm_time > 0']
+    _conditions = []
+    area = request.args.get('area','')
+    if area:
+        _conditions.append('`user`.area="%s"'%area)
+    pharmacy = request.args.get('pharmacy','')
+    if pharmacy:
+        _conditions.append('`user`.pharmacy="%s"'%pharmacy)
+
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`qxhdm_orderyf`.created>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`qxhdm_orderyf`.created<="%s"'%_end_date)
+    _today = datetime.now().strftime('%Y-%m-%d')
+    if not _start_date and not _end_date:        
+        _conditions.append('`qxhdm_orderyf`.created>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
+    print data
+    return render_template('report/pharmacy_report_by_fugouypmx.html',pharmacys=pharmacys,data=data,period=period)
 
 #复购统计
 @report.route('/yy/fgtj')
@@ -2206,9 +2250,243 @@ def yy_fgtj():
     rows = db.session.execute(_sql)
     _sql = ''
     for r in rows:
-        _sql += ''' UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount) from user_tjfg where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
-         UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount) from qxhdm_orderyf where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
+        _sql += ''' UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount),0 from user_tjfg where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
+         UNION all SELECT '%s',count(*),sum(bigcount),sum(mediumcount),sum(smallcount),sum(qizaocount) from qxhdm_orderyf where user_id in (SELECT user_id from user where assign_operator_id=%s %s) and %s
 '''%(r[0],r[1],user_where,' AND '.join(_conditions),r[0],r[1],user_where,' AND '.join(_conditions))
     #return _sql[10:]
     rows = db.session.execute(_sql[10:])
-    return render_template('report/user_report_by_fwfg.html',rows=rows,period=period)
+    tjcount = []
+    tjbig = []
+    tjme = []
+    tjsmall = []
+    fgcount = []
+    fgbig = []
+    fgme = []
+    fgsmall = []
+    fgqizao = []
+    return render_template('report/user_report_by_fwfg.html',tjcount=tjcount,tjbig=tjbig,tjme=tjme,tjsmall=tjsmall,fgcount=fgcount,fgbig=fgbig,fgme=fgme,fgsmall=fgsmall,fgqizao=fgqizao,rows=rows,period=period)
+#维护
+@report.route('/weihu')
+@admin_required
+def weihu_report():
+    #db.session.execute("call weihu()")
+    return render_template('report/weihu_report.html')
+@report.route('/weihu1')
+@admin_required
+def weihu_report1():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_weihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_weihu`.date="%s"'%yesterday)
+    rows = Weihu.query.filter(*_conditions)
+    return render_template('report/weihu_report1.html',rows=rows)
+
+@report.route('/weihu2')
+@admin_required
+def weihu_report2():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_weihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_weihu`.date="%s"'%yesterday)
+    rows = Weihu.query.filter(*_conditions)
+    return render_template('report/weihu_report2.html',rows=rows)
+@report.route('/weihuyeji')
+@admin_required
+def weihu_reportyeji():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_weihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_weihu`.date="%s"'%yesterday)
+    rows = Weihu.query.filter(*_conditions)
+    return render_template('report/weihu_reportyeji.html',rows=rows)
+@report.route('/weihucpgc')
+@admin_required
+def weihu_reportcpgc():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_weihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_weihu`.date="%s"'%yesterday)
+    rows = Weihu.query.filter(*_conditions)
+    return render_template('report/weihu_reportcpgc.html',rows=rows)
+
+
+#外呼
+@report.route('/waihu')
+@admin_required
+def waihu_report():
+    #db.session.execute("call weihu()")
+    return render_template('report/waihu_report.html')
+@report.route('/waihu1')
+@admin_required
+def waihu_report1():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_waihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_waihu`.date="%s"'%yesterday)
+    rows = Waihu.query.filter(*_conditions)
+    return render_template('report/waihu_report1.html',rows=rows)
+@report.route('/waihu2')
+@admin_required
+def waihu_report2():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_waihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_waihu`.date="%s"'%yesterday)
+    rows = Waihu.query.filter(*_conditions)
+    return render_template('report/waihu_report2.html',rows=rows)
+@report.route('/waihu3')
+@admin_required
+def waihu_report3():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_waihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_waihu`.date="%s"'%yesterday)
+    rows = Waihu.query.filter(*_conditions)
+    return render_template('report/waihu_report3.html',rows=rows)
+@report.route('/waihu4')
+@admin_required
+def waihu_report4():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_waihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_waihu`.date="%s"'%yesterday)
+    rows = Waihu.query.filter(*_conditions)
+    return render_template('report/waihu_report4.html',rows=rows)
+@report.route('/waihu5')
+@admin_required
+def waihu_report5():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_waihu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_waihu`.date="%s"'%yesterday)
+    rows = Waihu.query.filter(*_conditions)
+    return render_template('report/waihu_report5.html',rows=rows)
+
+
+#接线
+@report.route('/jiexian')
+@admin_required
+def jiexian_report():
+    #db.session.execute("call weihu()")
+    return render_template('report/jiexian_report.html')
+@report.route('/jiexian1')
+@admin_required
+def jiexian_report1():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_jiexian`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_jiexian`.date="%s"'%yesterday)
+    rows = Jiexian.query.filter(*_conditions)
+    return render_template('report/jiexian_report1.html',rows=rows)
+@report.route('/jiexian2')
+@admin_required
+def jiexian_report2():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_jiexian`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_jiexian`.date="%s"'%yesterday)
+    rows = Jiexian.query.filter(*_conditions)
+    return render_template('report/jiexian_report2.html',rows=rows)
+
+#外呼
+@report.route('/fuwu')
+@admin_required
+def fuwu_report():
+    #db.session.execute("call weihu()")
+    return render_template('report/fuwu_report.html')
+@report.route('/fuwu1')
+@admin_required
+def fuwu_report1():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_fuwu`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_fuwu`.date="%s"'%yesterday)
+    rows = Fuwu.query.filter(*_conditions)
+    return render_template('report/fuwu_report1.html',rows=rows)
+@report.route('/fuwu2')
+@admin_required
+def fuwu_report2():
+    #db.session.execute("call weihu()")
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`report_fuwu2`.date="%s"'%_start_date)
+    else:
+        _now = datetime.now()
+        _yesterday = _now+timedelta(days=-1)
+        yesterday = _yesterday.strftime('%Y-%m-%d')
+        _conditions.append('`report_fuwu2`.date="%s"'%yesterday)
+    rows = Fuwu2.query.filter(*_conditions)
+    return render_template('report/fuwu_report2.html',rows=rows)

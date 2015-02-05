@@ -74,6 +74,7 @@
             <th>顾客电话</th>
             <th>大盒</th>
             <th>小盒</th>
+            <th>芪枣</th>
             <th>症状</th>
         </tr>
         </thead>
@@ -89,9 +90,22 @@
             <td>{{ d['phone'] }}</td>
             <td>{{ d['bigcount'] }}</td>
             <td>{{ d['smallcount'] }}</td>
+            <td>{{ d['qizaocount'] }}</td>
             <td>{{ d['disease'] }}</td>
-            </tr>
+            </tr><font style="display:none">{{ bigcounts.append(d['bigcount']) }}{{ smallcounts.append(d['smallcount']) }}{{ qizaocounts.append(d['qizaocount']) }}</font>
         {% endfor %}
+            <tr>
+            <td>合计</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{{ bigcounts|sum }}</td>
+            <td>{{ smallcounts|sum }}</td>
+            <td>{{ qizaocounts|sum }}</td>
+            </tr>
         </tbody>
     </table>
     <div class="alert alert-success">

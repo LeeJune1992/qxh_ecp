@@ -1,0 +1,83 @@
+{% extends "report/waihu_report.html" %}
+{% from "_macro.html" import search_date_form with context %}
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function(){
+			$('.timepicker').datepicker({
+				language: 'zh-CN',
+				format: 'yyyy-mm-dd',
+				minView: "month", //选择日期后，不会再跳转去选择时分秒 
+				autoclose:true
+			});
+        });
+    </script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="日期" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span12">
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+                <thead>
+                <tr>
+                    <th rowspan="2" width="60">员工</th>
+                    <th colspan="5" style="text-align:center;">总业绩</th>
+                    <th colspan="5" style="text-align:center;">成交单数</th>
+                    <th colspan="5" style="text-align:center;">成交率</th>
+                </tr>
+                <tr>
+                	<th>1月内数据成交业绩</th>
+                	<th>1-3月内数据成交业绩</th>
+                	<th>3-6月内数据成交业绩</th>
+                	<th>6-12月内数据成交业绩</th>
+                	<th>12月以上数据成交业绩</th>
+                	<th>1月内数据成交单数</th>
+                	<th>1-3月内数据成交单数</th>
+                	<th>3-6月内数据成交单数</th>
+                	<th>6-12月内数据成交单数</th>
+                	<th>12月以上数据成交单数</th>
+                	<th>1月内数据成交率</th>
+                	<th>1-3月内数据成交率</th>
+                	<th>3-6月内数据成交率</th>
+                	<th>6-12月内数据成交率</th>
+                	<th>12月以上数据成交率</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                    <td>{{ row.operator.nickname }}</td>
+                    <td>{{ row.tqusersales1 }}</td>
+                    <td>{{ row.tqusersales3 }}</td>
+                    <td>{{ row.tqusersales6 }}</td>
+                    <td>{{ row.tqusersales12 }}</td>
+                    <td>{{ row.tqusersales1n }}</td>
+                    <td>{{ row.tqordercount1 }}</td>
+                    <td>{{ row.tqordercount3 }}</td>
+                    <td>{{ row.tqordercount6 }}</td>
+                    <td>{{ row.tqusersales12 }}</td>
+                    <td>{{ row.tqusersales1n }}</td>
+                    <td>{% if not row.tqcjusercount1 %}0{% else %}{{ '%.2f'|format(row.tqcjusercount1*100/row.usercount1) }}%{% endif %}</td>
+                    <td>{% if not row.tqcjusercount3 %}0{% else %}{{ '%.2f'|format(row.tqcjusercount3*100/row.usercount3) }}%{% endif %}</td>
+                    <td>{% if not row.tqcjusercount6 %}0{% else %}{{ '%.2f'|format(row.tqcjusercount6*100/row.usercount6) }}%{% endif %}</td>
+                    <td>{% if not row.tqcjusercount12 %}0{% else %}{{ '%.2f'|format(row.tqcjusercount12*100/row.usercount12) }}%{% endif %}</td>
+                    <td>{% if not row.tqcjusercount1n %}0{% else %}{{ '%.2f'|format(row.tqcjusercount1n*100/row.usercount1n) }}%{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <blockquote class="pull-left">统计时间：<br/><span class="label label-success">{{ period }}</span></blockquote>
+{% endblock %}
