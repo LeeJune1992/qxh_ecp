@@ -464,10 +464,15 @@
             <th>意向</th>
             <th>创建日期</th>
             <th>来源</th>
+            {% if 'member' in show_queries %}
+            <th>会员类型</th>
+        	{% endif %}
+            {% if 'service' in show_queries %}
             <th>客户类型</th>
             <th>区域</th>
             <th>有效性</th>
             <th>是否停用</th>
+        	{% endif %}
             <th>归属</th>
             <th>分配时间</th>
             <th>剩余时长</th>
@@ -505,6 +510,18 @@
                 <td>{{ user.intent_level }}</td>
                 <td>{{ user.join_time |format_date}}</td>
                 <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
+            	{% if 'member' in show_queries %}
+                <td>{% if user.user_label==1 %}
+                <code style="color:darkcyan">常规</code>
+                {% elif user.user_label==2 %}
+                <code style="color:000000">会员</code>
+                {% elif user.user_label==3 %}
+                <code style="color:000000">激活</code>
+                {% endif %}
+                </td>
+                {% endif %}
+                
+            	{% if 'service' in show_queries %}
                 <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code></td>
                 <td>{{ user.area }}</td>
                 <td>{% if user.is_valid==1 %}
@@ -516,6 +533,7 @@
                 {% endif %}
                 </td>
                 <td>{% if user.is_isable==1 %}<code style="color:darkcyan">是</code>{% else %}否{% endif %}</td>
+                {% endif %}
                 <td>
                     {{ user.assign_operator.nickname if user.assign_operator_id else '' }}
                 </td>

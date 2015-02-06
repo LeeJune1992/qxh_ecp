@@ -2279,8 +2279,6 @@ def my_users():
     show_queries = ['list_type','username','phone','user_origin']
     if current_user.id==4:
         show_queries = ['admin','list_type','username','phone','user_origin']
-    if current_user.team == 'C3':
-        show_queries=['service','list_type','username','phone','user_origin']
     
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
@@ -2314,6 +2312,10 @@ def public_users(user_type):
     if not is_order:order_by = asc(User.is_assigned)
     pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','username','phone','show_assign','user_origin','show_abandon']
+    if user_type==5:
+        show_queries=['service','admin','username','phone','show_assign','user_origin','show_abandon']
+    if user_type==2:
+        show_queries=['member','admin','username','phone','show_assign','user_origin','show_abandon']
     areas = ''
     promoterss = ''
     pharmacys = ''
@@ -2390,8 +2392,6 @@ def manage_users():
     else:
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
-    if current_user.team == 'C3' or current_user.is_admin:
-        show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
     return render_template('user/users.html',
                            pagination=pagination,
                            operators=operators,
