@@ -55,7 +55,7 @@
                     url: '{{ url_for('admin.sms_mass') }}',
                     dataType: "json",
                     type: 'POST',
-                    data: {message: message,phones:phones,remark:$('#remark').val()}
+                    data: {message: message,phones:phones,remark:$('#remark').val(),sendtime:$('#sendtime').val()}
                 });
                 req.done(function (data) {
                     if (data.result == true) {
@@ -136,6 +136,7 @@
             <div class="modal-body">
                 <textarea class="span12" style="height: 90px" id="phones" name="phones" placeholder="群发号码，多个号码请换行"></textarea>
                 <textarea class="span12" style="height: 60px" id="message" name="message" placeholder="发送内容"></textarea>
+                <input class="span6 input timepicker" type="text" style="height: 25px" id="sendtime" name="sendtime" placeholder="定时发送时间"/>马上发送则不填写
                 <input class="span12 input" type="text" style="height: 25px" id="remark" name="remark" placeholder="备注"/>
             </div>
             <div class="modal-footer" style="text-align: center">

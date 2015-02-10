@@ -2512,6 +2512,10 @@ def sms_mass():
     phones = request.form['phones'].split(',')
     message =  request.form['message']
     remark =  request.form['remark']
+    sendtime = request.form['sendtime']
+    if not sendtime:
+        print 'ok'
+        sendtime = None
     p = re.compile(r"((13|14|15|18)\d{9}$)")
     phones = [phone for phone in phones if phone and p.match(phone)]
     if len(phones)==0:return jsonify(result=False,error=u'群发号码为空或错误！')
@@ -2525,7 +2529,7 @@ def sms_mass():
     #暂时删除20131225
     try:
         for _phones in group_phones:
-            SMS.add_sms(_phones,message,status=0,operator_id=current_user.id,remark=remark,commit=False)
+            SMS.add_sms(_phones,message,sendtime,status=0,operator_id=current_user.id,remark=remark,commit=False)
         db.session.commit()
         return jsonify(result=True)
     except Exception,e:
