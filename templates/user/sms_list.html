@@ -157,6 +157,7 @@
             <th>备注</th>
             <th>员工</th>
             <th style="width: 90px">创建时间</th>
+            <th style="width: 90px">定时发送时间</th>
             <th style="text-align: center;width: 100px">操作</th>
         </tr>
         </thead>
@@ -181,6 +182,7 @@
                     {% endif %}
                 </td>
                 <td>{{ sms.created|format_date('%m-%d %H:%M:%S') }}</td>
+                <td>{{ sms.sendtime|format_date('%m-%d %H:%M:%S') }}</td>
                 <td style="text-align: center">
                     {% if sms.status==0 %}
                         <a href="#" class="btn btn-success btn-mini" data-sms_id="{{ sms.seqid }}" data-confirm="1">通过</a>

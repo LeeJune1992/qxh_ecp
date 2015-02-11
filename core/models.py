@@ -1148,7 +1148,7 @@ class SMS(db.Model):
 
 
     @classmethod
-    def add_sms(cls,phone,message,sendtime=None,addserial='',status=0,priority=1,operator_id=None,user_id=None,remark='',commit=True):
+    def add_sms(cls,phone,message,sendtime,addserial='',status=0,priority=1,operator_id=None,user_id=None,remark='',commit=True):
         _sms = SMS()
         _sms.phone = phone
         _sms.message = message
@@ -1180,6 +1180,7 @@ class SMS(db.Model):
         if self.status == 2:return True
         params_data = urllib.urlencode(self.send_params)
         f = urllib2.urlopen(self.url,data=params_data,timeout=30)
+        print params_data
         data = f.read()
         res = SMS.response(data)
         result = False
@@ -1204,7 +1205,7 @@ class SMS(db.Model):
                   'smspriority':self.priority,
                   'seqid':self.seqid}
         if self.sendtime:
-            params['sendtime'] = self.sendtime.strftime('%Y-%m-%d %H:%M:%S')
+            params['sendtime'] = self.sendtime.strftime('%Y%m%d%H%M%S')#格式为:年年年年月月日日时时分分秒秒,例如:20090504111010
         return params
 
     @property
