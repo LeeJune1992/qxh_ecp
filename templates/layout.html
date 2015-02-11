@@ -100,7 +100,28 @@
                                 <li><a href="{{ url_for('analytics.analytics_report_by_medium') }}"><i class="icon-globe"></i> 广告统计</a></li>
                             {% endif %}
                             {% if current_user.action('pharmacy_report') %}
-                                <li><a href="{{ url_for('report.pharmacy_report') }}"><i class="icon-globe"></i> 药房报表</a></li>
+                                <li><a href="{{ url_for('report.pharmacy_report') }}"><i class="icon-briefcase"></i> 药房报表</a></li>
+                            {% endif %}
+                        </ul>
+                        </li>
+                    {% endif %}
+                    {% if current_user.action('J') %}
+                        <li class="dropdown {% if category=='reportsys' %}active{% endif %}">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="icon-bookmark"></i> 报表系统 <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% if current_user.action('weihu_report') %}
+                                <li><a href="{{ url_for('report.weihu_report') }}"><i class="icon-star"></i> 维护报表</a></li>
+                            {% endif %}
+                            {% if current_user.action('waihu_report') %}
+                                <li><a href="{{ url_for('report.waihu_report') }}"><i class="icon-headphones"></i> 外呼报表</a></li>
+                            {% endif %}
+                            {% if current_user.action('jiexian_report') %}
+                                <li><a href="{{ url_for('report.jiexian_report') }}"><i class="icon-inbox"></i> 接线报表</a></li>
+                            {% endif %}
+                            {% if current_user.action('fuwu_report') %}
+                                <li><a href="{{ url_for('report.fuwu_report') }}"><i class="icon-user"></i> 服务报表</a></li>
                             {% endif %}
                         </ul>
                         </li>
@@ -117,12 +138,12 @@
 
                     {% if current_user.action('H') %}
                         <li{% if category=='securitycode' %} class="active"{% endif %}><a
-                                href="{{ url_for('admin.securitycodes') }}"><i class="icon-list-alt"></i> 防伪码管理</a></li>
+                                href="{{ url_for('admin.securitycodes') }}"><i class="icon-barcode"></i> 防伪码管理</a></li>
                     {% endif %}
 
                     {% if current_user.action('I') %}
                         <li{% if category=='knowledge' %} class="active"{% endif %}><a
-                                href="{{ url_for('admin.manage_knowledge') }}"><i class="icon-list-alt"></i> 知识管理</a></li>
+                                href="{{ url_for('admin.manage_knowledge') }}"><i class="icon-book"></i> 知识管理</a></li>
                     {% endif %}
                 </ul>
                 <a href="#" class="btn btn-mini back pull-right" style="margin-top: 10px"><i class=" icon-arrow-left"></i> 返回</a>
