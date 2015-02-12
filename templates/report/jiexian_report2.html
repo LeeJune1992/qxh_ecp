@@ -48,14 +48,14 @@
                     <td>{{ row.operator.nickname }}</td>
                     <td>{{ row.usersales }}</td>
                     <td>{{ row.ordercount }}</td>
-                    <td>{% if not row.usersales %}0{% else %}{{ '%.2f'|format(row.usersales/row.ordercount) }}%{% endif %}</td>
+                    <td>{% if not row.usersales %}0{% else %}{{ '%.2f'|format(row.usersales/row.ordercount) }}{% endif %}</td>
                     <td>{{ row.jxusersales }}</td>
                     <td>{{ row.jxordercount }}</td>
-                    <td>{% if not row.jxusersales %}0{% else %}{{ '%.2f'|format(row.jxusersales/row.jxordercount) }}%{% endif %}</td>
+                    <td>{% if not row.jxusersales %}0{% else %}{{ '%.2f'|format(row.jxusersales/row.jxordercount) }}{% endif %}</td>
                     <td></td>
                     <td>{{ row.wfusersales }}</td>
                     <td>{{ row.wfordercount }}</td>
-                    <td>{% if not row.wfusersales %}0{% else %}{{ '%.2f'|format(row.wfusersales/row.wfordercount) }}%{% endif %}</td>
+                    <td>{% if not row.wfusersales %}0{% else %}{{ '%.2f'|format(row.wfusersales/row.wfordercount) }}{% endif %}</td>
                     <td></td>
                     </tr>
                 {% endfor %}
