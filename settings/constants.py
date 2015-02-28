@@ -200,6 +200,7 @@ MODULES = {
     'G':u'广告管理',
     'H':u'防伪码管理',
     'I':u'知识管理',
+    'J':u'报表系统',
 }
 
 #权限节点列表（节点,名称,所属模块）
@@ -334,8 +335,28 @@ ENDPOINTS = [
     ('pharmacy_report_by_shujufankui',u'[药房]数据反馈统计','E'),
     ('pharmacy_report_by_fugou',u'[药房]复购统计报表','E'),
     ('pharmacy_report_by_fugouypmx',u'[药房]复购预判明细统计','E'),
+    ('pharmacy_report_by_khfgypmx',u'[药房]空盒换大礼复购预判明细表','E'),
 
+    ('waihu_report',u'外呼报表','J'),
+    ('waihu_report1',u'[外呼]持有数据量 ','J'),
+    ('waihu_report2',u'[外呼]接线流转数据业绩','J'),
+    ('waihu_report3',u'[外呼]TQ流转数据业绩','J'),
+    ('waihu_report4',u'[外呼]其他流转数据业绩','J'),
+    ('waihu_report5',u'[外呼]外呼报表','J'),
 
+    ('fuwu_report',u'服务报表','J'),
+    ('fuwu_report1',u'[外呼]服务报表 ','J'),
+    ('fuwu_report2',u'[外呼]维护数据','J'),
+
+    ('weihu_report',u'维护报表','J'),
+    ('weihu_report1',u'[维护]数据报表一 ','J'),
+    ('weihu_report2',u'[维护]数据报表二','J'),
+    ('weihu_reportyeji',u'[维护]业绩报表','J'),
+    ('weihu_reportcpgc',u'[维护]产品构成','J'),
+
+    ('jiexian_report',u'接线报表','J'),
+    ('jiexian_report1',u'[接线]业绩报表 ','J'),
+    ('jiexian_report2',u'[接线]接线报表','J'),
 
     ('analytics_report',u'广告统计','E'),
     ('analytics_report_by_medium',u'媒体广告统计','E'),

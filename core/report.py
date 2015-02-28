@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-from .models import Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
+from .models import Operator,Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -2003,7 +2003,9 @@ def yy_khsl():
 
 
     rows = QXHKHDJ.query.filter(db.and_(*_conditions))
-    return render_template('report/yy_report_by_khsl.html',rows=rows,period=period)
+    rowsc = QXHKHDJ.query.filter(db.and_(*_conditions)).count();
+    print rowsc
+    return render_template('report/yy_report_by_khsl.html',rowsc=rowsc,rows=rows,period=period)
 
 
 @report.route('/pharmacy')
@@ -2214,6 +2216,43 @@ def pharmacy_report_by_fugouypmx():
     data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
     print data
     return render_template('report/pharmacy_report_by_fugouypmx.html',pharmacys=pharmacys,data=data,period=period)
+#空盒换大礼复购预判明细表
+@report.route('/pharmacy/khfgypmx')
+@admin_required
+def pharmacy_report_by_khfgypmx():
+
+    #仅允许管理本部门员工数据
+    if not current_user.is_admin and current_user.team:
+        operators = Operator.query.filter(db.and_(Operator.team.like(current_user.team+'%'),Operator.assign_user_type>0,Operator.status<>9))
+        #op_ids = [op.id for op in operators]
+        #_conditions.append(User.assign_operator_id.in_(op_ids))
+    else:
+        operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9)
+
+    _conditions = ['`user`.origin = 19']
+    _conditions = []
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`user`.assign_operator_id="%s"'%assign_operator_id)
+
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`qxhdm_orderyf`.created>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`qxhdm_orderyf`.created<="%s"'%_end_date)
+    _today = datetime.now().strftime('%Y-%m-%d')
+    if not _start_date and not _end_date:        
+        _conditions.append('`qxhdm_orderyf`.created>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
+    #print data
+    return render_template('report/pharmacy_report_by_khfgypmx.html',operators=operators,data=data,period=period)
 
 #复购统计
 @report.route('/yy/fgtj')
@@ -2450,6 +2489,7 @@ def jiexian_report2():
         _now = datetime.now()
         _yesterday = _now+timedelta(days=-1)
         yesterday = _yesterday.strftime('%Y-%m-%d')
+        print yesterday
         _conditions.append('`report_jiexian`.date="%s"'%yesterday)
     rows = Jiexian.query.filter(*_conditions)
     return render_template('report/jiexian_report2.html',rows=rows)

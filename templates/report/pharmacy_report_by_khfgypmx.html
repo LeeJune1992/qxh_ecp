@@ -1,0 +1,67 @@
+{% extends "report/pharmacy_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域',
+			allowClear:true
+        });
+        $('#pharmacy').select2({
+            width:'120px',
+            placeholder:'药房',
+			allowClear:true
+        });
+		$('.timepicker').datepicker({
+			language: 'zh-CN',
+			format: 'yyyy-mm-dd',
+			minView: "month", //选择日期后，不会再跳转去选择时分秒 
+			autoclose:true
+		});
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select>
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>客户姓名</th>
+            <th>电话号码</th>
+            <th>归属员工</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+            <tr>
+            <td>{{ d.user.name }}</td>
+            <td>{{ d.user.phone }}</td>
+            <td>{{ d.user.assign_operator.nickname }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="alert alert-success">
+    </div>
+    <hr>
+    <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}
