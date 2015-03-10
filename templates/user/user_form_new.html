@@ -103,6 +103,39 @@
     }
 
 </style>
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .controls ul li{
+            margin-right: 20px;
+        }
+
+        .perm-title{
+            border: 1px solid #ddd;
+            background-color: #f0ede7;
+            padding-left: 25px;
+            padding-top: 5px;
+            height: 25px;
+        }
+        .perm-title label{
+            font-weight: bold;
+        }
+
+    </style>
 
 {%- endblock %}
 {% block js -%}
@@ -290,6 +323,13 @@
             });
             return _ids;
         };
+		var selected_weixin = function () {
+			var _ids = [];
+			$('input[name="weixins"]').filter(':checked').each(function () {
+				_ids.push($(this).val());
+			});
+			return _ids;
+		};
 
         /*   提交表单   */
         $('form').submit(function () {
@@ -384,6 +424,7 @@
             var values = $('form').serializeArray();
             values.push({name: 'entries', value: JSON.stringify(Entry.data())});
             values.push({name: 'concerns', value: JSON.stringify(selected_concerns())});
+        	values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
             var req = $.ajax({
                 url: "{{ request.path }}",
                 dataType: 'json',
@@ -648,6 +689,15 @@
                     <div class="span12">
                         <hr/>
                         <div class="control-group">
+                            <label class="control-label">微信情况</label>
+
+                            <div class="controls">
+                                {% for k,v in config['WEIXINS'].iteritems() %}
+                                    <label class="inline checkbox"><input type="checkbox" name="weixins" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="control-group">
                             <label class="control-label" style="background-color: #fdf59a">媒体来源</label>
 
                             <div class="controls" id="medias">
@@ -729,6 +779,26 @@
 
     <div class="accordion-group">
         <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo2">
+                <i class="icon-chevron-down"></i> 身体状态
+            </a>
+        </div>
+        <div id="collapseTwo2" class="control-group collapse in">
+            <div class="controls">
+                {% for module_id,endpoints in perms.iteritems() %}
+                <div class="checkbox perm-title"> <input id="{{ module_id }}" name="{{ module_id }}" type="checkbox"><label for="{{ module_id }}">{{ config['USER_ORGIN'][module_id] }}</label></div>
+                <ul class="checkbox inline" style="margin-bottom: 10px">
+                    {% for endpoint,name in endpoints %}
+                    <li><input id="{{ endpoint }}" name="{{ module_id }}" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo">
                 <i class="icon-chevron-down"></i> 身体状态
             </a>
@@ -752,27 +822,6 @@
                         <hr/>
                     </div>
                     <div class="span6" id="BODY">
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#collapseThree">
-                <i class="icon-chevron-down"></i> 生活习惯
-            </a>
-        </div>
-        <div id="collapseThree" class="accordion-body collapse in">
-            <div class="accordion-inner">
-                <div class="row-fluid">
-                    <div class="span6">
-                        <textarea name="habits_customs" style="width:600px; height:120px;" class="input"></textarea>
-                        <hr/>
-                    </div>
-                    <div class="span6" id="LIFE">
 
                     </div>
                 </div>

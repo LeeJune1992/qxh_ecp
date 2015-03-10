@@ -2392,6 +2392,8 @@ def manage_users():
     else:
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
+    if current_user.assign_user_type == 5:
+        show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
     return render_template('user/users.html',
                            pagination=pagination,
                            operators=operators,
@@ -2461,8 +2463,16 @@ def user(user_id,token):
     if not des.validate_user_token(token,user_id):
         abort(404)
     user = User.query.options(defer('entries')).get_or_404(user_id)
+    orders = Order.query.filter(db.and_(Order.user_id==user_id)).order_by(desc(Order.created))
+    ordercount = 0
+    for o in orders:
+        ordercount+=1
+    orderyfs = QXHDM_Orderyf.query.filter(QXHDM_Orderyf.user_id==user_id)
+    orderyfcount = 0
+    for yf in orderyfs:
+        orderyfcount+=1
     logs = User_Assign_Log.query.outerjoin(Operator,User_Assign_Log.assign_operator_id==Operator.id).filter(User_Assign_Log.user_id==user_id).order_by(User_Assign_Log.assign_time)
-    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,assign_logs = logs)
+    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount)
 
 
 @admin.route('/user/drop/<int:user_id>',methods=['POST'])
@@ -2710,7 +2720,9 @@ def _edit_user(user):
         user.income = income
         user.remark = request.form.get('remark','')
         user.concerns = json.loads(request.form['concerns'])
-
+        print request.form['concerns']
+        print request.form['weixin']
+        user.weixin = json.loads(request.form['weixin'])
         user.m1 = request.form['m1']
         user.m2 = request.form['m2']
         user.m3 = request.form['m3']
@@ -2738,7 +2750,7 @@ def _edit_user(user):
         user.intent_level = intent_level
 
         user.entries = entries
-        user.habits_customs = request.form['habits_customs']
+        #user.habits_customs = request.form['habits_customs']
         user.product_intention = request.form['product_intention']
         user.origin = origin
         user.operator_id = current_user.id
@@ -2863,6 +2875,7 @@ def _add_user():
             user.expect_time = datetime.strptime(expect_time[:16],'%Y-%m-%d %H:%M')
 
         user.concerns = json.loads(request.form['concerns'])
+        user.weixin = json.loads(request.form['weixin'])
         user.m1 = request.form['m1']
         user.m2 = request.form['m2']
         user.m3 = request.form['m3']
@@ -2886,7 +2899,7 @@ def _add_user():
                 user.record_time = datetime.now()
 
         user.entries = entries
-        user.habits_customs = request.form['habits_customs']
+        #user.habits_customs = request.form['habits_customs']
         user.product_intention = request.form['product_intention']
         user.origin = origin
         user.operator_id = current_user.id
@@ -2930,6 +2943,11 @@ def add_user():
     if request.method=='POST':
         result,desc = _add_user()
         return jsonify(result=result,error=desc)
+    
+#    perms = defaultdict(list)
+#    for endpoint,name,module_id in USER_ORGIN_SUB:
+#        perms[module_id].append((endpoint,name))
+#    
     return render_template('user/user_form_new.html')
 
 
@@ -3984,9 +4002,11 @@ def user_fwtjfg(user_id):
             bigcount = int(request.form['bigcount'])
             mediumcount = int(request.form['mediumcount'])
             smallcount = int(request.form['smallcount'])
+            qizaocount = int(request.form['qizaocount'])
             orderyf.bigcount = bigcount
             orderyf.mediumcount = mediumcount
             orderyf.smallcount = smallcount
+            orderyf.qizaocount = qizaocount
 
             db.session.add(orderyf)
 #            user.lastfugou_time = datetime.now().strftime('%Y-%m-%d')
@@ -4393,7 +4413,9 @@ def user_show_fwtjfg(user_id):
         sms_list.append({'message':str(sms.created),
                          'bigcount':sms.bigcount,
                          'mediumcount':sms.mediumcount,
-                         'smallcount':sms.smallcount
+                         'smallcount':sms.smallcount,
+                         'qizaocount':sms.qizaocount
+
 
 })
 
