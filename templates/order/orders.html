@@ -317,7 +317,7 @@
             <tr >
                 <td><a href="{{ url_for('admin.order_detail',order_id=order.order_id) }}">{{ order.order_id }}</a></td>
                 <td style="text-align: left"><a
-                        href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.username }}</a></td>
+                        href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.user.name }}</a></td>
                 <td>{{ order.created|format_date }}</td>
                 <td>
                     <a href="javascript:void(0)" class="popover-link"

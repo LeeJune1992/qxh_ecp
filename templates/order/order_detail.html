@@ -54,7 +54,7 @@
         {% if order.link_order_id %}
             <tr class="error"><td class="right">关联订单</td><td><a href="{{ url_for('admin.order_detail',order_id=order.link_order_id) }}" target="_blank">{{ order.link_order_id }}</a></td></tr>
         {% endif %}
-        <tr><td class="right">客户姓名</td><td><a href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.username }}</a></td></tr>
+        <tr><td class="right">客户姓名</td><td><a href="{{ url_for('admin.user',user_id=order.user_id,token=order.user_token) }}">{{ order.user.name }}</a></td></tr>
         <tr><td class="right">订购商品</td><td><table class='table table-bordered table-striped table-items'>
         <thead><tr><th>商品名称</th><th>数量</th><th>价格</th>{% if order.status in config['ORDER_DISPLAY_RETURN_STATUS'] %}<th>入库数</th><th>报损数</th>{% endif %}</tr></thead>
         {% for order_item in order.order_items %}

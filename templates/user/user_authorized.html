@@ -129,6 +129,39 @@
         }
 
     </style>
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .controls ul li{
+            margin-right: 20px;
+        }
+
+        .perm-title{
+            border: 1px solid #ddd;
+            background-color: #f0ede7;
+            padding-left: 25px;
+            padding-top: 5px;
+            height: 25px;
+        }
+        .perm-title label{
+            font-weight: bold;
+        }
+
+    </style>
 {%- endblock %}
 
 {% block js -%}
@@ -142,6 +175,18 @@
         charset="UTF-8"></script>
 <script type="text/javascript">
 $(function () {
+	var sel_perms = {% autoescape false %}{{ user.orgin if user else '[]' }}{% endautoescape %};
+
+	$.each(sel_perms,function(i){
+		$('input[id="'+sel_perms[i]+'"]').attr('checked',true);
+	});
+	$('#orgina').val('{{user.orgina}}');
+	$('#orginb').val('{{user.orginb}}');
+	$('#orginc').val('{{user.orginc}}');
+	$('#orgind').val('{{user.orgind}}');
+	$('#orgine').val('{{user.orgine}}');
+	$('#history').val('{{user.history}}');
+		
     $('#dialog_type').select2({
         width: '220px'
     });
@@ -215,90 +260,8 @@ $(function () {
         mask: '9999-99-99'
     });
 
-    var Entry = {
-        data: function (c) {
-            if (c == null) {
-                return $.data(document.body);
-            }
-            else {
-                return $('body').data(c);
-            }
-        },
-        init: function (data) {
-            if (data == null) {
-                $('body').data({'LIFE': {}, 'BODY': {}});
-            }
-            else {
-                $('body').data(data);
-            }
-        },
-        update: function (c) {
-            var entries = Entry.data(c);
-            var $sel = $('#' + c);
-            if (!$.isEmptyObject(entries)) {
-                var _html = '<table class="tabletable-condensed table-striped table-entries" style="width:470px"><tbody>';
-                for (var i in entries) {
-                    var entry = entries[i];
-                    _html += '<tr><td style="width:100px"><code style="color:green">' + entry.c2 + '</code> <code>' + entry.c3 + '</code></td><td>' + entry.v + '</td><td style="width:40px;text-align:center"><a href="#" class="delete" data-c="' + c + '" data-code="' + i + '">&times;</a></td></tr>';
-                }
-                _html += '</tbody></table>';
-                $sel.html(_html);
-                $('a.delete').on('click', Entry.del);
-            }
-            else {
-                $sel.html(null);
-            }
-        },
-        del: function (event) {
-            var code = $(this).data('code');
-            var c = $(this).data('c');
-            var entries = Entry.data(c);
-            if (entries[code] != null) {
-                delete entries[code];
-                Entry.update(c);
-            }
-            return false;
-        },
-        add: function () {
-            var $sel = $(this).siblings("select");
-            var $input = $(this).siblings('input');
-            var c1 = $(this).data('c1');
-            var c2 = $(this).data('c2');
-            var c3 = $sel.find('option:selected').text();
-            var code = $sel.val();
-            var v = escape_html($input.val());
 
-            var data_type = $sel.find('option:selected').data('type');
-            if (data_type == 1 && v == '') {
-                $input.focus();
-                return false;
-            }
 
-            var entries = Entry.data(c1);
-            entries[code] = {'c2': c2, 'c3': c3, 'v': v};
-            Entry.update(c1);
-            //$input.val(null);
-            return false;
-        }
-    };
-
-    $('a.add-entry').on('click', Entry.add);
-
-    $('select.entry-select').change(function () {
-        var sel_id = $(this).val();
-        var $input = $(this).siblings('input');
-        entries = Entry.data();
-        for (var i in entries) {
-            var _entries = entries[i];
-            for (var j in _entries) {
-                if (sel_id == j) {
-                    _entry = _entries[j];
-                    $input.val(_entry.v);
-                    return;
-                }
-            }
-        }
-    });
 
 
     var selected_concerns = function () {
@@ -640,18 +603,6 @@ $(function () {
     $('#m2').val('{{ user.m2|default('',true) }}').change();
     $('#m3').val('{{ user.m3|default('',true) }}').change();
 
-    {% if user.entries %}
-    var data = JSON.parse('{{user.entries|replace("'","")|safe}}');
-    Entry.init(data);
-    for (var i in data) {
-        Entry.update(i);
-    }
-    ;
-    $('select.entry-select').change();
-    {% else %}
-    Entry.init(null);
-    {% endif %}
-
 
     $('form#sms-form').submit(function(){
         var sms_message = $('#sms_message').val();
@@ -899,9 +850,16 @@ $(function () {
         add_btn.attr('disabled', true);
         //validate form
         var values = $('form').serializeArray();
-        values.push({name: 'entries', value: JSON.stringify(Entry.data())});
+        //values.push({name: 'entries', value: JSON.stringify(Entry.data())});
         values.push({name: 'concerns', value: JSON.stringify(selected_concerns())});
         values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
+		
+		var perms = [];
+		$('input[type="checkbox"]:checked').each(function(){
+			perms.push($(this).attr('id'));
+		});
+		values.push({name: 'orgin', value: JSON.stringify(perms)});
+			
         var req = $.ajax({
             url: "{{ url_for('admin.edit_user',user_id=user.user_id) }}",
             dataType: 'json',
@@ -1347,37 +1305,29 @@ function khsljjlq(id){
                     </div>
                 </div>
     </div>
-
+	
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo2">
                 <i class="icon-chevron-down"></i> 身体状态
             </a>
         </div>
-        <div id="collapseTwo" class="accordion-body collapse in">
-            <div class="accordion-inner">
-                <div class="row-fluid">
-                    <div class="span6">
-                        {%- for group_id,group_name,entries,css in config['USER_BODY_CONFIG'] -%}
-                            <div class="entry-group space">
-                                <div class="entry-group-title"><span class="{{ css }}">{{ group_name }}</span></div>
-                                <select id="{{ group_id }}" class="entry-select">
-                                    {%- for entry_id,entry_name,entry_type in entries -%}
-                                        <option value="{{ entry_id }}"
-                                                data-type="{{ entry_type }}">{{ entry_name }}</option>
-                                    {%- endfor -%}
-                                </select>
-                                <input type="text" style="width: 240px" name="value" placeholder="症状"/>
-                                <a href="#" class="add-entry btn btn-small" data-c2="{{ group_name }}"
-                                   data-c1="BODY">添加</a>
-                            </div>
-                        {%- endfor -%}
-                        <hr/>
-                    </div>
-                    <div class="span6" id="BODY">
-
-                    </div>
+        <div id="collapseTwo2" class="control-group collapse in">
+            <div class="controls">
+                {% for module_id,endpoints in perms.iteritems() %}
+                <div class="checkbox inline">
+                 <p style="float:left">{{ config['USER_ORGIN'][module_id] }}：</p>
+                
+                    <ul class="checkbox inline" style="margin-bottom: 10px; float:left;">
+                        {% for endpoint,name in endpoints %}
+                        <li><input id="{{ endpoint }}" name="{{ module_id }}" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                        
+                        {% endfor %}
+                    </ul><p><input name="orgin{{module_id|lower}}" id="orgin{{module_id|lower}}" type="text" style="width:800px;" class="input" placeholder="{{ config['USER_ORGIN'][module_id] }}" /></p>
                 </div>
+                <div class="clear"></div>
+                {% endfor %}
+				<p>病史：<input id="history" name="history" type="text" style="width:800px;" class="input" placeholder="病史" /></p>
             </div>
         </div>
     </div>
@@ -1572,7 +1522,7 @@ function khsljjlq(id){
     <div class="accordion-group">
         <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule" onclick="show('khsldj');">
-                <i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums"></span>)
+                <i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums" style="color:red">{{khsldjcount}}</span>)
             </a>
         </div>
         <div id="khsldjModule" class="accordion-body collapse">

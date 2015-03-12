@@ -847,6 +847,15 @@ class User(db.Model):
     area = Column(db.String(20))#区域
     pharmacy = Column(db.String(50))#药房
     pharmacystores = Column(db.String(50))#分店
+    
+    weixin = Column(fields.List(20),nullable=True)#微信情况
+    orgin = Column(fields.List(300),nullable=True)#身体状态
+    orgina = Column(db.String(300))#身体状态病症
+    orginb = Column(db.String(300))#身体状态病症
+    orginc = Column(db.String(300))#身体状态病症
+    orgind = Column(db.String(300))#身体状态病症
+    orgine = Column(db.String(300))#身体状态病症
+    history = Column(db.String(300))#身体状态病症
     @property
     def mobile_phones(self):
         _phones = []
@@ -1572,6 +1581,7 @@ class User_tjfg(db.Model):
     bigcount = Column(db.Integer(unsigned=True), default=0)#大数量
     mediumcount = Column(db.Integer(unsigned=True), default=0)#中数量
     smallcount = Column(db.Integer(unsigned=True), default=0)#小数量
+    qizaocount = Column(db.Integer(unsigned=True), default=0)#芪枣数量
     created = Column(db.DateTime, default=datetime.now, nullable=False)
 
 

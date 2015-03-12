@@ -219,29 +219,6 @@ $(function () {
         });
         return false;
     });
-
-    var load_entries = function () {
-        var data = JSON.parse('{{user.entries|default('{}',true)|replace("'","")|safe}}');
-        for (var c in data) {
-            var $sel = $('#' + c);
-            entries = data[c];
-            if (!$.isEmptyObject(entries)) {
-                var _html = '<table class="table-condensed table-entries table-hover" style="width:100%"><tbody>';
-                for (var i in entries) {
-					var entry = entries[i];
-                    //alert(entry.v);
-                    _html += '<tr><td style="width:60px"><code style="color:green">' + entry.c2 + '</code></td><td style="width:60px"><code>' + entry.c3 + '</code></td><td>' + entry.v + '</td></tr>';
-                }
-                _html += '</tbody></table>';
-                $sel.html(_html);
-            }
-            else {
-                $sel.html(null);
-            }
-        }
-    };
-
-    load_entries();
 	//show_shipping_address();
 });
 </script>
@@ -347,7 +324,29 @@ $(function () {
                         </tr>
                         <tr>
                             <td class="title">身体状态</td>
-                            <td id="BODY" colspan="3"></td>
+                            <td colspan="3">
+                                {% for k in user.orgin %}
+                                    <code style="color: #a47e3c">{{ config['USER_ORGIN_SUB'][k] }}</code>
+                                {% endfor %}
+                                {% if user.orgina %}
+                                <p>{{user.orgina}}</p>
+                                {%endif%}
+                                {% if user.orginb %}
+                                <p>{{user.orginb}}</p>
+                                {%endif%}
+                                {% if user.orginc %}
+                                <p>{{user.orginc}}</p>
+                                {%endif%}
+                                {% if user.orgind %}
+                                <p>{{user.orgind}}</p>
+                                {%endif%}
+                                {% if user.orgine %}
+                                <p>{{user.orgine}}</p>
+                                {%endif%}
+                                {% if user.history %}
+                                <p>{{user.history}}</p>
+                                {%endif%}
+                            </td>
                         </tr>
                         <tr>
                             <td class="title">微信情况</td>
@@ -450,7 +449,7 @@ $(function () {
 		<div class="accordion-group">
 			<div class="accordion-heading">
 				<a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule" onclick="show('khsldj');">
-					<i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums"></span>)
+					<i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums" style="color:red">{{khsldjcount}}</span>)
 				</a>
 			</div>
 			<div id="khsldjModule" class="accordion-body collapse">
