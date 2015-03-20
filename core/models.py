@@ -817,12 +817,14 @@ class User(db.Model):
     status = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#当前状态(1:正常,2:冻结)
     join_time = Column(db.DateTime, default=datetime.now)#加入日期
     ext_fields = Column(fields.Dict(500))#扩展信息
-    entries = deferred(Column(fields.Json(3000)))
+    #entries = deferred(Column(fields.Json(3000)))
     
-    habits_customs = Column(db.String(500))#生活习惯
+    #habits_customs = Column(db.String(500))#生活习惯
     
     addresses = db.relationship('Address', backref='user', lazy='dynamic')
     dialogs = db.relationship('User_Dialog', backref='user', lazy='dynamic')
+    
+    #qxhkhdjs = db.relationship('QXHKHDJ', backref='user', lazy='dynamic')
 
     operator = db.relationship('Operator', primaryjoin="(Operator.id == User.operator_id)")
     assign_operator = db.relationship('Operator', primaryjoin="(Operator.id == User.assign_operator_id)")
@@ -856,6 +858,8 @@ class User(db.Model):
     orgind = Column(db.String(300))#身体状态病症
     orgine = Column(db.String(300))#身体状态病症
     history = Column(db.String(300))#身体状态病症
+    
+    communication = Column(db.String(30))#沟通情况
     @property
     def mobile_phones(self):
         _phones = []
@@ -1553,6 +1557,7 @@ class QXHKHDJ(db.Model):
     qxhcodes = relationship('Security_Codekh', backref='qxhkjdj', lazy='dynamic')
     receive = Column(db.Integer,nullable=False,default=0)#状态是否领取
     status = Column(db.Boolean,nullable=False,default=True)#状态是否有效
+    reason = Column(db.String(30))#原因
 
 
 class User_Isable(db.Model):

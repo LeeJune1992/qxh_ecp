@@ -2253,6 +2253,33 @@ def pharmacy_report_by_khfgypmx():
     data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
     #print data
     return render_template('report/pharmacy_report_by_khfgypmx.html',operators=operators,data=data,period=period)
+#空盒换大礼服务明细表
+@report.route('/pharmacy/khfwmx')
+@admin_required
+def pharmacy_report_by_khfwmx():
+
+    _conditions = ['`u`.origin = 19']
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`u`.assign_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`u`.assign_time<="%s"'%_end_date)
+    _today = datetime.now().strftime('%Y-%m-%d')
+    if not _start_date and not _end_date:        
+        _conditions.append('`u`.assign_time>="%s"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = 'select u.name,u.phone,u.assign_time,u.area,(select count(*) from qxhdm_orderyf where user_id=u.user_id) fgypcount,u.communication,u.isable_reason,kh.id,kh.reason,kh.receive from user u left join qxhkjdj kh on u.user_id=kh.user_id where %s'%' AND '.join(_conditions)
+    print _sql
+    #data = User.query.filter(db.and_(*_conditions))
+    data = db.session.execute(_sql)
+    #print data
+    return render_template('report/pharmacy_report_by_khfwmx.html',data=data,period=period)
 
 #复购统计
 @report.route('/yy/fgtj')

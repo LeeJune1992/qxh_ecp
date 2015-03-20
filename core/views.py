@@ -2462,7 +2462,8 @@ def change_user_type():
 def user(user_id,token):
     if not des.validate_user_token(token,user_id):
         abort(404)
-    user = User.query.options(defer('entries')).get_or_404(user_id)
+    #user = User.query.options(defer('entries')).get_or_404(user_id)
+    user = User.query.get_or_404(user_id)
     orders = Order.query.filter(db.and_(Order.user_id==user_id)).order_by(desc(Order.created))
     ordercount = 0
     for o in orders:
@@ -2482,8 +2483,11 @@ def user(user_id,token):
     for k in USER_ORGIN_SUB:
         perms[k[:1]].append((k,USER_ORGIN_SUB[k]))
 
+    is_service = False
+    if current_user.assign_user_type == 5:
+        is_service = True
     
-    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms=perms)
+    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms=perms,is_service=is_service)
 
 
 @admin.route('/user/drop/<int:user_id>',methods=['POST'])
@@ -2731,8 +2735,7 @@ def _edit_user(user):
         user.income = income
         user.remark = request.form.get('remark','')
         user.concerns = json.loads(request.form['concerns'])
-        print request.form['concerns']
-        print request.form['weixin']
+
         user.weixin = json.loads(request.form['weixin'])
 
         user.orgin = json.loads(request.form['orgin'])
@@ -2746,7 +2749,15 @@ def _edit_user(user):
         user.m1 = request.form['m1']
         user.m2 = request.form['m2']
         user.m3 = request.form['m3']
+        
+        area = request.form.get('area')
+        if area:
+            user.area = area
+        communication = request.form.get('communication')
+        if communication:
+            user.communication = communication
 
+        
         expect_time = request.form['expect_time']
         
         is_new = request.form['is_new']
@@ -4150,6 +4161,24 @@ def khsldj(user_id):
             db.session.rollback()
             current_app.logger.error('ADD QXHKHHLDJ ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
+#修改拒接换购原因
+@admin.route('/user/khjjyy', methods=['POST'])
+@login_required
+def khjjyy():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            print id
+            qxhkdj = QXHKHDJ.query.get(id)
+            if qxhkdj:
+                qxhkdj.reason = request.form['reason']
+                db.session.add(qxhkdj)
+                db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE QXHKHHLDJ REASON ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
 
 
 @admin.route('/user/showkhsldj/<int:user_id>')
@@ -4224,6 +4253,8 @@ def khsldjqx():
             qxhkdj = QXHKHDJ.query.get(id)
             if qxhkdj:
                 qxhkdj.status = 0
+                if request.form.get('reason'):
+                    qxhkdj.reason=request.form.get('reason')
                 db.session.add(qxhkdj)
                 db.session.commit()
                 for codes in qxhkdj.qxhcodes:
@@ -4268,6 +4299,8 @@ def user_servicetype(user_id):
         else:
             ss = '启用'
         isable_reason = request.form['isable_reason']
+        user.isable_reason = isable_reason
+        db.session.add(user)
         if user.assign_operator_id<>current_user.id:
             return jsonify(result=False,error=u'该客户不归属于你，无法%s。'%ss)
         _conditions = []
@@ -4323,7 +4356,7 @@ def servicetype_user_ok():
             give.remarks = remarks
 
             give.user.is_isable = give.is_isable
-            give.user.isable_reason = give.remarks
+            #give.user.isable_reason = give.remarks
             current_app.logger.info('USERSERVICEOK ISABLE|%s|%s|%s|%s'%(give.user_id,give.is_isable,current_user.id,datetime.now()))
         #db.session.query(User_Giveup).filter(User_Giveup.user_id.in_(user_ids)).delete(synchronize_session=False)
         db.session.commit()

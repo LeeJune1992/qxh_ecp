@@ -186,7 +186,10 @@ $(function () {
 	$('#orgind').val('{{user.orgind}}');
 	$('#orgine').val('{{user.orgine}}');
 	$('#history').val('{{user.history}}');
-		
+	{%if is_service%}
+	$('#area').val('{{user.area}}');
+	$('#communication').val('{{user.communication}}');
+	{%endif %}
     $('#dialog_type').select2({
         width: '220px'
     });
@@ -771,6 +774,37 @@ $(function () {
         return false;
     });
 
+    $('form#jjyy-form').submit(function(){
+        var jjyy = $('#jjyy').val()
+		var jjyyid = $('#jjyyid').val()
+        if (jjyy == ''){
+            alert('原因不能为空');
+            $('#jjyy').focus();
+            return false;
+        }
+
+        var req = $.ajax({
+            url: '{{ url_for('admin.khjjyy') }}',
+            dataType: "json",
+            type: 'POST',
+            data: {id: jjyyid,reason:jjyy}
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#jjyyModal').modal('hide');
+                bootbox.alert('修改成功！');
+            }
+            else {
+                bootbox.alert('修改失败：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
+	
     function update_order_link(){
         var _href = '/order/add?user_id='+'{{ user.user_id }}'+'&phone='+$('#user_phone').val()+'&name='+$('#name').val();
         $('#order_link').attr('href',_href);
@@ -855,7 +889,7 @@ $(function () {
         values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
 		
 		var perms = [];
-		$('input[type="checkbox"]:checked').each(function(){
+            $('li input[type="checkbox"]:checked').each(function(){
 			perms.push($(this).attr('id'));
 		});
 		values.push({name: 'orgin', value: JSON.stringify(perms)});
@@ -893,15 +927,23 @@ $(function () {
     });
 });
 function khsldjqx(id){
-	bootbox.confirm('确认取消吗,确认取消后将不能更改!', function (result) {
-		if (result != true) {
+	//bootbox.confirm('确认取消吗,确认取消后将不能更改!', function (result) {
+//		if (result != true) {
+//			return;
+//		}
+	var confirm_text = '确认取消吗,确认取消后将不能更改!';
+	bootbox.prompt(confirm_text, function (result) {
+		if(result === null){
+			return;
+		}else if(result == ''){
+			bootbox.alert('原因为空,请填写原因!');
 			return;
 		}
 		var req = $.ajax({
 			url: '{{ url_for('admin.khsldjqx') }}',
 			dataType: "json",
 			type: 'POST',
-			data: {id: id}
+			data: {id: id,reason:result}
 		});
 
 		req.done(function (data) {
@@ -1066,6 +1108,28 @@ function khsljjlq(id){
     </div>
     </form>
 
+    <form name="jjyy-form" id="jjyy-form">
+    <div id="jjyyModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-header">
+            <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
+            <blockquote style="color:#ccc">提示：请确认后登记。</blockquote>
+        </div>
+        <div class="modal-body"><input type="hidden" id="jjyyid" />
+           空盒编码:<select id="jjyy" name="jjyy" class="select2" style="width: 170px">
+           <option>刚提交还未确认</option>
+           <option>未能联系客户无法确认</option>
+           <option>没有业务员联系</option>
+           <option>重新预约了时间</option>
+           <option>想换四件套</option>
+           </select>
+        </div>
+        <div class="modal-footer" style="text-align: center">
+            <button class="btn btn-success" type="submit">确认提交</button>
+        </div>
+
+    </div>
+    </form>
     <div class="alert alert-block alert-error fade in" id="error" style="display: none">
         <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
         <p></p>
@@ -1166,6 +1230,19 @@ function khsljjlq(id){
                                         </select>
                                     </div>
                                 </div>
+                                {% if is_service%}
+                                <div class="control-group">
+                                    <label class="control-label">区域</label>
+
+                                    <div class="controls">
+                                        <select name="area" id="area">
+                                        {%- for k,v in config['AREA'].iteritems() -%}
+                                            <option value="{{ k }}">{{ v }}</option>
+                                        {%- endfor -%}
+                                        </select>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                             <div class="span6">
                                 <div class="control-group">
@@ -1233,6 +1310,19 @@ function khsljjlq(id){
                                         <input id="expect_time" name="expect_time" class="input-large" type="text"/>
                                     </div>
                                 </div>
+                                {% if is_service%}
+                                <div class="control-group">
+                                    <label class="control-label">沟通情况</label>
+
+                                    <div class="controls">
+                                        <select name="communication" id="communication">
+                                        {%- for k,v in config['COMMUNICATIONS'].iteritems() -%}
+                                            <option value="{{ k }}">{{ v }}</option>
+                                        {%- endfor -%}
+                                        </select>
+                                    </div>
+                                </div>
+                                {% endif %}
 
 
                             </div>
@@ -1320,7 +1410,7 @@ function khsljjlq(id){
                 
                     <ul class="checkbox inline" style="margin-bottom: 10px; float:left;">
                         {% for endpoint,name in endpoints %}
-                        <li><input id="{{ endpoint }}" name="{{ module_id }}" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                        <li><input id="{{ endpoint }}" name="{{ module_id }}" class="orgincss" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
                         
                         {% endfor %}
                     </ul><p><input name="orgin{{module_id|lower}}" id="orgin{{module_id|lower}}" type="text" style="width:800px;" class="input" placeholder="{{ config['USER_ORGIN'][module_id] }}" /></p>
@@ -1344,7 +1434,7 @@ function khsljjlq(id){
 			<a href="#" id="fwtjfg" class="btn btn-primary btn-small" onclick="$('#fwtjfgModal').modal('show');">推荐复购</a>
 			<a href="#" id="dm_addyp" class="btn btn-primary btn-small" onclick="$('#addypModal').modal('show');">复购预判</a>
             {% endif %}
-            {% if user.qxhdm_user_id %}
+            {% if user.qxhdm_user_id or user.origin==19 %}
 				{% if user.is_isable %}
 				<a href="#" id="service_qy" class="btn btn-primary btn-small" onclick="$('#servicetype').val(0);$('#serviceModal').modal('show');">启用</a>
 				{% else %}
@@ -1804,6 +1894,7 @@ var show_khsldj = function () {
 						html += "未领取&nbsp;<a href='#' onclick='khsllq(" + sms.id + ");return false;'>点此确认客户领取</a>&nbsp;<a href='#' onclick='khsljjlq(" + sms.id + ");return false;'>点此客户拒接换购</a>&nbsp;<a href='#' onclick='khsldjqx(" + sms.id + ");return false;'>点此取消</a>";
 					}
 				}
+				html += "&nbsp;<a href='#' onclick='jjyy(" + sms.id + ");return false;'>未领取原因</a>";
 				html += '</td></tr>';
 			}
 			html += '</tbody></table>';
@@ -1844,7 +1935,10 @@ var show_fwtjfg = function () {
 	});
 };
 //show_fwtjfg();
-
+function jjyy(id){
+	$('#jjyyid').val(id);
+	$('#jjyyModal').modal('show');return false;
+}
 
 var shdz = 0;
 var lsgmjl = 0;
