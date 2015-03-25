@@ -187,8 +187,16 @@ $(function () {
 	$('#orgine').val('{{user.orgine}}');
 	$('#history').val('{{user.history}}');
 	{%if is_service%}
-	$('#area').val('{{user.area}}');
-	$('#communication').val('{{user.communication}}');
+    $('#area').select2({
+        placeholder: '区域',
+        width: '125px'
+    });
+    $('#communication').select2({
+        placeholder: '沟通情况',
+        width: '135px'
+    });
+	$('#area').val('{{user.area}}').change();
+	$('#communication').val('{{user.communication}}').change();
 	{%endif %}
     $('#dialog_type').select2({
         width: '220px'
@@ -404,8 +412,9 @@ $(function () {
                         html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
                     }
                     html += '</tbody></table>';
+					html += data.pages;
                     $('#dialog_history').html(html);
-                    $('#dialog_nums').html(dialogs.length);
+                    $('#dialog_nums').html(data.length);
                 }
                 else {
                     $('#dialog_history').html(null);
@@ -836,6 +845,22 @@ $(function () {
 			$('#product_intention').focus();
 			return false;
 		}
+		{%if is_service%}
+		//区域
+		var area = $('#area').val();
+		if(area==''||area==null){
+			show_err('请选择区域');
+			$('#area').focus();
+			return false;
+		}
+		//沟通情况
+		var communication = $('#communication').val();
+		if(communication==''||communication==null){
+			show_err('请选择沟通情况');
+			$('#communication').focus();
+			return false;
+		}
+		{%endif %}
 		//验证性别
 		var gender = $('#gender').val();
 		if (gender==null || gender==''){
@@ -1113,15 +1138,17 @@ function khsljjlq(id){
          aria-hidden="true">
         <div class="modal-header">
             <a  class="close" data-dismiss="modal" aria-hidden="true">×</a>
-            <blockquote style="color:#ccc">提示：请确认后登记。</blockquote>
+            <blockquote style="color:#ccc">提示：请确认后提交。</blockquote>
         </div>
         <div class="modal-body"><input type="hidden" id="jjyyid" />
-           空盒编码:<select id="jjyy" name="jjyy" class="select2" style="width: 170px">
+           未领取原因:<select id="jjyy" name="jjyy" class="select2" style="width: 170px">
            <option>刚提交还未确认</option>
            <option>未能联系客户无法确认</option>
            <option>没有业务员联系</option>
            <option>重新预约了时间</option>
            <option>想换四件套</option>
+           <option>放弃领取</option>
+           <option>已确认领取</option>
            </select>
         </div>
         <div class="modal-footer" style="text-align: center">
@@ -1236,6 +1263,7 @@ function khsljjlq(id){
 
                                     <div class="controls">
                                         <select name="area" id="area">
+                                        <option></option>
                                         {%- for k,v in config['AREA'].iteritems() -%}
                                             <option value="{{ k }}">{{ v }}</option>
                                         {%- endfor -%}
@@ -1316,6 +1344,7 @@ function khsljjlq(id){
 
                                     <div class="controls">
                                         <select name="communication" id="communication">
+                                        <option></option>
                                         {%- for k,v in config['COMMUNICATIONS'].iteritems() -%}
                                             <option value="{{ k }}">{{ v }}</option>
                                         {%- endfor -%}

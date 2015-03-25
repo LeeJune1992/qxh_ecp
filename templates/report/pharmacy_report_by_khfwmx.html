@@ -3,17 +3,59 @@
 {{ super() }}
 <script type="text/javascript">
     $(function(){
-		$('.timepicker').datepicker({
-			language: 'zh-CN',
-			format: 'yyyy-mm-dd',
-			minView: "month", //选择日期后，不会再跳转去选择时分秒 
-			autoclose:true
-		});
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域',
+			allowClear:true
+        });
+        $('#register').select2({
+            width:'120px',
+            placeholder:'是否登记',
+			allowClear:true
+        });
+        $('#communication').select2({
+            width:'120px',
+            placeholder:'沟通情况',
+			allowClear:true
+        });
+        $('#isable_reason').select2({
+            width:'120px',
+            placeholder:'停用原因',
+			allowClear:true
+        });
     });
 </script>
 {% endblock %}
 {% block report %}
     <form action="" method="get" class="form-search inline">
+        {% set area = request.args.get('area') %}
+        <select name="area" id="area">
+        <option></option>
+        {%- for k,v in config['AREA'].iteritems() -%}
+            <option value="{{ k }}" {% if k==area %}selected="selected"{% endif %}>{{ v }}</option>
+        {%- endfor -%}
+        </select>
+        {% set register = request.args.get('register',0)|int %}
+        <select name="register" id="register">
+        <option></option>
+        <option value="1" {% if register==1 %}selected="selected"{% endif %}>是</option>
+        <option value="2" {% if register==2 %}selected="selected"{% endif %}>否</option>
+        </select>
+        {% set communication = request.args.get('communication') %}
+        <select name="communication" id="communication">
+        <option></option>
+        {%- for k,v in config['COMMUNICATIONS'].iteritems() -%}
+            <option value="{{ k }}" {% if k==communication %}selected="selected"{% endif %}>{{ v }}</option>
+        {%- endfor -%}
+        </select>
+        <input type="text" class="input-small" name="phone" placeholder="电话号码" value="{{ request.args.get('phone','') }}">
+        {% set isable_reason = request.args.get('isable_reason') %}
+        <select name="isable_reason" id="isable_reason">
+        <option></option>
+        {%- for k,v in config['ISABLEREASONS'].iteritems() -%}
+            <option value="{{ k }}" {% if k==isable_reason %}selected="selected"{% endif %}>{{ v }}</option>
+        {%- endfor -%}
+        </select>
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
@@ -51,7 +93,7 @@
             <td>{{ d.communication }}</td>
             <td>{% if d.receive!=1 %}{{ d.reason }}{%endif%}</td>
             <td>{{ d.isable_reason }}</td>
-            </tr>
+            </tr><font style="display:none">{{ total.append(1) }}</font>
         {% endfor %}
         </tbody>
     </table>
@@ -59,5 +101,6 @@
     </div>
     <hr>
     <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>
+    <div class="alert pull-left">记录数：{{ total|sum }}</div>
 
 {% endblock %}

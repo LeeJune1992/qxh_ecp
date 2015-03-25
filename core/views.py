@@ -2388,18 +2388,18 @@ def manage_users():
     is_order,order_by = user_order_by()
     if not is_order:order_by = desc(User.join_time)
     if len(_conditions) > 0:
+        #pagination = User.query.with_entities(User.name, User.phone).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     else:
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
     if current_user.assign_user_type == 5:
         show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
+    print pagination.items
     return render_template('user/users.html',
                            pagination=pagination,
                            operators=operators,
                            show_queries=show_queries)
-
-
 
 @admin.route('/user/manage/change_op',methods=['POST'])
 @admin_required
@@ -2633,8 +2633,23 @@ def add_sms(user_id):
 @admin.route('/user/<int:user_id>/dialogs')
 @login_required
 def user_dialogs(user_id):
-    dialogs = User_Dialog.query.join(Operator,Operator.id==User_Dialog.operator_id).filter(User_Dialog.user_id==user_id).order_by(desc(User_Dialog.created))
+    page = int(request.args.get('page', 1))
+    dialogs = User_Dialog.query.join(Operator,Operator.id==User_Dialog.operator_id).filter(User_Dialog.user_id==user_id).order_by(desc(User_Dialog.created))#.paginate(page, per_page=1)
     _datas = []
+#    print dir(dialogs)
+#    print dialogs.pages
+#    print dir(dialogs.iter_pages)
+#    pages='<div class="pagination pull-right">'
+#    pages+='<ul>'
+#    for page in dialogs.iter_pages():
+#        if page:
+#            if page != dialogs.page:
+#                pages+='<li><a href="?page='+str(page)+'">'+str(page)+'</a></li>'
+#            else:
+#                pages+='<li class="active"><a href="#">'+str(page)+'</a></li>'
+#        else:
+#            pages+='<li><span class="ellipsis">…</span></li>'
+#    pages+='</ul></div>'
     for dialog in dialogs:
         _datas.append({'dialog_id':dialog.id,
                        'solution':dialog.solution,
@@ -2644,6 +2659,7 @@ def user_dialogs(user_id):
                        'op_name':dialog.operator.nickname,
                        'created':dialog.created.strftime('%Y-%m-%d %H:%M')})
     return jsonify(result = _datas)
+    #return jsonify(result = _datas,pages=pages,length=dialogs.total)
 
 
 @admin.route('/user/<int:user_id>/add_dialog',methods=['POST'])
@@ -3077,7 +3093,7 @@ def giveup_users():
     #else:
     operators = Operator.query.filter(Operator.assign_user_type>0)
 
-    page = int(request.args.get('page', 1))
+    
     _conditions.append(User_Giveup.status==0)
     is_order,order_by = user_order_by()
     if not is_order:order_by = desc(User.join_time)
@@ -4076,7 +4092,8 @@ def user_orderyf(user_id):
     _objs = QXHDM_Orderyf.query.filter(QXHDM_Orderyf.user_id==user_id)
     sms_list = []
     for sms in _objs:
-        sms_list.append({'message':str(sms.created),
+        sms_list.append({'id':str(sms.id),
+                         'message':str(sms.created),
                          'bigcount':sms.bigcount,
                          'mediumcount':sms.mediumcount,
                          'smallcount':sms.smallcount,
@@ -4472,7 +4489,8 @@ def user_show_fwtjfg(user_id):
     _objs = User_tjfg.query.filter(User_tjfg.user_id==user_id)
     sms_list = []
     for sms in _objs:
-        sms_list.append({'message':str(sms.created),
+        sms_list.append({'id':str(sms.id),
+                         'message':str(sms.created),
                          'bigcount':sms.bigcount,
                          'mediumcount':sms.mediumcount,
                          'smallcount':sms.smallcount,
@@ -4482,3 +4500,52 @@ def user_show_fwtjfg(user_id):
 })
 
     return jsonify(result=sms_list)
+
+
+@admin.route('/user/khsldel', methods=['POST'])
+@login_required
+def khsldel():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            qxhkdj = QXHKHDJ.query.get(id)
+            if qxhkdj:
+                db.session.delete(qxhkdj)
+                db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/tjfgdel', methods=['POST'])
+@login_required
+def tjfgdel():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            qxhkdj = User_tjfg.query.get(id)
+            if qxhkdj:
+                db.session.delete(qxhkdj)
+                db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/fgypdel', methods=['POST'])
+@login_required
+def fgypdel():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            qxhkdj = QXHDM_Orderyf.query.get(id)
+            if qxhkdj:
+                db.session.delete(qxhkdj)
+                db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)

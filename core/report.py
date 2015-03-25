@@ -2259,6 +2259,29 @@ def pharmacy_report_by_khfgypmx():
 def pharmacy_report_by_khfwmx():
 
     _conditions = ['`u`.origin = 19']
+    area = request.args.get('area','')
+    if area:
+        _conditions.append('`u`.area="%s"'%area)
+    register = request.args.get('register','')
+    if register == '1':
+        _conditions.append('`kh`.id>0')
+    if register == '2':
+        _conditions.append('`kh`.id is null')
+
+    phone = request.args.get('phone', None)
+    if phone:
+        _conditions.append('`u`.phone="%s"'%phone)
+
+
+    communication = request.args.get('communication','')
+    if communication:
+        _conditions.append('`u`.communication="%s"'%communication)
+
+    isable_reason = request.args.get('isable_reason','')
+    if isable_reason:
+        _conditions.append('`u`.isable_reason="%s"'%isable_reason)
+
+
 
     _start_date = request.args.get('start_date','')
     if _start_date:
@@ -2274,12 +2297,13 @@ def pharmacy_report_by_khfwmx():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    _sql = 'select u.name,u.phone,u.assign_time,u.area,(select count(*) from qxhdm_orderyf where user_id=u.user_id) fgypcount,u.communication,u.isable_reason,kh.id,kh.reason,kh.receive from user u left join qxhkjdj kh on u.user_id=kh.user_id where %s'%' AND '.join(_conditions)
+    _sql = 'select u.name,u.phone,u.assign_time,u.area,(select count(*) from qxhdm_orderyf where user_id=u.user_id) fgypcount,u.communication,u.isable_reason,kh.id,kh.reason,kh.receive from user u left join qxhkjdj kh on u.user_id=kh.user_id where %s order by assign_time'%' AND '.join(_conditions)
     print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
-    #print data
-    return render_template('report/pharmacy_report_by_khfwmx.html',data=data,period=period)
+    total = []
+    #print data.length()
+    return render_template('report/pharmacy_report_by_khfwmx.html',data=data,period=period,total=total)
 
 #复购统计
 @report.route('/yy/fgtj')

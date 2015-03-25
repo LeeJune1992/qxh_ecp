@@ -668,10 +668,11 @@ $(function () {
         req.done(function (data) {
             var sms_list = data.result;
             if (!$.isEmptyObject(sms_list)) {
-                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th></tr></thead><tbody>';
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th><th>操作</th></tr></thead><tbody>';
                 for (var i in sms_list) {
                     sms = sms_list[i];
-                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td></tr>';
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td>';
+					html += "<td><a onclick='fgypdel(" + sms.id + ")'>删除</a></td></tr>";
                 }
                 html += '</tbody></table>';
                 $('#orderyf_history').html(html);
@@ -695,7 +696,7 @@ $(function () {
         req.done(function (data) {
             var sms_list = data.result;
             if (!$.isEmptyObject(sms_list)) {
-                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>礼品数量</th><th>药房地址</th><th>登记时间</th><th>是否领取</th></tr></thead><tbody>';
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>礼品数量</th><th>药房地址</th><th>登记时间</th><th>是否领取</th><th>操作</th></tr></thead><tbody>';
                 for (var i in sms_list) {
                     sms = sms_list[i];
                     html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.giftcount + '</td><td>' + sms.province + sms.city + sms.district + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
@@ -711,7 +712,8 @@ $(function () {
 							//html += "未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a>&nbsp;<a onclick='khsldjqx(" + sms.id + ")'>点此取消</a>";
 						}
 					}
-					html += '</td></tr>';
+					html += '</td>';
+					html += "<td><a onclick='khsldel(" + sms.id + ")'>删除</a></td></tr>";
                 }
                 html += '</tbody></table>';
                 $('#khsldj_list').html(html);
@@ -735,10 +737,11 @@ $(function () {
         req.done(function (data) {
             var sms_list = data.result;
             if (!$.isEmptyObject(sms_list)) {
-                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th></tr></thead><tbody>';
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th><th>操作</th></tr></thead><tbody>';
                 for (var i in sms_list) {
                     sms = sms_list[i];
-                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td></tr>';
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td>';
+					html += "<td><a onclick='tjfgdel(" + sms.id + ")'>删除</a></td></tr>";
                 }
                 html += '</tbody></table>';
                 $('#fwtjfg_list').html(html);
@@ -750,6 +753,82 @@ $(function () {
             }
         });
     };
+
+function khsldel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.khsldel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+function tjfgdel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.tjfgdel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+function fgypdel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.fgypdel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
     //show_fwtjfg();
 var shdz = 0;
 var lsgmjl = 0;
