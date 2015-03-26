@@ -186,7 +186,7 @@ $(function () {
 	$('#orgind').val('{{user.orgind}}');
 	$('#orgine').val('{{user.orgine}}');
 	$('#history').val('{{user.history}}');
-	{%if is_service%}
+	{%if user.origin == 19%}
     $('#area').select2({
         placeholder: '区域',
         width: '125px'
@@ -845,7 +845,7 @@ $(function () {
 			$('#product_intention').focus();
 			return false;
 		}
-		{%if is_service%}
+		{%if user.origin == 19%}
 		//区域
 		var area = $('#area').val();
 		if(area==''||area==null){
@@ -1257,7 +1257,7 @@ function khsljjlq(id){
                                         </select>
                                     </div>
                                 </div>
-                                {% if is_service%}
+                                {%if user.origin == 19%}
                                 <div class="control-group">
                                     <label class="control-label">区域</label>
 
@@ -1338,7 +1338,7 @@ function khsljjlq(id){
                                         <input id="expect_time" name="expect_time" class="input-large" type="text"/>
                                     </div>
                                 </div>
-                                {% if is_service%}
+                                {%if user.origin == 19%}
                                 <div class="control-group">
                                     <label class="control-label">沟通情况</label>
 
@@ -1423,6 +1423,19 @@ function khsljjlq(id){
 
                     </div>
                 </div>
+    </div>
+    
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
+                <i class="icon-chevron-down"></i> 大礼包
+            </a>
+        </div>
+        <div id="collapsedlb" class="control-group collapse in">
+            <div class="controls">
+            	
+            </div>
+        </div>
     </div>
 	
     <div class="accordion-group">

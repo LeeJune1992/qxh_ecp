@@ -636,7 +636,8 @@ def financial_report():
 @report.route('/financial/sale')
 @admin_required
 def financial_report_by_sale():
-    _conditions = ['`order`.delivery_time IS NOT NULL','`order`.order_type<100']
+    #_conditions = ['`order`.delivery_time IS NOT NULL','`order`.order_type<100']
+    _conditions = ['`order`.delivery_time IS NOT NULL']
 
     order_type = request.args.get('order_type',0)
     if order_type:
@@ -773,7 +774,8 @@ def financial_report_by_return():
 @admin_required
 def financial_report_by_dzbb():
     period = ''
-    _conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`']
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order_log`.`operate_time`>="%s"'%_start_date)
@@ -820,7 +822,8 @@ GROUP BY `tmp_order`.express_id,order_item.sku_id,order_item.name ORDER BY `tmp_
 @admin_required
 def financial_report_by_paidan():
     period = ''
-    _conditions = ['`order`.order_type<100']
+    #_conditions = ['`order`.order_type<100']
+    _conditions = []
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order`.delivery_time>="%s"'%_start_date)
@@ -941,7 +944,8 @@ ORDER BY `order`.end_time'''%' AND '.join(_conditions)
 @admin_required
 def financial_report_by_qianshou():
     period = ''
-    _conditions = ['`order`.order_type<100']
+    #_conditions = ['`order`.order_type<100']
+    _conditions = []
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order`.arrival_time>="%s"'%_start_date)
@@ -1261,7 +1265,8 @@ GROUP BY `sku`.id,`sku`.`name`,`loss`.degree'''%' AND '.join(_conditions)
 @admin_required
 def financial_report_by_dzbbmx():
     period = ''
-    _conditions = ['`order`.order_type<100']
+    #_conditions = ['`order`.order_type<100']
+    _conditions = []
     _start_date = request.args.get('start_date','')
     #_conditions.append('`order`.status=60')
     if _start_date:
@@ -1330,7 +1335,8 @@ ORDER BY `order_log`.operate_time desc'''%' AND '.join(_conditions)
 @admin_required
 def financial_report_by_paidantongji():
     period = ''
-    _conditions = ['`order`.order_type<100']
+    #_conditions = ['`order`.order_type<100']
+    _conditions = []
 
     if not current_user.is_admin and current_user.team:
         _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
@@ -1424,7 +1430,8 @@ GROUP BY `order`.team,`order`.express_id ORDER BY `order`.express_id,`order`.tea
 @report.route('/financia/qianshou/tongji')
 @admin_required
 def financial_report_by_qianshoutongji():
-    _conditions = ['`order`.order_type<100']
+    #_conditions = ['`order`.order_type<100']
+    _conditions = []
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`order`.arrival_time>="%s"'%_start_date)
