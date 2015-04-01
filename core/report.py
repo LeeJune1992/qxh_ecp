@@ -2588,3 +2588,127 @@ def fuwu_report2():
         _conditions.append('`report_fuwu2`.date="%s"'%yesterday)
     rows = Fuwu2.query.filter(*_conditions)
     return render_template('report/fuwu_report2.html',rows=rows)
+
+
+@report.route('/dlb')
+@admin_required
+def dlb_report():
+    return render_template('report/dlb_report.html')
+
+@report.route('/dlb/zt')
+@admin_required
+def dlb_zt():
+    _conditions = []
+    _op_sql = 'SELECT id,nickname FROM `operator` WHERE role_id=101'
+    _ops = db.session.execute(_op_sql)    
+    op_id = request.args.get('op',0)
+    if op_id:
+        _conditions.append('`assign_operator_id`=%d'%int(op_id))
+
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('dlb_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('dlb_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('dlb_time>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_valid=2 THEN 1 ELSE 0 END) as wx,SUM(CASE WHEN dlb_new=2 THEN 1 ELSE 0 END) as old,SUM(CASE WHEN dlb_new=1 THEN 1 ELSE 0 END) as new from user where dlb_type>0 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
+    #print _sql
+    #data = User.query.filter(db.and_(*_conditions))
+    data = db.session.execute(_sql)
+
+    return render_template('report/dlb_zt.html',data=data,period=period,ops=_ops)
+
+
+@report.route('/dlb/new')
+@admin_required
+def dlb_new():
+    _conditions = []
+    _op_sql = 'SELECT id,nickname FROM `operator` WHERE role_id=101'
+    _ops = db.session.execute(_op_sql)    
+    op_id = request.args.get('op',0)
+    if op_id:
+        _conditions.append('`assign_operator_id`=%d'%int(op_id))
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('dlb_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('dlb_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('dlb_time>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_connect=1 THEN 1 ELSE 0 END) as connect,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sl,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sccj from user where dlb_type>0 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
+    #print _sql
+    #data = User.query.filter(db.and_(*_conditions))
+    data = db.session.execute(_sql)
+
+    return render_template('report/dlb_new.html',data=data,period=period,ops=_ops)
+
+
+@report.route('/dlb/jinxian')
+@admin_required
+def dlb_jinxian():
+    _conditions = []
+    _op_sql = 'SELECT id,nickname FROM `operator` WHERE role_id=101'
+    _ops = db.session.execute(_op_sql)    
+    op_id = request.args.get('op',0)
+    if op_id:
+        _conditions.append('`assign_operator_id`=%d'%int(op_id))
+
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('dlb_time>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('dlb_time<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('dlb_time>="%s 00:00:00"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _sql = '''SELECT dlb_time,
+    SUM(CASE WHEN dlb_type=2 THEN 1 ELSE 0 END) as wxtotal,
+    SUM(CASE WHEN (dlb_type=2 and dlb_valid=2) THEN 1 ELSE 0 END) as wxwx,
+    SUM(CASE WHEN (dlb_type=2 and dlb_new=2) THEN 1 ELSE 0 END) as wxold,
+    SUM(CASE WHEN (dlb_type=2 and dlb_new=1) THEN 1 ELSE 0 END) as wxnew,
+    SUM(CASE WHEN (dlb_type=2 and dlb_connect=1) THEN 1 ELSE 0 END) as wxconnect,
+    SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsl,
+    SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsccj,
+    SUM(CASE WHEN dlb_type=1 THEN 1 ELSE 0 END) as lytotal,
+    SUM(CASE WHEN (dlb_type=1 and dlb_valid=2) THEN 1 ELSE 0 END) as lywx,
+    SUM(CASE WHEN (dlb_type=1 and dlb_new=2) THEN 1 ELSE 0 END) as lyold,
+    SUM(CASE WHEN (dlb_type=1 and dlb_new=1) THEN 1 ELSE 0 END) as lynew,
+    SUM(CASE WHEN (dlb_type=1 and dlb_connect=1) THEN 1 ELSE 0 END) as lyconnect,
+    SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysl,
+    SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysccj
+     from user where dlb_type>0 and %s GROUP BY dlb_time'''%' AND '.join(_conditions)
+        #print _sql
+        #data = User.query.filter(db.and_(*_conditions))
+    
+    data = db.session.execute(_sql)
+
+    return render_template('report/dlb_jinxian.html',data=data,period=period,ops=_ops)
+
+

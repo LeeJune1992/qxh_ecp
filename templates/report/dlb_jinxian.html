@@ -1,0 +1,88 @@
+{% extends "report/dlb_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+		$('#op').select2({
+			width:'150px',
+			placeholder:'选择员工',
+			allowClear:true
+		});
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="op" name="op">
+            <option></option>
+            {% set sel_id = request.args.get('op',0)|int %}
+            {% for op_id,op_name in ops %}
+            <option value="{{ op_id }}" {% if op_id==sel_id %}selected="selected"{% endif %}>{{ op_name }}</option>
+            {% endfor %}
+        </select>
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th rowspan="2">日期</th>
+            <th colspan="9">留言</th>
+            <th colspan="9">微信</th>
+        </tr>
+        <tr>
+            <th>留言进线总数</th>
+            <th>无效数</th>
+            <th>老客户数</th>
+            <th>新客户数</th>
+            <th>接通量</th>
+            <th>接通率</th>
+            <th>送礼订单数</th>
+            <th>送礼率</th>
+            <th>首次成交订单数</th>
+            <th>微信进线总数</th>
+            <th>无效数</th>
+            <th>老客户数</th>
+            <th>新客户数</th>
+            <th>接通量</th>
+            <th>接通率</th>
+            <th>送礼订单数</th>
+            <th>送礼率</th>
+            <th>首次成交订单数</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+            <tr>
+            <td>{{ d['dlb_time'] }}</td>
+            <td>{{ d['lytotal'] }}</td>
+            <td>{{ d['lywx'] }}</td>
+            <td>{{ d['lyold'] }}</td>
+            <td>{{ d['lynew'] }}</td>
+            <td>{{ d['lyconnect'] }}</td>
+            <td>{% if not d.lyconnect %}0{% else %}{{ '%.2f'|format(d.lyconnect|int*100/d.lytotal|int) }}%{% endif %}</td>
+            <td>{{ d['lysl'] }}</td>
+            <td>{% if not d.lysl %}0{% else %}{{ '%.2f'|format(d.lysl|int*100/d.lytotal|int) }}%{% endif %}</td>
+            <td>{{ d['lysccj'] }}</td>
+            <td>{{ d['wxtotal'] }}</td>
+            <td>{{ d['wxwx'] }}</td>
+            <td>{{ d['wxold'] }}</td>
+            <td>{{ d['wxnew'] }}</td>
+            <td>{{ d['wxconnect'] }}</td>
+            <td>{% if not d.wxconnect %}0{% else %}{{ '%.2f'|format(d.wxconnect|int*100/d.wxtotal|int) }}%{% endif %}</td>
+            <td>{{ d['wxsl'] }}</td>
+            <td>{% if not d.wxsl %}0{% else %}{{ '%.2f'|format(d.wxsl|int*100/d.wxtotal|int) }}%{% endif %}</td>
+            <td>{{ d['wxsccj'] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

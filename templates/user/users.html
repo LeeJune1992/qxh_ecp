@@ -49,6 +49,13 @@
             autoclose: true,
             todayBtn: true
         });
+		{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+		$('#dlb_type').select2({
+			placeholder: '大礼包',
+			width: '125px',
+			allowClear:true
+		});
+		{% endif %}
 		{% if 'service' in show_queries %}
         $('#area').select2({
             width:'120px',
@@ -337,6 +344,16 @@
                     <option value="{{ k }}" {% if k==user_type %}selected="selected"{% endif %}>{{ v }}</option>
                 {%- endfor -%}
             </select>
+        {% endif %}
+        {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+        {% set dlb_type = request.args.get('dlb_type',0)|int %}
+        <select id="dlb_type" name="dlb_type" class="select2">
+                <option></option>
+                <option value="9" {% if 9==dlb_type %}selected="selected"{% endif %}>大礼包</option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==dlb_type %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+        </select>
         {% endif %}
         {% if 'service' in show_queries %}
         <select id="area" name="area" class="select2">

@@ -152,6 +152,25 @@
     $(function () {
         new MMMS('m1','m2','m3');
 
+		{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+		$('#dlb_type').select2({
+			placeholder: '类型',
+			width: '125px'
+		});
+		$('#dlb_valid').select2({
+			placeholder: '是否有效',
+			width: '135px'
+		});
+		$('#dlb_new').select2({
+			placeholder: '是否新客户',
+			width: '125px'
+		});
+		$('#dlb_connect').select2({
+			placeholder: '是否接通',
+			width: '135px'
+		});
+		{%endif %}
+	
 
         $('#medias select').select2({
             width:'200px'
@@ -343,7 +362,7 @@
         	values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
 			
             var perms = [];
-            $('input[type="checkbox"]:checked').each(function(){
+            $('li input[type="checkbox"]:checked').each(function(){
                 perms.push($(this).attr('id'));
             });
 			values.push({name: 'orgin', value: JSON.stringify(perms)});
@@ -660,6 +679,45 @@
     </div>
 
 
+    {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
+                <i class="icon-chevron-down"></i> 大礼包
+            </a>
+        </div>
+        <div id="collapsedlb" class="control-group collapse in">
+            <div class="controls" style="padding:40px;">
+                <label style="float:left; padding-right:15px;">类型
+                <select name="dlb_type" id="dlb_type">
+                <option></option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}">{{ v }}</option>
+                {%- endfor -%}
+                </select></label>
+                <label style="float:left; padding-right:15px;">新老客户
+                <select name="dlb_new" id="dlb_new">
+                <option></option>
+                <option value="1">新客户</option>
+                <option value="2">老客户</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否有效
+                <select name="dlb_valid" id="dlb_valid">
+                <option></option>
+                <option value="1">有效</option>
+                <option value="2">无效</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否接通
+                <select name="dlb_connect" id="dlb_connect">
+                <option></option>
+                <option value="1">接通</option>
+                <option value="2">不通</option>
+                </select></label>
+            	
+            </div>
+        </div>
+    </div>
+	{% endif %}
 
 
     <div class="accordion-group">
@@ -713,7 +771,7 @@
                 
                     <ul class="checkbox inline" style="margin-bottom: 10px; float:left;">
                         {% for endpoint,name in endpoints %}
-                        <li><input id="{{ endpoint }}" name="{{ module_id }}" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                        <li><input id="{{ endpoint }}" name="{{ module_id }}" class="orgincss" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
                         
                         {% endfor %}
                     </ul><p><input name="orgin{{module_id|lower}}" type="text" style="width:800px;" class="input" placeholder="{{ config['USER_ORGIN'][module_id] }}" /></p>

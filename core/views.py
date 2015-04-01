@@ -2197,7 +2197,15 @@ def user_conditions():
     if isable:
         _conditions.append(User.is_isable==int(isable))
 
-
+    #大礼包
+    dlb_type = request.args.get('dlb_type', 0)    
+    if dlb_type:
+        dlb_type = int(dlb_type)
+        if dlb_type==9:
+            _conditions.append(User.dlb_type > 0)
+        else:
+            _conditions.append(User.dlb_type == dlb_type)
+    
 
     #_conditions.append(User.qxhdm_user_id==0)    
     assign_operator_id = request.args.get('assign_operator_id','')
@@ -2395,7 +2403,7 @@ def manage_users():
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
     if current_user.assign_user_type == 5:
         show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
-    print pagination.items
+    #print pagination.items
     return render_template('user/users.html',
                            pagination=pagination,
                            operators=operators,
@@ -2634,23 +2642,23 @@ def add_sms(user_id):
 @login_required
 def user_dialogs(user_id):
     page = int(request.args.get('page', 1))
-    dialogs = User_Dialog.query.join(Operator,Operator.id==User_Dialog.operator_id).filter(User_Dialog.user_id==user_id).order_by(desc(User_Dialog.created))#.paginate(page, per_page=1)
+    dialogs = User_Dialog.query.join(Operator,Operator.id==User_Dialog.operator_id).filter(User_Dialog.user_id==user_id).order_by(desc(User_Dialog.created)).paginate(page, per_page=5)
     _datas = []
-#    print dir(dialogs)
-#    print dialogs.pages
-#    print dir(dialogs.iter_pages)
-#    pages='<div class="pagination pull-right">'
-#    pages+='<ul>'
-#    for page in dialogs.iter_pages():
-#        if page:
-#            if page != dialogs.page:
-#                pages+='<li><a href="?page='+str(page)+'">'+str(page)+'</a></li>'
-#            else:
-#                pages+='<li class="active"><a href="#">'+str(page)+'</a></li>'
-#        else:
-#            pages+='<li><span class="ellipsis">…</span></li>'
-#    pages+='</ul></div>'
-    for dialog in dialogs:
+    print dir(dialogs)
+    print dialogs.pages
+    print dir(dialogs.iter_pages)
+    pages='<div class="pagination pull-right">'
+    pages+='<ul>'
+    for page in dialogs.iter_pages():
+        if page:
+            if page != dialogs.page:
+                pages+='<li><a onclick="showdialog('+str(page)+')">'+str(page)+'</a></li>'
+            else:
+                pages+='<li class="active"><a href="#">'+str(page)+'</a></li>'
+        else:
+            pages+='<li><span class="ellipsis">…</span></li>'
+    pages+='</ul></div>'
+    for dialog in dialogs.items:
         _datas.append({'dialog_id':dialog.id,
                        'solution':dialog.solution,
                        'type_name':DIALOG_TYPES[dialog.type],
@@ -2658,8 +2666,8 @@ def user_dialogs(user_id):
                        'record_number':dialog.record_number,
                        'op_name':dialog.operator.nickname,
                        'created':dialog.created.strftime('%Y-%m-%d %H:%M')})
-    return jsonify(result = _datas)
-    #return jsonify(result = _datas,pages=pages,length=dialogs.total)
+    #return jsonify(result = _datas)
+    return jsonify(result = _datas,pages=pages,length=dialogs.total)
 
 
 @admin.route('/user/<int:user_id>/add_dialog',methods=['POST'])
@@ -2802,6 +2810,35 @@ def _edit_user(user):
         user.origin = origin
         user.operator_id = current_user.id
 
+        #大礼包
+        dlb_type = request.form.get('dlb_type',None)        
+        if dlb_type:
+            dlb_type = int(dlb_type)
+            user.dlb_type = dlb_type
+            dlb_valid = request.form['dlb_valid']
+            if not dlb_valid:dlb_valid = 0
+            dlb_valid = int(dlb_valid)
+            dlb_new = request.form['dlb_new']
+            if not dlb_new:dlb_new = 0
+            dlb_new = int(dlb_new)
+            dlb_connect = request.form['dlb_connect']
+            if not dlb_connect:dlb_connect = 0
+            dlb_connect = int(dlb_connect)
+            user.dlb_valid = dlb_valid
+            user.dlb_new = dlb_new
+            user.dlb_connect = dlb_connect
+            if dlb_valid==2:
+                user.dlb_new=0
+                user.dlb_connect=0
+            if dlb_new==2:
+                user.dlb_connect=0
+
+
+            if not user.dlb_time:
+                user.dlb_time = datetime.now()
+        else:
+            user.dlb_type = dlb_type
+            user.dlb_time = None
 
         db.session.commit()
         return True,{'user_id':user.user_id,'token':des.user_token(user.user_id)}
@@ -2810,6 +2847,55 @@ def _edit_user(user):
         db.session.rollback()
         current_app.logger.error('edit user failed, error: %s.' % e)
         return False,e.message
+
+@admin.route('/user/dlb/<int:user_id>', methods=['POST'])
+@admin_required
+def savedlb_user(user_id):
+    if request.method=='POST':
+        user = User.query.get_or_404(user_id)
+        #if not user.is_authorize:abort(404)
+        if request.method == 'POST':
+            try:
+                #大礼包
+                dlb_type = request.form.get('dlb_type',None)                
+                if dlb_type:
+                    dlb_type = int(dlb_type)
+                    user.dlb_type = dlb_type
+                    dlb_valid = request.form['dlb_valid']
+                    if not dlb_valid:dlb_valid = 0
+                    dlb_valid = int(dlb_valid)
+                    dlb_new = request.form['dlb_new']
+                    if not dlb_new:dlb_new = 0
+                    dlb_new = int(dlb_new)
+                    dlb_connect = request.form['dlb_connect']
+                    if not dlb_connect:dlb_connect = 0
+                    dlb_connect = int(dlb_connect)
+                    user.dlb_valid = dlb_valid
+                    user.dlb_new = dlb_new
+                    user.dlb_connect = dlb_connect
+                    if dlb_valid==2:
+                        user.dlb_new=0
+                        user.dlb_connect=0
+                    if dlb_new==2:
+                        user.dlb_connect=0
+
+                    if not user.dlb_time:
+                        user.dlb_time = datetime.now()
+                else:
+                    user.dlb_type = dlb_type
+                    user.dlb_time = None
+                db.session.add(user)
+                db.session.commit()
+                return jsonify(result=True)
+                #return True,{'user_id':user.user_id,'token':des.user_token(user.user_id)}
+            except Exception,e:
+                printException()
+                db.session.rollback()
+                current_app.logger.error('dlb user failed, error: %s.' % e)
+                return jsonify(result=False,error=e.message)
+                #return False,e.message
+
+    abort(404)
 
 
 @admin.route('/user/edit/<int:user_id>', methods=['POST'])
@@ -2960,6 +3046,32 @@ def _add_user():
         user.origin = origin
         user.operator_id = current_user.id
         
+        #大礼包
+        dlb_type = request.form.get('dlb_type',None)
+        if dlb_type:
+            dlb_type = int(dlb_type)
+            user.dlb_type = dlb_type
+            dlb_valid = request.form['dlb_valid']
+            if not dlb_valid:dlb_valid = 0
+            dlb_valid = int(dlb_valid)
+            dlb_new = request.form['dlb_new']
+            if not dlb_new:dlb_new = 0
+            dlb_new = int(dlb_new)
+            dlb_connect = request.form['dlb_connect']
+            if not dlb_connect:dlb_connect = 0
+            dlb_connect = int(dlb_connect)
+            user.dlb_valid = dlb_valid
+            user.dlb_new = dlb_new
+            user.dlb_connect = dlb_connect
+            if dlb_valid==2:
+                user.dlb_new=0
+                user.dlb_connect=0
+            if dlb_new==2:
+                user.dlb_connect=0
+
+
+            user.dlb_time = datetime.now()
+    
         db.session.add(user)
         db.session.flush()
         user.assign_op(current_user,current_user.id)

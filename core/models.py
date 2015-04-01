@@ -822,7 +822,7 @@ class User(db.Model):
     #habits_customs = Column(db.String(500))#生活习惯
     
     addresses = db.relationship('Address', backref='user', lazy='dynamic')
-    dialogs = db.relationship('User_Dialog', backref='user', lazy='dynamic')
+    #dialogs = db.relationship('User_Dialog', backref='user', lazy='dynamic')
     
     #qxhkhdjs = db.relationship('QXHKHDJ', backref='user', lazy='dynamic')
 
@@ -860,6 +860,12 @@ class User(db.Model):
     history = Column(db.String(300))#身体状态病症
     
     communication = Column(db.String(30))#沟通情况
+    
+    dlb_time = Column(db.Date)#大礼包时间
+    dlb_type = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包类型1留言，2微信
+    dlb_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否有效1有效，2无效
+    dlb_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否新客户1新，2老
+    dlb_connect = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否接通1接通，2不通
     @property
     def mobile_phones(self):
         _phones = []

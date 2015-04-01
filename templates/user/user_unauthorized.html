@@ -91,11 +91,113 @@
 {% block js -%}
 {{ super() }}
 <script type="text/javascript">
+
+    /*   提交表单   */
+    function save() {
+        var add_btn = $('.btn-primary');
+
+
+        add_btn.attr('disabled', true);
+        //validate form
+        var values = [];
+        //values.push({name: 'entries', value: JSON.stringify(Entry.data())});
+        values.push({name: 'dlb_type', value: $('#dlb_type').val()});
+        values.push({name: 'dlb_valid', value: $('#dlb_valid').val()});
+        values.push({name: 'dlb_new', value: $('#dlb_new').val()});
+        values.push({name: 'dlb_connect', value: $('#dlb_connect').val()});
+		
+		var perms = [];
+            $('li input[type="checkbox"]:checked').each(function(){
+			perms.push($(this).attr('id'));
+		});
+		values.push({name: 'orgin', value: JSON.stringify(perms)});
+			
+        var req = $.ajax({
+            url: "{{ url_for('admin.savedlb_user',user_id=user.user_id) }}",
+            dataType: 'json',
+            type: 'POST',
+            data: $.param(values)});
+
+        req.done(function (data) {
+            if (data.result == true) {
+                alert('保存资料成功');
+				add_btn.attr('disabled', true);
+				//show_success('保存资料成功！');
+                //update_order_link();
+            }
+            else {
+                alert('保存资料失败');
+				add_btn.attr('disabled', true);
+                //show_err(data.error);
+            }
+        });
+        req.fail(function (request, status, err) {
+			alert('发生未知错误，请与管理员联系!');
+			add_btn.attr('disabled', true);
+            //show_err('发生未知错误，请与管理员联系!');
+        });
+        req.always(function () {
+            add_btn.attr('disabled', false);
+        });
+        return false;
+    }
+function showdialog(page){
+	
+	var req = $.ajax({
+		url: '{{ url_for('admin.user_dialogs',user_id=user.user_id) }}?page='+page,
+		dataType: "json",
+		cache: false,
+		type: 'GET'
+	});
+	req.done(function (data) {
+		var dialogs = data.result;
+		if (!$.isEmptyObject(dialogs)) {
+			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+			for (var i in dialogs) {
+				dialog = dialogs[i];
+				html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
+			}
+			html += '</tbody></table>';
+			html += data.pages;
+			$('#dialog_history').html(html);
+			$('#dialog_nums').html(dialogs.length);
+		}
+		else {
+			$('#dialog_history').html('无沟通记录');
+			$('#dialog_nums').html(0);
+		}
+	});
+}
 $(function () {
+
+	
     $('#dialog_type').select2({
         width: '220px'
     });
 
+	{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    $('#dlb_type').select2({
+        placeholder: '类型',
+        width: '125px'
+    });
+    $('#dlb_valid').select2({
+        placeholder: '是否有效',
+        width: '135px'
+    });
+    $('#dlb_new').select2({
+        placeholder: '是否新客户',
+        width: '125px'
+    });
+    $('#dlb_connect').select2({
+        placeholder: '是否接通',
+        width: '135px'
+    });
+	$('#dlb_type').val('{{user.dlb_type}}').change();
+	$('#dlb_valid').val('{{user.dlb_valid}}').change();
+	$('#dlb_new').val('{{user.dlb_new}}').change();
+	$('#dlb_connect').val('{{user.dlb_connect}}').change();
+	{%endif %}
+	
     $('input.say').keypress(function (e) {
         if (e.which == 13) {
             var new_txt = $(this).val();
@@ -146,6 +248,7 @@ $(function () {
                         html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
                     }
                     html += '</tbody></table>';
+					html += data.pages;
                     $('#dialog_history').html(html);
                     $('#dialog_nums').html(dialogs.length);
                 }
@@ -180,7 +283,7 @@ $(function () {
 
             req.done(function (data) {
                 if (data.result == true) {
-                    Dialog.update();
+                    showdialog(1);
                     $('#dialog_solution').val(null);
                     $('#dialog_content').val(null);
                 }
@@ -195,7 +298,7 @@ $(function () {
         }
     };
 
-    Dialog.update();
+    showdialog(1);
 
     $('a#add_dialog').click(Dialog.add);
 
@@ -361,6 +464,46 @@ $(function () {
                 </div>
             </div>
         </div>
+    {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
+                <i class="icon-chevron-down"></i> 大礼包
+            </a>
+        </div>
+        <div id="collapsedlb" class="control-group collapse in">
+            <div class="controls" style="padding:40px;">
+                <label style="float:left; padding-right:15px;">类型
+                <select name="dlb_type" id="dlb_type">
+                <option></option>
+                <option value="0">无</option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}">{{ v }}</option>
+                {%- endfor -%}
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否有效
+                <select name="dlb_valid" id="dlb_valid">
+                <option></option>
+                <option value="1">有效</option>
+                <option value="2">无效</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">新老客户
+                <select name="dlb_new" id="dlb_new">
+                <option></option>
+                <option value="1">新客户</option>
+                <option value="2">老客户</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否接通
+                <select name="dlb_connect" id="dlb_connect">
+                <option></option>
+                <option value="1">接通</option>
+                <option value="2">不通</option>
+                </select></label>
+            	<button type="submit" class="btn btn-primary" onclick="return save();">保存客户</button>
+            </div>
+        </div>
+    </div>
+	{% endif %}
 
 
         <div class="accordion-group">

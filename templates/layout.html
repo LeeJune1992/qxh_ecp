@@ -102,6 +102,9 @@
                             {% if current_user.action('pharmacy_report') %}
                                 <li><a href="{{ url_for('report.pharmacy_report') }}"><i class="icon-briefcase"></i> 药房报表</a></li>
                             {% endif %}
+                            {% if current_user.action('dlb_report') %}
+                                <li><a href="{{ url_for('report.dlb_report') }}"><i class="icon-briefcase"></i> 大礼包报表</a></li>
+                            {% endif %}
                         </ul>
                         </li>
                     {% endif %}
@@ -238,7 +241,7 @@ $(function(){
     };
 
     reminder_func();
-    setInterval(reminder_func,30000);
+    //setInterval(reminder_func,30000);
 });
 </script>
 {% endif %}
