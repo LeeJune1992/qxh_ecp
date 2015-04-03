@@ -2402,7 +2402,9 @@ def manage_users():
         pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
     if current_user.assign_user_type == 5:
-        show_queries=['service','admin','user_origin','op','user_type','username','phone','show_abandon']
+        show_queries.append('service')
+    if current_user.is_admin or current_user.team in ('A','A1','A2','B','B1','B2'):
+        show_queries.append('dlb')
     #print pagination.items
     return render_template('user/users.html',
                            pagination=pagination,

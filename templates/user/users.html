@@ -49,7 +49,7 @@
             autoclose: true,
             todayBtn: true
         });
-		{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+		{% if 'dlb' in show_queries %}
 		$('#dlb_type').select2({
 			placeholder: '大礼包',
 			width: '125px',
