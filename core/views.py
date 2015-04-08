@@ -2403,8 +2403,9 @@ def manage_users():
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
     if current_user.assign_user_type == 5:
         show_queries.append('service')
-    if current_user.is_admin or current_user.team in ('A','A1','A2','B','B1','B2'):
+    if current_user.is_admin or current_user.role_id in DLB_ROLES:
         show_queries.append('dlb')
+    print show_queries
     #print pagination.items
     return render_template('user/users.html',
                            pagination=pagination,

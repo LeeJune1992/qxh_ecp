@@ -459,7 +459,28 @@ $(function () {
                                 {% endfor %}
                             </td>
                         </tr>
-
+						{% if current_user.is_admin or current_user.role_id in config['DLB_ROLESS']  %}
+                        <tr>
+                            <td class="title">大礼包</td>
+                            <td colspan="3">
+                                {% if user.dlb_type %}
+                                	{{ config['DLB_TYPES'][user.dlb_type] }}
+                                    {% if user.dlb_valid==1 %}
+                                    有效
+                                    {%elif user.dlb_valid==2 %}无效
+                                    {%endif%}
+                                    {% if user.dlb_new==1 %}
+                                    新客户
+                                    {%elif user.dlb_new==2 %}老客户
+                                    {%endif%}
+                                    {% if user.dlb_connect==1 %}
+                                    接通
+                                    {%elif user.dlb_connect==2 %}不通
+                                    {%endif%}
+                                {%endif%}
+                            </td>
+                        </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>

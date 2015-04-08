@@ -345,7 +345,7 @@
                 {%- endfor -%}
             </select>
         {% endif %}
-        {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+        {% if 'dlb' in show_queries %}
         {% set dlb_type = request.args.get('dlb_type',0)|int %}
         <select id="dlb_type" name="dlb_type" class="select2">
                 <option></option>
