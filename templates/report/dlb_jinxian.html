@@ -79,8 +79,29 @@
             <td>{{ d['wxsl'] }}</td>
             <td>{% if not d.wxsl %}0{% else %}{{ '%.2f'|format(d.wxsl|int*100/d.wxtotal|int) }}%{% endif %}</td>
             <td>{{ d['wxsccj'] }}</td>
-            </tr>
+            </tr><font style="display:none">{{ lytotal.append(d['lytotal']|int) }}{{ lywx.append(d['lywx']|int) }}{{ lyold.append(d['lyold']|int) }}{{ lynew.append(d['lynew']|int) }}{{ lyconnect.append(d['lyconnect']|int) }}{{ lysl.append(d['lysl']|int) }}{{ lysccj.append(d['lysccj']|int) }}{{ wxtotal.append(d['wxtotal']|int) }}{{ wxwx.append(d['wxwx']|int) }}{{ wxold.append(d['wxold']|int) }}{{ wxnew.append(d['wxnew']|int) }}{{ wxconnect.append(d['wxconnect']|int) }}{{ wxsl.append(d['wxsl']|int) }}{{ wxsccj.append(d['wxsccj']|int) }}</font>
         {% endfor %}
+            <tr>
+            <td>合计</td>
+            <td>{{ lytotal|sum }}</td>
+            <td>{{ lywx|sum }}</td>
+            <td>{{ lyold|sum }}</td>
+            <td>{{ lynew|sum }}</td>
+            <td>{{ lyconnect|sum }}</td>
+            <td>{% if not lyconnect|sum %}0{% else %}{{ '%.2f'|format(lyconnect|sum|int*100/lytotal|sum|int) }}%{% endif %}</td>
+            <td>{{ lysl|sum }}</td>
+            <td>{% if not lysl|sum %}0{% else %}{{ '%.2f'|format(lysl|sum|int*100/lytotal|sum|int) }}%{% endif %}</td>
+            <td>{{ lysccj|sum }}</td>
+            <td>{{ wxtotal|sum }}</td>
+            <td>{{ wxwx|sum }}</td>
+            <td>{{ wxold|sum }}</td>
+            <td>{{ wxnew|sum }}</td>
+            <td>{{ wxconnect|sum }}</td>
+            <td>{% if not wxconnect|sum %}0{% else %}{{ '%.2f'|format(wxconnect|sum|int*100/wxtotal|sum|int) }}%{% endif %}</td>
+            <td>{{ wxsl|sum }}</td>
+            <td>{% if not wxsl|sum %}0{% else %}{{ '%.2f'|format(wxsl|sum|int*100/wxtotal|sum|int) }}%{% endif %}</td>
+            <td>{{ wxsccj|sum }}</td>
+            </tr>
         </tbody>
     </table>
     <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>

@@ -53,8 +53,18 @@
             <td>{% if not d.sl %}0{% else %}{{ '%.2f'|format(d.sl|int*100/d.total|int) }}%{% endif %}</td>
             <td>{{ d['sccj'] }}</td>
             <td>{% if not d.sccj %}0{% else %}{{ '%.2f'|format(d.sccj|int*100/d.total|int) }}%{% endif %}</td>
-            </tr>
+            </tr><font style="display:none">{{ total.append(d['total']|int) }}{{ jttotal.append(d['connect']|int) }}{{ sltotal.append(d['sl']|int) }}{{ sccjtotal.append(d['sccj']|int) }}</font>
         {% endfor %}
+            <tr>
+            <td>合计</td>
+            <td>{{ total|sum }}</td>
+            <td>{{ jttotal|sum }}</td>
+            <td>{% if not jttotal|sum %}0{% else %}{{ '%.2f'|format(jttotal|sum|int*100/total|sum|int) }}%{% endif %}</td>
+            <td>{{ sltotal|sum }}</td>
+            <td>{% if not sltotal|sum %}0{% else %}{{ '%.2f'|format(sltotal|sum|int*100/total|sum|int) }}%{% endif %}</td>
+            <td>{{ sccjtotal|sum }}</td>
+            <td>{% if not sccjtotal|sum %}0{% else %}{{ '%.2f'|format(sccjtotal|sum|int*100/total|sum|int) }}%{% endif %}</td>
+            </tr>
         </tbody>
     </table>
     <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>

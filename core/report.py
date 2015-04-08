@@ -611,7 +611,7 @@ def sale_report_by_item():
     JOIN (SELECT `order_id` FROM `order` WHERE %s) AS `orders` ON `order_item`.order_id=`orders`.order_id
     LEFT JOIN (SELECT `item`.`category_id`,`sku`.id AS `sku_id` FROM `item` JOIN `sku` ON `item`.id=`sku`.item_id) AS `sku_item` ON `sku_item`.sku_id=`order_item`.sku_id
     GROUP BY `sku_item`.`category_id`,`order_item`.`sku_id`,`order_item`.name'''%' AND '.join(_conditions)
-
+    print _sql
     rows = db.session.execute(_sql)
     detail = defaultdict(list)
     for category_id,sku_id,item_name,quantity,fee in rows:
@@ -2625,8 +2625,13 @@ def dlb_zt():
     #print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
+    total = []
+    wxtotal = []
+    oldtotal = []
+    newtotal = []
 
-    return render_template('report/dlb_zt.html',data=data,period=period,ops=_ops)
+    return render_template('report/dlb_zt.html',data=data,period=period,ops=_ops
+,total=total,wxtotal=wxtotal,oldtotal=oldtotal,newtotal=newtotal)
 
 
 @report.route('/dlb/new')
@@ -2658,8 +2663,14 @@ def dlb_new():
     #print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
+    total = []
+    jttotal = []
+    sltotal = []
+    sccjtotal = []
 
-    return render_template('report/dlb_new.html',data=data,period=period,ops=_ops)
+
+    return render_template('report/dlb_new.html',data=data,period=period,ops=_ops
+,total=total,jttotal=jttotal,sltotal=sltotal,sccjtotal=sccjtotal)
 
 
 @report.route('/dlb/jinxian')
@@ -2709,6 +2720,23 @@ def dlb_jinxian():
     
     data = db.session.execute(_sql)
 
-    return render_template('report/dlb_jinxian.html',data=data,period=period,ops=_ops)
+    lytotal = []
+    lywx = []
+    lyold = []
+    lynew = []
+    lyconnect = []
+    lysl = []
+    lysccj = []
+    wxtotal = []
+    wxwx = []
+    wxold = []
+    wxnew = []
+    wxconnect = []
+    wxsl = []
+    wxsccj = []
+
+    return render_template('report/dlb_jinxian.html',data=data,period=period,ops=_ops
+,lytotal=lytotal,lywx=lywx,lyold=lyold,lynew=lynew,lyconnect=lyconnect,lysl=lysl,lysccj=lysccj
+,wxtotal=wxtotal,wxwx=wxwx,wxold=wxold,wxnew=wxnew,wxconnect=wxconnect,wxsl=wxsl,wxsccj=wxsccj)
 
 
