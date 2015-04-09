@@ -494,14 +494,13 @@
             <th>分配时间</th>
             <th>剩余时长</th>
             <th>联系次数</th>
-            <th>省市</th>
             <th>最后联系时间</th>
 
         </tr>
         </thead>
         <tbody>
         {% for user in pagination.items %}
-            {% set link_url = url_for('admin.user',user_id=user.user_id,token=user.user_token) %}
+            {% set link_url = url_for('admin.user',user_id=user.user_id,token=user.user_id|user_token) %}
             <tr data-link-url="{{ link_url }}">
             {% if allowed_admin %}
                 <td style="text-align: center" unallowed-click="false"><input type="checkbox" id="sel_ids" name="sel_ids" value="{{ user.user_id }}"> </td>
@@ -520,10 +519,20 @@
                     {% endif %}
                 </td>
                 {% if show_label %}
-                <td>{% if user.label %}<code>{{ user.label }}</code>{% endif %}</td>
+                <td><code>{{ user.user_type|user_label(user.order_num,user.label_id) }}</code></td>
                 {% endif %}
-                <td>{{ user.phones|join('<br/>')|safe }}</td>
-                <td>{{ user.tels|join('<br/>')|safe }}</td>
+                <td>{%if current_user and current_user.action('view_user_phone')%}
+                {{user.phone}}{% if user.phone2 %}<br />{{user.phone2}}{% endif %}
+                {% else %}
+                {{user.phone|hide_phone}}{% if user.phone2 %}<br />{{user.phone2|hide_phone}}{% endif %}
+                {% endif %}
+                </td>
+                <td>{%if current_user and current_user.action('view_user_phone')%}
+                {{user.tel}}{% if user.tel2 %}<br />{{user.tel2}}{% endif %}
+                {% else %}
+                {{user.tel|hide_phone}}{% if user.tel2 %}<br />{{user.tel2|hide_phone}}{% endif %}
+                {% endif %}
+                </td>
                 <td>{{ user.intent_level }}</td>
                 <td>{{ user.join_time |format_date}}</td>
                 <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
@@ -539,7 +548,7 @@
                 {% endif %}
                 
             	{% if 'service' in show_queries %}
-                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code></td>
+                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.user_type|type_name }}</code></td>
                 <td>{{ user.area }}</td>
                 <td>{% if user.is_valid==1 %}
                 <code style="color:darkcyan">有效</code>
@@ -552,17 +561,12 @@
                 <td>{% if user.is_isable==1 %}<code style="color:darkcyan">是</code>{% else %}否{% endif %}</td>
                 {% endif %}
                 <td>
-                    {{ user.assign_operator.nickname if user.assign_operator_id else '' }}
+                    {{ user.nickname if user.assign_operator_id else '' }}
                 </td>
                 <td>{{ user.assign_time }}</td>
-                <td>{{ user.assign_remain_info }}</td>
+                <td>{{ user.assign_retain_time|assign_remain_info(user.assign_operator_id,user.order_num,user.assign_time) }}</td>
 
                 <td>{{ user.dialog_times }}</td>
-                <td>
-                {% for a in user.addresses %}
-                {{ a.province }}-{{ a.city }}
-                {% endfor %}
-                </td>
                 <td>
                     {{ user.last_dialog_time|default('',true) }}
                     {% if user.expect_time %}<br/>

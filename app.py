@@ -5,12 +5,16 @@ from wtforms import HiddenField
 from extensions import db,login_manager#,principal
 from core.views import admin
 from core.report import report
+from core.joinexport import joinexport
 from core.models import Operator
 from flask.ext.login import current_user
 
 from analytics.views import analytics
 #from flask.ext.principal import Principal,Identity,AnonymousIdentity,ActionNeed,RoleNeed,PermissionDenied,Permission,identity_loaded
 
+from utils.tools import delta_s,converse_s_2_dhms_zh,des
+from settings.constants import *
+from datetime import datetime,timedelta
 def create_app():
     _app = Flask(__name__)
     _app.config.from_pyfile('global_settings.py')
@@ -29,6 +33,7 @@ def create_app():
     configure_error_handlers(_app)
     _app.register_blueprint(admin)
     _app.register_blueprint(report)
+    _app.register_blueprint(joinexport)
     _app.register_blueprint(analytics)
     LOGIN_MESSAGE = u'请先登录系统！'
     return _app
@@ -88,6 +93,40 @@ def configure_jinja2(app):
 
     def compare_bitwise(a,b):
         return a&b
+    
+    #add by john 20150409
+    @app.template_filter()
+    def user_token(user_id):
+        return des.user_token(user_id)
+    @app.template_filter()
+    def user_label(user_type,order_num,label_id):
+        if user_type == 1:
+            if order_num>0:return u'已下单'
+            return USER_LABEL_IDS.get(label_id,u'')
+        return u''
+    @app.template_filter()
+    def type_name(user_type):
+        if user_type==1:return u'新客户'
+        if user_type==2:return u'会员客户'
+        if user_type==4:return u'黑名单'
+        if user_type==5:return u'服务客户'
+    @app.template_filter()
+    def assign_remain_info(assign_retain_time,assign_operator_id,order_num,assign_time):
+        if assign_operator_id and assign_retain_time>0 and order_num==0:
+            expired = assign_time+timedelta(hours=assign_retain_time)
+            now = datetime.now()
+            return converse_s_2_dhms_zh(delta_s(expired,now)) if expired>now else u'已到期'
+        return '-'
+
+
+
+
+
+
+
+
+
+
 
     app.jinja_env.globals.update(compare_bitwise=compare_bitwise)
 

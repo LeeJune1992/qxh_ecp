@@ -2291,7 +2291,13 @@ def my_users():
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
     if not is_order:order_by = desc(User.expect_time)
-    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+    pagination = User.query.with_entities(User.name, User.phone, User.user_id
+        , User.operator_id, User.assign_operator_id,Operator.nickname,User.is_abandon,User.remark
+        ,User.label_id,User.user_type,User.order_num,User.phone,User.phone2,User.tel,User.tel2
+        ,User.intent_level,User.join_time,User.origin,User.user_label,User.area,User.is_valid
+        ,User.is_isable,User.assign_time,User.assign_retain_time,User.dialog_times,User.last_dialog_time
+        ,User.expect_time
+        ).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     return render_template('user/users.html',
                            pagination=pagination,
                            list_type=list_type,
@@ -2318,7 +2324,13 @@ def public_users(user_type):
     page = int(request.args.get('page', 1))
     is_order,order_by = user_order_by()
     if not is_order:order_by = asc(User.is_assigned)
-    pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+    pagination = User.query.with_entities(User.name, User.phone, User.user_id
+        , User.operator_id, User.assign_operator_id,Operator.nickname,User.is_abandon,User.remark
+        ,User.label_id,User.user_type,User.order_num,User.phone,User.phone2,User.tel,User.tel2
+        ,User.intent_level,User.join_time,User.origin,User.user_label,User.area,User.is_valid
+        ,User.is_isable,User.assign_time,User.assign_retain_time,User.dialog_times,User.last_dialog_time
+        ,User.expect_time
+        ).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','username','phone','show_assign','user_origin','show_abandon']
     if user_type==5:
         show_queries=['service','admin','username','phone','show_assign','user_origin','show_abandon']
@@ -2396,16 +2408,28 @@ def manage_users():
     is_order,order_by = user_order_by()
     if not is_order:order_by = desc(User.join_time)
     if len(_conditions) > 0:
-        #pagination = User.query.with_entities(User.name, User.phone).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
-        pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+        pagination = User.query.with_entities(User.name, User.phone, User.user_id
+        , User.operator_id, User.assign_operator_id,Operator.nickname,User.is_abandon,User.remark
+        ,User.label_id,User.user_type,User.order_num,User.phone,User.phone2,User.tel,User.tel2
+        ,User.intent_level,User.join_time,User.origin,User.user_label,User.area,User.is_valid
+        ,User.is_isable,User.assign_time,User.assign_retain_time,User.dialog_times,User.last_dialog_time
+        ,User.expect_time
+        ).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+        #pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
     else:
-        pagination = User.query.outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
+        pagination = User.query.with_entities(User.name, User.phone, User.user_id
+        , User.operator_id, User.assign_operator_id,Operator.nickname,User.is_abandon,User.remark
+        ,User.label_id,User.user_type,User.order_num,User.phone,User.phone2,User.tel,User.tel2
+        ,User.intent_level,User.join_time,User.origin,User.user_label,User.area,User.is_valid
+        ,User.is_isable,User.assign_time,User.assign_retain_time,User.dialog_times,User.last_dialog_time
+        ,User.expect_time
+        ).outerjoin(Operator,User.assign_operator_id==Operator.id).order_by(order_by).paginate(page, per_page=user_per_page())
     show_queries=['admin','user_origin','op','user_type','username','phone','show_abandon']
     if current_user.assign_user_type == 5:
         show_queries.append('service')
     if current_user.is_admin or current_user.role_id in DLB_ROLES:
         show_queries.append('dlb')
-    print show_queries
+    #print show_queries
     #print pagination.items
     return render_template('user/users.html',
                            pagination=pagination,
