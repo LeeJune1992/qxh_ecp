@@ -318,13 +318,13 @@
     </form>
     {% if allowed_admin %}
         <div class="alert" id="admin-panel" style="display:none;margin-bottom: -3px;min-height: 30px">
-            {% if current_user.action('giveup_user_ok') or current_user.action('giveup_user_no') %}
+            {% if current_user.action('servicetype_user_ok') or current_user.action('servicetype_user_no') %}
             <input type="text" class="input-small" id="giveupuser_remark" placeholder="备注" }}>
             {% endif %}
-            {% if current_user.action('giveup_user_ok') %}
+            {% if current_user.action('servicetype_user_ok') %}
             <button class="btn btn-primary" id="giveupuserok">审核通过</button>
             {% endif %}
-            {% if current_user.action('giveup_user_no') %}
+            {% if current_user.action('servicetype_user_no') %}
             <button class="btn btn-primary" id="giveupuserno">审核不通过</button>
             {% endif %}
         </div>
