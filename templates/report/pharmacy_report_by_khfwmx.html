@@ -3,6 +3,11 @@
 {{ super() }}
 <script type="text/javascript">
     $(function(){
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'员工',
+			allowClear:true
+        });
         $('#area').select2({
             width:'120px',
             placeholder:'区域',
@@ -28,6 +33,14 @@
 {% endblock %}
 {% block report %}
     <form action="" method="get" class="form-search inline">
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select>
         {% set area = request.args.get('area') %}
         <select name="area" id="area">
         <option></option>
@@ -58,6 +71,8 @@
         </select>
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
+        <input id="start_fpdate" name="start_fpdate" class="timepicker" type="text" value="{{ request.args['start_fpdate'] }}" placeholder="分配开始时间" />
+        <input id="end_fpdate" name="end_fpdate" class="timepicker" type="text" value="{{ request.args['end_fpdate'] }}" placeholder="分配结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
                 class="icon-search icon-white"></i>
             查询
@@ -78,6 +93,8 @@
             <th>沟通情况</th>
             <th>未领取原因</th>
             <th>停用原因</th>
+            <th>员工</th>
+            <th>登记时间</th>
         </tr>
         </thead>
         <tbody>
@@ -93,6 +110,8 @@
             <td>{{ d.communication }}</td>
             <td>{% if d.receive!=1 %}{{ d.reason }}{%endif%}</td>
             <td>{{ d.isable_reason }}</td>
+            <td>{{ d.nickname }}</td>
+            <td>{{ d.date }}</td>
             </tr><font style="display:none">{{ total.append(1) }}</font>
         {% endfor %}
         </tbody>

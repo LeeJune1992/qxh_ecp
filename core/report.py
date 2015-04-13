@@ -2288,29 +2288,43 @@ def pharmacy_report_by_khfwmx():
     if isable_reason:
         _conditions.append('`u`.isable_reason="%s"'%isable_reason)
 
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`u`.assign_operator_id="%s"'%assign_operator_id)
+
 
 
     _start_date = request.args.get('start_date','')
     if _start_date:
-        _conditions.append('`u`.assign_time>="%s"'%_start_date)
+        _conditions.append('kh.date>="%s"'%_start_date)
 
     _end_date = request.args.get('end_date','')
     if _end_date:
-        _conditions.append('`u`.assign_time<="%s"'%_end_date)
+        _conditions.append('kh.date<="%s"'%_end_date)
+    
+    _start_fpdate = request.args.get('start_fpdate','')
+    if _start_fpdate:
+        _conditions.append('`u`.assign_time>="%s"'%_start_fpdate)
+
+    _end_fpdate = request.args.get('end_fpdate','')
+    if _end_fpdate:
+        _conditions.append('`u`.assign_time<="%s"'%_end_fpdate)
     _today = datetime.now().strftime('%Y-%m-%d')
-    if not _start_date and not _end_date:        
+    if not _start_fpdate and not _end_fpdate:        
         _conditions.append('`u`.assign_time>="%s"'%_today)
         period = _today
     else:
-        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+        period = '%s ~ %s'%(_start_fpdate if _start_fpdate else u'开始',_end_fpdate if _end_fpdate else u'现在')
 
-    _sql = 'select u.name,u.phone,u.assign_time,u.area,(select count(*) from qxhdm_orderyf where user_id=u.user_id) fgypcount,u.communication,u.isable_reason,kh.id,kh.reason,kh.receive from user u left join qxhkjdj kh on u.user_id=kh.user_id where %s order by assign_time'%' AND '.join(_conditions)
+
+    _sql = 'select u.name,u.phone,u.assign_time,u.area,(select count(*) from qxhdm_orderyf where user_id=u.user_id) fgypcount,u.communication,u.isable_reason,kh.id,kh.reason,kh.receive,o.nickname,kh.date from user u left join operator o on o.id=u.assign_operator_id left join qxhkjdj kh on u.user_id=kh.user_id where %s order by assign_time'%' AND '.join(_conditions)
     print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
     total = []
     #print data.length()
-    return render_template('report/pharmacy_report_by_khfwmx.html',data=data,period=period,total=total)
+    operators = Operator.query.filter(Operator.team=='C3')
+    return render_template('report/pharmacy_report_by_khfwmx.html',operators=operators,data=data,period=period,total=total)
 
 #复购统计
 @report.route('/yy/fgtj')
