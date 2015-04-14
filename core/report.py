@@ -2673,7 +2673,7 @@ def dlb_new():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
     
-    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_connect=1 THEN 1 ELSE 0 END) as connect,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sl,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sccj from user where dlb_type>0 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
+    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_connect=1 THEN 1 ELSE 0 END) as connect,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sl,SUM(CASE WHEN (SELECT order_id from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sccj from user where dlb_type>0 and dlb_new=1 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
     #print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
