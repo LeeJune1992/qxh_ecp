@@ -225,6 +225,7 @@ ENDPOINTS = [
     ('hasarrived',u'一键物流对帐','A'),
     ('caiwuqr',u'一键财务对帐','A'),
     ('getuserinfobyeid',u'快递单查归属','A'),
+    ('clear_order_items',u'订单缓存','A'),
 
     ('my_users',u'我的客户库','B'),
     ('public_new_users',u'新客户公共库','B'),
@@ -566,7 +567,7 @@ USER_ASSIGN_HOURS = {
 
 ASSIGN_DEFAULT_HOURS = 72
 
-USER_INTENT_LEVELS = ['A','B','C','D','E','F','G','H']
+USER_INTENT_LEVELS = ['A','B','C','D','E','F','G','H','I']
 
 USER_STATUS = {
     0:u'全部',
@@ -924,6 +925,7 @@ PRODUCT_INTENTION = {
     6:u'心力健其它',
     7:u'新会员',
     8:u'大礼包',
+    8:u'PPTV',
     4:u'其它'
 }
 #心力健媒体
