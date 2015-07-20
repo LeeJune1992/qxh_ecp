@@ -560,6 +560,24 @@ $(function () {
 
             </div>
         </div>
+        
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#integrationModule" onclick="show('integration');">
+                    <i class="icon-chevron-down"></i> 用户积分 (<span style="color:red">{{user.integration}}</span>)
+                </a>
+            </div>
+            <div id="integrationModule" class="accordion-body collapse">
+                <div class="accordion-inner">
+                    <div class="row-fluid">
+                        <div class="span10" id="integration_history">
+                            <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <div class="accordion-group">
             <div class="accordion-heading">
@@ -640,6 +658,23 @@ $(function () {
 	
 			</div>
 		</div>
+	
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#scratchdjModule" onclick="show('scratchdj');">
+                <i class="icon-chevron-down"></i> 刮刮卡登记　(<span id="scratchdj_nums" style="color:red">{{scratchdjcount}}</span>)
+            </a>
+        </div>
+        <div id="scratchdjModule" class="accordion-body collapse">
+            <div class="accordion-inner">
+                <div id="scratchdj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                           border="0"/>正在费力加载中...
+                </div>
+            </div>
+
+        </div>
+    </div>
+        
     </div>
 {%- endblock -%}
 
@@ -727,6 +762,30 @@ $(function () {
         });
     };
     //show_shipping_address();
+
+	var show_integration = function () {
+		var req = $.ajax({
+			url: '{{ url_for('admin.user_integration',user_id=user.user_id) }}',
+			dataType: "json",
+			cache: false,
+			type: 'GET'
+		});
+		req.done(function (data) {
+			var sms_list = data.result;
+			if (!$.isEmptyObject(sms_list)) {
+				var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>积分</th><th>类型</th><th>备注</th><th>操作人</th><th>时间</th></tr></thead><tbody>';
+				for (var i in sms_list) {
+					sms = sms_list[i];
+					html += '<tr><td>' + sms.integration + '</td><td>' + sms.type + '</td><td>' + sms.mero + '</td><td>' + sms.operator + '</td><td>' + sms.created + '</td></tr>';
+				}
+				html += '</tbody></table>';
+				$('#integration_history').html(html);
+			}
+			else {
+				$('#integration_history').html('无积分记录');
+			}
+		});
+	};
 
     var show_orders = function () {
         var req = $.ajax({
@@ -850,6 +909,33 @@ $(function () {
     };
     //show_orderyf();
 
+
+var show_scratchdj = function () {
+	var req = $.ajax({
+		url: '{{ url_for('admin.user_show_scratchdj',user_id=user.user_id) }}',
+		dataType: "json",
+		cache: false,
+		type: 'GET'
+	});
+	req.done(function (data) {
+		var sms_list = data.result;
+		if (!$.isEmptyObject(sms_list)) {
+			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>刮刮卡编码</th><th>登记时间</th><th>操作</th></tr></thead><tbody>';
+			for (var i in sms_list) {
+				sms = sms_list[i];
+				html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.date + '</td>';
+				html += "<td>&nbsp;<a href='#' onclick='scratchdjqx(" + sms.id + ");return false;'>删除</a></td></tr>";
+			}
+			html += '</tbody></table>';
+			$('#scratchdj_list').html(html);
+			$('#scratchdj_nums').html(sms_list.length);
+		}
+		else {
+			$('#scratchdj_list').html('无刮刮卡登记');
+			$('#scratchdj_nums').html(0);
+		}
+	});
+};
     var show_khsldj = function () {
         var req = $.ajax({
             url: '{{ url_for('admin.user_show_khsldj',user_id=user.user_id) }}',
@@ -918,6 +1004,31 @@ $(function () {
         });
     };
 
+function scratchdjqx(id){
+	bootbox.confirm('确认取消吗,确认取消后将不能更改!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.scratchdjqx') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
 function khsldel(id){
 	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
 		if (result != true) {
@@ -995,12 +1106,14 @@ function fgypdel(id){
 }
     //show_fwtjfg();
 var shdz = 0;
+var integration = 0;
 var lsgmjl = 0;
 var sms = 0;
 var voucher = 0;
 var orderyf = 0;
 var khsldj = 0;
 var fwtjfg = 0;
+var scratchdj = 0;
 //$('a#addressModule').click(show);
 function show(id) {
 //	alert(this);
@@ -1009,6 +1122,13 @@ function show(id) {
 		}else{
 			shdz = 1;
 			show_shipping_address();
+		}
+	}
+	if(id == 'integration'){
+		if(integration){
+		}else{
+			integration = 1;
+			show_integration();
 		}
 	}
 	if(id == 'lsgmjl'){
@@ -1051,6 +1171,13 @@ function show(id) {
 		}else{
 			fwtjfg = 1;
 			show_fwtjfg();
+		}
+	}
+	if(id == 'scratchdj'){
+		if(scratchdj){
+		}else{
+			scratchdj = 1;
+			show_scratchdj();
 		}
 	}
 }

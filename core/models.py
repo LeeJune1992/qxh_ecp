@@ -91,6 +91,7 @@ class Order(db.Model):
     is_xlj = Column(db.Boolean, nullable=False, default=True)#是否心力健 john
     voucher_id = Column(db.Integer)
     voucher_fee = Column(db.Float(unsigned=True), nullable=False)
+    integration = db.Column(db.Integer,default=0,nullable=False)#积分
     @property
     def store_name(self):
         if self.store_id:
@@ -142,9 +143,14 @@ class Order(db.Model):
             self.assign_operator_id = None
             self.need_assign = False
         
+
+        
         #激活数据再次订单->会员
         if self.status == 1 and to_status == 2:
-            user = self.user            
+            #兑换产品确认订单减少积分
+            if self.integration > 0:
+                self.user.integrations(2,self.integration,'订单%s兑换产品确认订单减少积分'%self.order_id)
+            user = self.user
             if user.user_label == 3:
                 user.hy_time = datetime.now()
                 user.user_label = 2
@@ -152,6 +158,9 @@ class Order(db.Model):
         #变更客户类型(新客户 -> 会员客户)
         if self.status == 5 and to_status in (6,100):
             user = self.user
+            #确认到货增加积分
+            if self.item_fee > 0:
+                self.user.integrations(3,self.item_fee,'订单%s确认到货增加积分'%self.order_id)
             if user.user_type == 1:
                 user.label_id = 99
                 if self.actual_fee>0:#有金额的才流转到会员客户20141210 or (user.origin not in NEED_PAID_USER_ORIGINS):# and user.product_intention <> 7检测是否为付费订单扭转的来源客户 (2013.08.20)
@@ -177,6 +186,11 @@ class Order(db.Model):
 
         if to_status>100:
             self.user.del_order(self)#删除用户订单
+        
+        if self.status == 6 and to_status == 5:#退回发货
+            self.user.integrations(2,self.item_fee,'订单%s退回发货减少积分'%self.order_id)
+        if self.status and to_status == 1 and self.integration > 0:
+            self.user.integrations(3,self.integration,'订单%s兑换产品打回订单增加积分'%self.order_id)
 
         if to_status>=100:self.end_time = datetime.now()
         self.status = to_status
@@ -329,6 +343,7 @@ class Sku_Set(db.Model):
     config = Column(fields.Dict(200), nullable=False)
     price_config = Column(fields.Dict(300),nullable=False)
     price = Column(db.Float(unsigned=True), nullable=False)#总价
+    integration = Column(db.Integer(unsigned=True), default=0)#积分
     is_valid = Column(db.Boolean, nullable=False, default=True)#是否启用
     created = Column(db.DateTime, default=datetime.now)
 
@@ -337,7 +352,7 @@ class Sku_Set(db.Model):
         _items = []
         sku_sets = cls.query.filter(cls.is_valid == True)
         for sku_set in sku_sets:
-            _items.append({'id': '%s-%d'%(sku_set.id,sku_set.price),'sku_id':sku_set.id,'type': 2, 'unit': u'套', 'name': sku_set.name, 'price': sku_set.price})
+            _items.append({'id': '%s-%d'%(sku_set.id,sku_set.price),'sku_id':sku_set.id,'type': 2, 'unit': u'套', 'name': sku_set.name, 'price': sku_set.price, 'integration': int(sku_set.integration)})
         return _items
 
     @property
@@ -394,9 +409,9 @@ class Sku(db.Model):
         skus = cls.query.filter(cls.status == True)
         for sku in skus:
             _price = sku.actual_price
-            _items.append({'id': '%s-%d'%(sku.id,_price),'sku_id':sku.id, 'type': 1, 'unit': sku.unit, 'name': sku.name, 'price': _price})
+            _items.append({'id': '%s-%d'%(sku.id,_price),'sku_id':sku.id, 'type': 1, 'unit': sku.unit, 'name': sku.name, 'price': _price, 'integration': 0})
             if _price>0 and sku.allowed_gift:
-                _items.append({'id': '%s-0'%sku.id,'sku_id':sku.id,'type': 1, 'unit': sku.unit, 'name': sku.gift_name, 'price': 0})
+                _items.append({'id': '%s-0'%sku.id,'sku_id':sku.id,'type': 1, 'unit': sku.unit, 'name': sku.gift_name, 'price': 0, 'integration': 0})
         return _items
 
     @property
@@ -790,6 +805,8 @@ class User(db.Model):
 
     order_fee = Column(db.Float(unsigned=True),nullable=False,default=0)#订单费用
     order_num = Column(db.Integer,nullable=False,default=0)#订单数
+    
+    integration = Column(db.Integer,nullable=False,default=0)#积分
 
     total_fee = Column(db.Integer, nullable=False, default=0)#累计积分
     used_fee = Column(db.Integer, nullable=False, default=0)#已用积分
@@ -971,6 +988,22 @@ class User(db.Model):
             _team_retain_hours = TEAM_RETAIN_USER_HOURS[team]
             return _team_retain_hours[self.origin] if _team_retain_hours.has_key(self.origin) else _team_retain_hours[0]
             return TEAM_RETAIN_DEFAULT_HOURS if self.user_type == 1 else 0
+    
+    def integrations(self,type,integration,mero):
+        if type == 3:
+            self.integration = self.integration + integration
+        else:
+            self.integration = self.integration - integration
+        useri = User_Integration()
+        useri.type = type
+        useri.integration = integration
+        useri.mero = mero
+        useri.user_id = self.user_id
+        useri.operator_id = current_user.id
+        db.session.add(useri)
+
+
+
 
     def assign_op(self,op,operator_id,is_abandon=False,allowed_change_user_type=True):
         self.assign_time = datetime.now()
@@ -1782,3 +1815,57 @@ class Fuwu2(db.Model):
     youxiao = Column(db.Integer, default=0, nullable=False)#
     wuxiao = Column(db.Integer, default=0, nullable=False)#
     usersum = Column(db.Integer, default=0, nullable=False)#
+
+class User_Integration(db.Model):
+    '''用户积分'''
+    __tablename__ = 'user_integration'
+
+    id = Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'),nullable=False)
+    phone = db.Column(db.String(20),nullable=False)
+    user = db.relationship('User', primaryjoin="(User.user_id == User_Integration.user_id)")
+    type = db.Column(db.Integer,default=0,nullable=False)#类型:1活动,2提前使用,3注册
+    mero = db.Column(db.String(50))#备注
+    integration = db.Column(db.Integer,default=0,nullable=False)#积分
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
+    operator = db.relationship('Operator', backref=db.backref('user_integration', lazy='dynamic'))
+    created = Column(db.DateTime, default=datetime.now)
+
+
+class Integration(db.Model):
+    '''增加积分记录'''
+
+    __tablename__ = 'integration'
+
+    id = Column(db.BigInteger, primary_key=True)
+    phone = db.Column(db.String(5000),nullable=False)
+    type = db.Column(db.Integer,default=0,nullable=False)#类型:1活动,2提前使用,3注册
+    mero = db.Column(db.String(50))#备注
+    integration = db.Column(db.Integer,default=0,nullable=False)#积分
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
+    operator = db.relationship('Operator', backref=db.backref('integration', lazy='dynamic'))
+    created = Column(db.DateTime, default=datetime.now)
+
+
+class Scratch(db.Model):
+    '''刮刮卡编码'''
+    __tablename__ = 'scratch'
+
+    id = Column(db.Integer, primary_key=True)
+    code = Column(db.String(7), nullable=False, unique=True)
+    scratchdj_id = Column(db.Integer, db.ForeignKey('scratchdj.id'))
+    #qxhkjdj = relationship('QXHKHDJ', primaryjoin="(QXHKHDJ.id == Security_Codekh.qxhkjdj_id)")
+
+class SCRATCHDJ(db.Model):
+    '''刮刮卡登记'''
+    __tablename__ = 'scratchdj'
+    
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    user = relationship('User', primaryjoin="(User.user_id == SCRATCHDJ.user_id)")
+    date = Column(db.Date)
+    qxhcode = Column(db.String(100), nullable=False)
+    qxhcodes = relationship('Scratch', backref='scratchdj', lazy='dynamic')
+    receive = Column(db.Integer,nullable=False,default=0)#状态是否领取
+    status = Column(db.Boolean,nullable=False,default=True)#状态是否有效
+    reason = Column(db.String(30))#原因

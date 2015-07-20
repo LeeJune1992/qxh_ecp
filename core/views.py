@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import Scratch,SCRATCHDJ,User_Integration,Integration,User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -161,7 +161,7 @@ def simple_users():
             _conditions.append(User.assign_operator_id==current_user.id)
         users = User.query.filter(*_conditions)
         for u in users:
-            result.append({'user_id': u.user_id, 'name': u.name, 'tel': u.phone})
+            result.append({'user_id': u.user_id, 'name': u.name, 'integration': u.integration, 'tel': u.phone})
     return jsonify(users=result)
 
 
@@ -558,12 +558,14 @@ def add_sku_set():
             name = request.form['name']
             items = json.loads(request.form['items'])#商品
             price = float(request.form['price'])
+            integration = int(request.form['integration'])
 
             sku_set = Sku_Set()
             sku_set.name = name
             sku_set.config = dict([(int(k), int(d['quantity'])) for k, d in items.iteritems()])
             sku_set.price_config = dict([(int(k), float(d['discount_price'])) for k, d in items.iteritems()])
             sku_set.price = price
+            sku_set.integration = integration
             db.session.add(sku_set)
             db.session.commit()
             cache.delete(ALLOWED_ORDER_ITEMS_CACHE_KEY)
@@ -1026,6 +1028,7 @@ def _add_order(operator, request):
             break
     total_item_fee = 0
     totalitemfee = 0
+    integration = 0
     _sku_objs = {}
     _sku_sets = []
     _order_items = []
@@ -1066,11 +1069,18 @@ def _add_order(operator, request):
                 _fee = item_price * _quantity
                 _order_items.append((_sku.id,_sku_set.name,_sku.name,item_price,_quantity,_fee,_sku.unit,_sku.code))
             total_item_fee += _sku_set.price * quantity
+            integration += _sku_set.integration * quantity
             if DRUGS.find(data['sku-id']+',') == -1:
                 totalitemfee += _sku_set.price * quantity
 
             _sku_sets.append((_sku_set, quantity))
-        
+    
+    #积分
+    if integration > 0 and user.integration < 0:
+        return False, u'总积分不够无法下单'
+    if integration > 0 and integration>user.integration+total_item_fee:
+        return False, u'积分不够'
+    
     #代金卷
     #djj = int(request.form.get('djj', 0))
     djj = json.loads(request.form['djj2'])
@@ -1136,6 +1146,8 @@ def _add_order(operator, request):
 
         #订单
         order = Order()
+        #积分
+        order.integration = integration
         order.is_xlj = is_xlj
         _date = datetime.now().strftime('%y%m%d')
         order.date = _date
@@ -1567,7 +1579,14 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
     _allows = filter(lambda a: a[2] == to_status and a[3] & order.payment_type, ORDER_OPROVRAL_CONFIG[order.status])
     if len(_allows) <> 1: return False,u'未允许操作'
     op_name, css, to_status, payment_type, flag = _allows[0]
-
+    
+    #确认订单判断是否兑换产品
+    if order.status == 1 and to_status == 2:
+        if order.integration > 0:
+            if order.user.integration < 0:
+                return False,u'用户积分为负,不能进行兑换产品'
+            if order.integration > order.user.integration + order.item_fee:
+                return False,u'积分不够'
     if order.status == 2 and to_status in (3, 40,):#内勤审核
         store_id = int(request.form['store_id'])
         express_id = request.form.get('express_id', 0)
@@ -1641,16 +1660,19 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
 
         order_items = order.order_items
         _in_return_items = defaultdict(int)
+        total_feet = 0
         for order_item in order_items:
             if not _return_items.has_key(order_item.id): continue
             in_quantity, loss_quantity = _return_items[order_item.id]
 
             if in_quantity>order_item.quantity:return False,u'退货入库数量错误！'
             if in_quantity>0:
+                total_feet += order_item.price * in_quantity
                 order_item.in_quantity = in_quantity
                 _in_return_items[order_item.sku_id] += in_quantity
             if loss_quantity>0:order_item.loss_quantity = loss_quantity
-
+        if total_feet > 0:
+            order.user.integrations(2,total_feet,'订单%s退货入库减少积分'%order.order_id)
         for sku_id,amount in _in_return_items.iteritems():
             Stock_In.sale_return(order.order_id,sku_id,amount,order.store_id)
 
@@ -1954,6 +1976,7 @@ def _edit_order(order):
 
             total_item_fee = 0
             totalitemfee = 0
+            integration = 0
             _sku_objs = {}
             _sku_sets = []
             _order_items = []
@@ -1994,8 +2017,15 @@ def _edit_order(order):
                         _order_items.append((_sku.id,_sku_set.name,_sku.name,item_price,_quantity,_fee,_sku.unit,_sku.code))
                     total_item_fee += _sku_set.price * quantity
                     totalitemfee += _sku_set.price * quantity
+                    integration += _sku_set.integration * quantity
                     _sku_sets.append((_sku_set, quantity))
 
+            #积分
+            if integration > 0 and order.user.integration < 0:
+                return False, u'总积分不够无法下单'
+            if integration > 0 and integration>order.user.integration+total_item_fee:
+                return False, u'积分不够'
+            
             #扣减原有销售数量
             for order_item in order.order_items:
                 sku = order_item.sku
@@ -2029,6 +2059,9 @@ def _edit_order(order):
                 _order_sku_set.price = sku_set.price
                 db.session.add(_order_sku_set)
 
+            #积分
+            order.integration = integration
+            
             order.item_fee = total_item_fee#TODO:优惠处理
             #if djj > 0:                
                 #if totalitemfee<voucheruser.price:return False, '不能使用该代金卷1'                
@@ -4688,3 +4721,173 @@ def fgypdel():
             db.session.rollback()
             current_app.logger.error('UPDATE KHSLLQ ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
+
+@admin.route('/user/integration_edit',methods=['POST'])
+@admin_required
+def integration_edit():
+    phones = request.form['phones'].split(',')
+    integration =  int(request.form['integration'])
+    type =  4#int(request.form['type'])
+    mero = request.form['mero']
+    p = re.compile(r"((13|14|15|18)\d{9}$)")
+    phones = [phone for phone in phones if phone and p.match(phone)]
+    if len(phones)==0:return jsonify(result=False,error=u'号码为空或错误！')
+    group_phones = []
+    while True:
+        if len(phones)<=200:
+            group_phones.append(','.join(phones))
+            break
+        group_phones.append(','.join(phones[:200]))
+        phones = phones[200:]
+    try:
+        ui = User_Integration()
+        for _phones in phones:
+            upid = User_Phone.user_id_by_phone(_phones)
+            user = User.query.get(upid)
+            if user:
+                user.integration = user.integration+integration
+                db.session.add(user)
+                ui.user_id = upid
+                ui.phone = _phones
+                ui.integration = integration
+                ui.type = type
+                ui.mero = mero
+                ui.operator_id = current_user.id
+                db.session.add(ui)
+        integratioin = Integration()    
+        for _phones in group_phones:
+            integratioin.phone = _phones
+            integratioin.integration = integration
+            integratioin.type = type
+            integratioin.mero = mero
+            integratioin.operator_id = current_user.id
+            db.session.add(integratioin)
+
+            
+            #SMS.add_sms(_phones,message,sendtime,status=0,operator_id=current_user.id,remark=remark,commit=False)
+        db.session.commit()
+        return jsonify(result=True)
+    except Exception,e:
+        return jsonify(result=False,error=u'群发失败，%s'%e)
+
+
+
+@admin.route('/user/integration/list')
+@admin_required
+def integration_list():
+    page = int(request.args.get('page', 1))
+    PER_PAGE = 20
+    _conditions = []
+    phone = request.args.get('phone','')
+    if phone<>'': _conditions.append(Integration.phone.like('%' + phone + '%'))
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append(SMS.created>=_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append(SMS.created<=_end_date)
+
+    if len(_conditions)>0:
+        pagination = Integration.query.filter(*_conditions).order_by(desc(Integration.created)).paginate(page, per_page=PER_PAGE)
+    else:
+        pagination = Integration.query.order_by(desc(Integration.created)).paginate(page, per_page=PER_PAGE)
+    return render_template('user/integration_list.html', pagination=pagination)
+
+@admin.route('/user/integration/<int:user_id>')
+@login_required
+def user_integration(user_id):
+    _objs = User_Integration.query.filter(User_Integration.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'integration':sms.integration,
+                         'type':INTEGRATION_STATUS[sms.type],
+                         'mero':sms.mero,
+                         'operator':sms.operator.nickname,
+                         'created':str(sms.created)})
+    return jsonify(result=sms_list)
+
+
+@admin.route('/user/scratch/<int:user_id>', methods=['POST'])
+@login_required
+def scratch(user_id):
+    if request.method == 'POST':
+        try:
+            user = User.query.get(user_id)
+            qxhkjdj = SCRATCHDJ()
+            qxhkjdj.user_id = user.user_id
+            qxhcode = request.form['qxhcode']
+            qxhcodes = qxhcode.split(',')
+            page = int(request.args.get('page', 1))
+            print qxhcode
+            print qxhcode.replace(',','\',\'')
+            print 'qxhkjdj_id is null and code in (\''+qxhcode.replace('\r\n','\',\'')+'\')'
+            codes = Scratch.query.filter('scratchdj_id is null and code in (\''+qxhcode.replace(',','\',\'')+'\')').paginate(page, per_page=user_per_page())
+            print codes.total
+            print len(qxhcodes)
+            if codes.total<len(qxhcodes):
+                return jsonify(result=False,error='刮刮卡编码错误或已登记！')
+            qxhkjdj.qxhcode = qxhcode
+            _date = datetime.now().strftime('%Y-%m-%d')
+            qxhkjdj.date = _date
+
+            db.session.add(qxhkjdj)
+            db.session.flush()
+            for c in codes.items:
+                c.scratchdj_id = qxhkjdj.id
+                db.session.add(c)
+            db.session.commit()
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('ADD SCRATCHDJ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/user/showscratchdj/<int:user_id>')
+@login_required
+def user_show_scratchdj(user_id):
+    _objs = SCRATCHDJ.query.filter(SCRATCHDJ.user_id==user_id)
+    sms_list = []
+    for sms in _objs:
+        sms_list.append({'qxhcode':str(sms.qxhcode),
+                         'date':str(sms.date),
+                         'receive':sms.receive,
+                         'status':sms.status,
+                         'id':sms.id
+
+})
+    return jsonify(result=sms_list)
+
+@admin.route('/user/scratchdjqx', methods=['POST'])
+@admin_required
+def scratchdjqx():
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            print id
+            qxhkdj = SCRATCHDJ.query.get(id)
+            if qxhkdj:
+                db.session.delete(qxhkdj)
+                db.session.commit()
+
+            return jsonify(result=True)
+        except Exception,e:
+            db.session.rollback()
+            current_app.logger.error('DELETE SCRATCHDJ ERROR,%s'%e)
+            return jsonify(result=False,error=e.message)
+
+@admin.route('/securitycode/scratch',methods=['POST', 'GET'])
+@admin_required
+def securitycode_scratch():
+    if request.method == 'POST':
+        orderids = request.form['orders']
+        #print orderids
+        orders = orderids.split('\r\n')
+        orders1 = orders
+        orders = Scratch.query.filter('code in (\''+orderids.replace('\r\n','\',\'')+'\')').all()
+        print orders
+        return render_template('securitycode/scratch.html',orderids=orderids,orders=orders)    
+    else:
+        orders = Order.query.filter('1=2').all()
+        return render_template('securitycode/scratch.html',orders=orders)

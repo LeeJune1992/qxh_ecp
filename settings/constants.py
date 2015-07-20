@@ -259,11 +259,17 @@ ENDPOINTS = [
     ('sale_user_list',u'会员客户统计','B'),
     ('search_knowledge',u'知识查询','B'),
     ('voucheradd',u'添加代金卷','B'),
+    ('scratch',u'刮刮卡登记','B'),
+    ('scratchdjqx',u'刮刮卡删除','B'),
 
     ('khsldel',u'删除空盒送礼','B'),
     ('fgypdel',u'删除复购预判','B'),
     ('tjfgdel',u'删除推荐复购','B'),
     ('savedlb_user',u'增加大礼包','B'),
+    ('integration_list',u'积分管理','B'),
+    ('integration_edit',u'积分增加','B'),
+
+
 
 
 
@@ -399,6 +405,7 @@ ENDPOINTS = [
     ('securitycodes',u'防伪码查询','H'),
     ('securitycodelog',u'防伪码查询记录','H'),
     ('securitycode_khbmcx',u'空盒编码查询','H'),
+    ('securitycode_scratch',u'刮刮卡编码查询','H'),
 
     ('categorys',u'知识类别管理','I'),
     ('manage_knowledge',u'知识管理','I'),
@@ -473,7 +480,8 @@ ORDER_MODES = {
     21:u'PPTV送礼',
     22:u'PPTV送礼订购',
     23:u'PPTV到礼订购',
-
+    24:u'官网注册',
+    25:u'刮刮卡送礼',
     100:u'其它',
 }
 
@@ -563,7 +571,8 @@ USER_ORIGINS = {
     23:u'流转',
     24:u'漏接',
     25:u'微信150527',
-
+    26:u'官网注册',
+    27:u'刮刮卡2015',
     99:u'其它',
 }
 
@@ -983,6 +992,14 @@ XLJ_ID = 10125
 
 DRUGS = '10001,10002,10003,10004,10120,'#药品ID
 
+INTEGRATION_STATUS = {
+    1:u'官网注册',
+    2:u'订单消耗',
+    3:u'订单增加',
+    4:u'手动增加'
+
+}
+
 from global_settings import SF_D
 from global_settings import SF_Custid
 from global_settings import SF_Key
@@ -996,5 +1013,5 @@ from global_settings import WLNQ_CHENGDUID
 
 
 
-from global_settings import DEBUG
-ALLOWED_ORDER_ITEMS_CACHE_KEY = 'ORDER_ITEMS_CACHE_KEY_%d'%DEBUG
+from global_settings import ITEM_CACHE
+ALLOWED_ORDER_ITEMS_CACHE_KEY = 'ORDER_ITEMS_CACHE_KEY_%s'%ITEM_CACHE
