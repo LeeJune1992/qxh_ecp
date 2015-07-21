@@ -4878,7 +4878,7 @@ def scratchdjqx():
             return jsonify(result=False,error=e.message)
 
 @admin.route('/securitycode/scratch',methods=['POST', 'GET'])
-@admin_required
+@login_required
 def securitycode_scratch():
     if request.method == 'POST':
         orderids = request.form['orders']

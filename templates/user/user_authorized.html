@@ -1312,7 +1312,7 @@ function khsljjlq(id){
                         <div class="row-fluid" style="padding-bottom: 0">
                             <div class="span6">
                                 <div class="control-group">
-                                    <label class="control-label">客户</label>
+                                    <label class="control-label">客户1</label>
 
                                     <div class="controls">
                                         <input id="name" name="name" placeholder="姓名" type="text"
@@ -1321,8 +1321,8 @@ function khsljjlq(id){
                                                style="width: 125px;color: red">
                                         <select id="origin" name="origin" class="space">
                                             <option></option>
-                                            {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
-                                                <option value="{{ k }}">{{ v }}</option>
+                                            {%- for k in config['USED_USER_ORIGINS'] -%}
+                                                <option value="{{ k }}">{{ config['USER_ORIGINS'][k] }}</option>
                                             {%- endfor -%}
                                         </select>
 

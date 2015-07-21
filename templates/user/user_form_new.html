@@ -492,8 +492,8 @@
                                        style="width: 125px;color: red">
                                 <select id="origin" name="origin" class="space">
                                     <option></option>
-                                    {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
-                                        <option value="{{ k }}">{{ v }}</option>
+                                            {%- for k in config['USED_USER_ORIGINS'] -%}
+                                                <option value="{{ k }}">{{ config['USER_ORIGINS'][k] }}</option>
                                     {%- endfor -%}
                                 </select>
                             </div>
@@ -695,17 +695,17 @@
                     <option value="{{ k }}">{{ v }}</option>
                 {%- endfor -%}
                 </select></label>
-                <label style="float:left; padding-right:15px;">新老客户
-                <select name="dlb_new" id="dlb_new">
-                <option></option>
-                <option value="1">新客户</option>
-                <option value="2">老客户</option>
-                </select></label>
                 <label style="float:left; padding-right:15px;">是否有效
                 <select name="dlb_valid" id="dlb_valid">
                 <option></option>
                 <option value="1">有效</option>
                 <option value="2">无效</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">新老客户
+                <select name="dlb_new" id="dlb_new">
+                <option></option>
+                <option value="1">新客户</option>
+                <option value="2">老客户</option>
                 </select></label>
                 <label style="float:left; padding-right:15px;">是否接通
                 <select name="dlb_connect" id="dlb_connect">
