@@ -1321,8 +1321,8 @@ function khsljjlq(id){
                                                style="width: 125px;color: red">
                                         <select id="origin" name="origin" class="space">
                                             <option></option>
-                                            {%- for k in config['USED_USER_ORIGINS'] -%}
-                                                <option value="{{ k }}">{{ config['USER_ORIGINS'][k] }}</option>
+                                            {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                                                <option value="{{ k }}">{{ v }}</option>
                                             {%- endfor -%}
                                         </select>
 
