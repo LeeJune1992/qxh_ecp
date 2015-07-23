@@ -319,6 +319,8 @@ ENDPOINTS = [
     ('xlj_xsqkb',u'[营销]心力健销售情况表','E'),
     ('yy_khsl',u'[营销]空盒送礼登记表','E'),
     ('yy_fgtj',u'[营销]复购统计','E'),
+    ('sale_scratchjx',u'[营销]刮刮卡进线','E'),
+    ('sale_scratchmx',u'[营销]刮刮卡明细','E'),
 
 
     ('financial_report',u'财务报表','E'),
@@ -451,7 +453,7 @@ ORDER_TYPES = {
     103:u'调库订单',
     104:u'抽奖活动订单',
     }
-
+USED_ORDER_TYPES = [1,9,2,17,8,19,18,10,13,5,101,102,103,104]
 ORDER_RELATED_STOCK_OUT_CATEGORIES = {
     101:14,102:13,103:12
 }
@@ -484,7 +486,7 @@ ORDER_MODES = {
     25:u'刮刮卡送礼',
     100:u'其它',
 }
-
+USED_ORDER_MODES = [3,1,2,5,7,4,17,25,18,19,20,21,22,23,9,11,14,15,24,100]
 ORDER_PAYMENTS = {
     1:u'货到付款',
     2:u'先款后货',

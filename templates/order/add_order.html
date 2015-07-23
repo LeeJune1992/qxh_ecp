@@ -180,6 +180,7 @@
                 address.show(user.user_id);
 				getvoucher(user.user_id);
                 $('button[type="submit"]').show();
+				$('#integration').val(user.integration);
                 return user.name + " | " + user.tel;
 
             },
@@ -255,7 +256,28 @@
                 bootbox.alert('尚未添加任何商品');
                 return false;
             }
-
+			var integration = parseInt($('#integration').val());
+			if (isNaN(integration)){
+				integration = 0;
+			}
+			var total_integration = parseInt($('#total_integration').val());
+			if (isNaN(total_integration)){
+				total_integration = 0;
+			}
+			if(total_integration > 0 && integration < 0){
+                //bootbox.alert('用户积分为负,不能进行兑换产品');
+                //return false;
+			}
+			var total_fee = parseInt($('#total_fee').val());
+			if (isNaN(total_fee)){
+				total_fee = 0;
+			}
+			//alert(total_fee);alert(integration);alert(total_integration);return false;
+			if(total_integration>integration+total_fee){
+                //bootbox.alert('积分不够');
+                //return false;
+			}
+			
             var user_id = parseInt($('#user_id').val());
             if (isNaN(user_id) || user_id == 0 || user_id == '') {
                 bootbox.alert('请先查询客户！');
@@ -327,6 +349,7 @@
             var values = $('form').serializeArray();
             values.push({name: 'items', value: JSON.stringify(items)});
             values.push({name: 'user_id', value: user_id});
+            values.push({name: 'integration', value: total_integration});
             values.push({name: 'payment_type', value: payment_type});
             values.push({name: 'djj2', value: JSON.stringify(djj)});
             var add_order = $.ajax({
@@ -370,11 +393,13 @@
                 var items = $('body').data('items');
                 var $sel = $('#selected-items');
                 var total_fee = 0;
+                var total_integration = 0;
 				var totalfee = 0;
                 if (!$.isEmptyObject(items)) {
                     $sel.html('<table id="display-items" class="table table-condensed"><thead><tr><th class="span3">商品</th><th style="text-align:center">数量</th><th style="text-align:center">单价</th><th></th></tr></thead></table>');
                     for (var i in items) {
                         var item = items[i];
+                        total_integration += item.integration * item.quantity;
                         total_fee += item.price * item.quantity;
 						if(drugs.indexOf(item["sku-id"].concat(',')) == -1){
 							totalfee += item.price * item.quantity;
@@ -425,14 +450,22 @@
 					}
                     $('#fee').show();
                     $('#fee').text("商品总价：￥" + total_fee);
+					if(total_integration>0){
+						$('#ointegration').show();
+						$('#ointegration').text("商品总积分：￥" + total_integration);						
+					}else{
+						$('#ointegration').hide();
+					}
                 }
                 else {
                     $sel.html('<span class="alert alert-warning span12">尚未选择任何商品</span>');
                     $('#fee').hide();
+                    $('#ointegration').hide();
 					$("input:radio[name='djj']").attr("checked",false);
 					$('#uservoucher').hide();
                 }
                 $('input#total_fee').val(total_fee);
+                $('input#total_integration').val(total_integration);
             },
             del: function (event) {
                 data = event.data;
@@ -453,7 +486,7 @@
                 var id = $('#item').val();
                 if (items[id] == null) {
                     var $selected = $('#item option:selected');
-                    items[id] = {'name': $selected.text(),'unit':$selected.attr('unit'),'sku-id':$selected.attr('sku-id'),'type':parseInt($selected.attr('type')), 'price': parseFloat($selected.attr('price')), 'quantity': quantity};
+                    items[id] = {'name': $selected.text(),'unit':$selected.attr('unit'),'sku-id':$selected.attr('sku-id'),'type':parseInt($selected.attr('type')), 'price': parseFloat($selected.attr('price')), 'integration': parseInt($selected.attr('integration')), 'quantity': quantity};
                 }
                 else {
                     items[id].quantity += quantity;
@@ -476,6 +509,8 @@
         <input id="total_fee" name="total_fee" type="hidden">
         <input id="address_id" name="address_id" type="hidden" value="0">
         {% set link_order_id = request.args.get('link_order_id',0)|int %}
+        <input type="hidden" id="integration" value="0" />
+        <input id="total_integration" name="total_integration" type="hidden">
         <input id="link_order_id" name="link_order_id" type="hidden" value="{{ link_order_id }}">
     </div>
 
@@ -505,7 +540,7 @@
             <div class="controls">
                 <select id="item" name="item" class="select2" style="width: 285px">
                     {%- for item in items -%}
-                        <option value="{{ item.id }}" price="{{ item.price }}" sku-id="{{ item.sku_id }}" unit="{{ item.unit }}" type="{{ item.type }}"{% if item.type==2 %} class="sku_set_style"{% endif %}>{{ item.name }}</option>
+                        <option value="{{ item.id }}" price="{{ item.price }}" integration="{{ item.integration }}" sku-id="{{ item.sku_id }}" unit="{{ item.unit }}" type="{{ item.type }}"{% if item.type==2 %} class="sku_set_style"{% endif %}>{{ item.name }}</option>
                     {%- endfor -%}
                 </select>
 
@@ -526,6 +561,7 @@
                     <div class="span7" id="selected-items"></div>
                 </div>
                 <p id="fee" class="alert alert-warning" style="font-size: 14px;width: 140px;font-weight: bold"></p>
+                <p id="ointegration" class="alert alert-warning" style="font-size: 14px;width: 140px;font-weight: bold"></p>
             </div>
         </div>
 
@@ -555,8 +591,8 @@
 
             <div class="controls">
                 <select id="order_type" name="order_type" class="select2" style="width: 220px">
-                    {%- for k,v in config['ORDER_TYPES'].iteritems() -%}
-                        <option value="{{ k }}">{{ v }}</option>
+                    {%- for k in config['USED_ORDER_TYPES'] -%}
+                        <option value="{{ k }}">{{ config['ORDER_TYPES'][k] }}</option>
                     {%- endfor -%}
                 </select>
                 <input id="client_ip" name="client_ip" type="text" placeholder="客户IP地址" style="width: 130px;margin-left: 15px;display: none" />
@@ -568,8 +604,8 @@
 
             <div class="controls">
                 <select id="order_mode" name="order_mode" class="select2" style="width: 220px">
-                    {%- for k,v in config['ORDER_MODES'].iteritems() -%}
-                        <option value="{{ k }}">{{ v }}</option>
+                    {%- for k in config['USED_ORDER_MODES'] -%}
+                        <option value="{{ k }}">{{ config['ORDER_MODES'][k] }}</option>
                     {%- endfor -%}
                 </select>
             </div>
