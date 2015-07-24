@@ -320,6 +320,7 @@ ENDPOINTS = [
     ('yy_khsl',u'[营销]空盒送礼登记表','E'),
     ('yy_fgtj',u'[营销]复购统计','E'),
     ('sale_scratchjx',u'[营销]刮刮卡进线','E'),
+    ('sale_scratchqyjx',u'[营销]刮刮卡区域进线','E'),
     ('sale_scratchmx',u'[营销]刮刮卡明细','E'),
 
 
