@@ -30,6 +30,7 @@
                 <thead>
                 <tr>
                     <th>用户姓名</th>
+            		<th>归属员工</th>
                     <th>电话</th>
                     <th>空盒编码</th>
                     <th>礼品名称</th>
@@ -46,6 +47,7 @@
                 {% for row in rows %}
                     <tr>
                         <td>{{ row.user.name }}</td>
+                        <td>{{ row.user.operator.nickname }}</td>
                         <td>{{ row.user.phone }}{%if row.user.phone2%},{{ row.user.phon2e }}{%endif%}</td>
                         <td>{{ row['qxhcode'] }}</td>
                         <td>{{ row['giftname'] }}</td>

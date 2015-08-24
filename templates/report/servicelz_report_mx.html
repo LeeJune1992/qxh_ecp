@@ -1,0 +1,67 @@
+{% extends "report/servicelz_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#express_id').select2({
+            width:'150px',
+            placeholder:'快递公司',
+            allowClear:true
+        })
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="s_start_date" class="timepicker input input-medium" name="s_start_date" type="text" value="{{ request.args['s_start_date'] }}" placeholder="分配开始时间" />
+        <input id="s_end_date" class="timepicker input input-medium" name="s_end_date" type="text" value="{{ request.args['s_end_date'] }}" placeholder="分配结束时间" />
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="流转开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="流转结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>区域</th>
+            <th>来源</th>
+            <th>复购次数</th>
+            <th>流转时意向登记</th>
+            <th>是否有效</th>
+            <th>分配时间</th>
+            <th>流转时间</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in rows %}
+            <tr>
+            <td>{{ d['name'] }}</td>
+            <td>{{ d['phone'] }}</td>
+            <td>{{ d['area'] }}</td>
+            <td>{{ config['USER_ORIGINS'][d.origin] }}</td>
+            <td>{{ d['fgcs'] }}</td>
+            <td>{{ d['intent_level'] }}</td>
+            <td>
+            {% if d['origin'] == 18 %}
+            	{% if d['is_valid'] == 1 %}有效{% else %}无效{% endif %}
+            {% else %}
+            -
+            {% endif %}
+            </td>
+            <td>{{ d['assign_time'] }}</td>
+            <td>{{ d['time'] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>
+    <div class="alert pull-left">记录数：{{ rows.rowcount }}</div>
+
+{% endblock %}

@@ -231,6 +231,7 @@ ENDPOINTS = [
     ('public_new_users',u'新客户公共库','B'),
     ('public_old_users',u'会员公共库','B'),
     ('public_service_users',u'服务公共库','B'),
+    ('public_servicelz_users',u'服务流转公共库','B'),
     ('qxhdm_users',u'地面公共库','B'),
     ('search_user_form',u'客户检索输入框','B'),
     ('search_user',u'客户检索','B'),
@@ -351,13 +352,18 @@ ENDPOINTS = [
     ('pharmacy_report_by_shujufankui',u'[药房]数据反馈统计','E'),
     ('pharmacy_report_by_fugou',u'[药房]复购统计报表','E'),
     ('pharmacy_report_by_fugouypmx',u'[药房]复购预判明细统计','E'),
-    ('pharmacy_report_by_khfgypmx',u'[药房]空盒换大礼复购预判明细表','E'),
+    ('pharmacy_report_by_khfgypmx',u'[药房]服务组复购预判明细表','E'),
     ('pharmacy_report_by_khfwmx',u'[药房]空盒换大礼服务明细表 ','E'),
 
     ('dlb_report',u'大礼包报表','E'),
     ('dlb_zt',u'[大礼包]整体进线情况表 ','E'),
     ('dlb_new',u'[大礼包]新客户处理情况表','E'),
     ('dlb_jinxian',u'[大礼包]进线类型统计表','E'),
+    
+    ('servicelz_report',u'服务流转报表','E'),
+    ('servicelz_report_mx',u'[服务流转]服务流转数据明细表 ','E'),
+    ('servicelz_report_tj',u'[服务流转]服务流转数据统计表','E'),
+
 
 
     ('waihu_report',u'外呼报表','J'),
@@ -668,6 +674,7 @@ OPEARTOR_ASSIGN_USER_TYPES = {
     1:u'新客户',
     2:u'会员客户',
     5:u'会员服务',
+    6:u'服务流转',
     #3:u'新客户+会员客户'
 }
 
@@ -676,6 +683,7 @@ USER_TYPES = {
     1:u'新客户',
     2:u'会员客户',
     5:u'会员服务',
+    6:u'服务流转',
     4:u'黑名单',
 }
 
@@ -713,10 +721,14 @@ TEAMS = {
 TEAM_RETAIN_USER_HOURS = {
     'A1':{0:72,13:1},
     'A2':{0:72,13:1},
-    'B1':{0:720,7:1440,8:1440,9:1440},
-    'B2':{0:720,7:1440,8:1440,9:1440},
-    'B3':{0:720},
-    'B4':{0:720},
+    #'B1':{0:720,7:1440,8:1440,9:1440},
+    #'B2':{0:720,7:1440,8:1440,9:1440},
+    #'B3':{0:720},
+    #'B4':{0:720},
+    'B1':{0:2160},
+    'B2':{0:2160},
+    'B3':{0:2160},
+    'B4':{0:2160},
     'C1':{0:0},
     'C2':{0:0},
     'C3':{0:0},
@@ -999,8 +1011,9 @@ INTEGRATION_STATUS = {
     1:u'官网注册',
     2:u'订单消耗',
     3:u'订单增加',
-    4:u'手动增加'
-
+    4:u'手动增加',
+    5:u'2015年1-6月到货金额增加',
+    6:u'2015年1-6月退货金额减少'
 }
 
 from global_settings import SF_D

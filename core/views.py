@@ -1671,7 +1671,9 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
                 order_item.in_quantity = in_quantity
                 _in_return_items[order_item.sku_id] += in_quantity
             if loss_quantity>0:order_item.loss_quantity = loss_quantity
-        if total_feet > 0:
+        if to_status == 104 and order.integration > 0:
+            order.user.integrations(3,order.integration,'订单%s拒收退货入库增加积分'%order.order_id)
+        if to_status == 33 and total_feet > 0:
             order.user.integrations(2,total_feet,'订单%s退货入库减少积分'%order.order_id)
         for sku_id,amount in _in_return_items.iteritems():
             Stock_In.sale_return(order.order_id,sku_id,amount,order.store_id)
@@ -2377,10 +2379,13 @@ def public_users(user_type):
         promoterss = db.session.execute('select distinct promoters from user where qxhdm_time > 0')
         pharmacys = db.session.execute('select distinct pharmacy from user where qxhdm_time > 0')
         show_queries=['admin','service','username','phone','show_assign','user_origin','show_abandon']
+    operators=Operator.query.filter(Operator.assign_user_type==user_type)
+    if user_type == 6:
+        operators=Operator.query.filter(Operator.role_id==101)
     return render_template('user/users.html',
                            pagination=pagination,
                            show_label = True if user_type==1 else False,
-                           operators=Operator.query.filter(Operator.assign_user_type==user_type),
+                           operators=operators,
                            show_queries=show_queries,areas=areas,pharmacys=pharmacys,promoterss=promoterss)
 
 @admin.route('/user/public/new')
@@ -2397,6 +2402,11 @@ def public_old_users():
 @admin_required
 def public_service_users():
     return public_users(5)
+@admin.route('/user/public/servicelz')
+@admin_required
+def public_servicelz_users():
+    return public_users(6)
+
 
 
 @admin.route('/user/search')
@@ -2489,7 +2499,12 @@ def change_user_op():
                 outbound = Outbound()
                 outbound.user_id = u.user_id
                 db.session.add(outbound)
-            u.assign_op(op,current_user.id)
+            #print u.user_type,op.team,op.assign_user_type
+            if u.user_type == 6 and op.team != 'C3':#为服务流转时不改变
+                #print 'ok'
+                u.assign_op(op,current_user.id,False,False)
+            else:
+                u.assign_op(op,current_user.id)
         db.session.commit()
         return jsonify(result=True)
     except Exception,e:
@@ -4802,7 +4817,7 @@ def user_integration(user_id):
     sms_list = []
     for sms in _objs:
         sms_list.append({'integration':sms.integration,
-                         'type':INTEGRATION_STATUS[sms.type],
+                         'type':INTEGRATION_STATUS.get(sms.type),
                          'mero':sms.mero,
                          'operator':sms.operator.nickname,
                          'created':str(sms.created)})

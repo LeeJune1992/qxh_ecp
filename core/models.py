@@ -161,7 +161,7 @@ class Order(db.Model):
             #确认到货增加积分
             if self.item_fee > 0:
                 self.user.integrations(3,self.item_fee,'订单%s确认到货增加积分'%self.order_id)
-            if user.user_type == 1:
+            if user.user_type in (1,6):#新客户,服务流转
                 user.label_id = 99
                 if self.actual_fee>0:#有金额的才流转到会员客户20141210 or (user.origin not in NEED_PAID_USER_ORIGINS):# and user.product_intention <> 7检测是否为付费订单扭转的来源客户 (2013.08.20)
                     user.user_type = 2
@@ -971,6 +971,7 @@ class User(db.Model):
         if self.user_type==2:return u'会员客户'
         if self.user_type==4:return u'黑名单'
         if self.user_type==5:return u'服务客户'
+        if self.user_type==6:return u'服务流转客户'
         return u''
 
     @hybrid_property
@@ -1013,7 +1014,11 @@ class User(db.Model):
         else:
             
             #---> 修改客户类型
-            if allowed_change_user_type and (not op.assign_user_type&self.user_type) and op.assign_user_type:
+            #print allowed_change_user_type,'ok'
+            #print op.assign_user_type,self.user_type
+            #if allowed_change_user_type and (not op.assign_user_type&self.user_type) and op.assign_user_type:
+            if allowed_change_user_type and (not op.assign_user_type==self.user_type) and op.assign_user_type:
+                print 'ok2'
                 self.user_type = op.assign_user_type
 
             self.assign_operator_id = op.id
@@ -1824,7 +1829,7 @@ class User_Integration(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'),nullable=False)
     phone = db.Column(db.String(20),nullable=False)
     user = db.relationship('User', primaryjoin="(User.user_id == User_Integration.user_id)")
-    type = db.Column(db.Integer,default=0,nullable=False)#类型:1活动,2提前使用,3注册
+    type = db.Column(db.Integer,default=0,nullable=False)#类型:1活动,2提前使用,3注册,4
     mero = db.Column(db.String(50))#备注
     integration = db.Column(db.Integer,default=0,nullable=False)#积分
     operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作员
@@ -1869,3 +1874,28 @@ class SCRATCHDJ(db.Model):
     receive = Column(db.Integer,nullable=False,default=0)#状态是否领取
     status = Column(db.Boolean,nullable=False,default=True)#状态是否有效
     reason = Column(db.String(30))#原因
+
+class User_Servicelz(db.Model):
+    '''服务数据流转'''
+    __tablename__ = 'user_servicelz'
+    
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    user = relationship('User', primaryjoin="(User.user_id == User_Servicelz.user_id)")
+    intent_level = Column(db.String(2),nullable=False,default='A')#意向等级
+    assign_time = Column(db.DateTime,default=datetime.now)#分配时间
+    time = Column(db.DateTime,default=datetime.now)#流转时间
+
+class Order_Express(db.Model):
+    '''订单是否到货'''
+    __tablename__ = 'order_express'
+    
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#重复
+    order_id = Column(db.BigInteger(unsigned=True), db.ForeignKey('order.order_id'), nullable=False)
+    express_id = Column(db.SmallInteger, nullable=False, default=0)#快递公司
+    express_number = Column(db.String(50), index=True)#快递号
+    state = Column(db.Integer,nullable=False,default=0)#状态
+    data = Column(db.String(100), nullable=False)#情况
+    status = Column(db.Integer,nullable=False,default=0)#状态
+    time = Column(db.DateTime,default=datetime.now)#流转时间

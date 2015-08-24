@@ -243,7 +243,7 @@ $(function () {
 	{%endif %}
 	{%endif %}
 	
-	{%if user.origin == 19%}
+	{%if user.origin in (19,27)%}
     $('#area').select2({
         placeholder: '区域',
         width: '125px'
@@ -652,6 +652,12 @@ $(function () {
     $('#user_id').val({{ user.user_id }});
     $('#name').val('{{ user.name }}');
     $('#origin').val({{ user.origin }}).change();
+	{%if user.user_type == 6 %}//服务流转的时候不可修改来源
+	$('#origin').select2("disable");//.select2("read");
+	//$('#origin').attr("readonly",true);//.select2("read");
+	//$("#origin:[readonly='readonly']").selectReadOnly();
+	//$('#origin').attr("disabled", true);
+	{%endif%}
 	{%if user.product_intention or user.product_intention > -1 %}
     $('#product_intention').val({{ user.product_intention }}).change();
 	{%endif%}
@@ -926,6 +932,7 @@ $(function () {
             $('#origin').focus();
             return false;
         }
+		
 		//验证产品意向
 		var product_intention = $('#product_intention').val();
 		if(product_intention==''||product_intention==null){
@@ -933,7 +940,7 @@ $(function () {
 			$('#product_intention').focus();
 			return false;
 		}
-		{%if user.origin == 19%}
+	{%if user.origin in (19,27)%}
 		//区域
 		var area = $('#area').val();
 		if(area==''||area==null){
@@ -997,6 +1004,9 @@ $(function () {
         add_btn.attr('disabled', true);
         //validate form
         var values = $('form').serializeArray();
+		{%if user.user_type == 6 %}
+		values.push({name: 'origin', value: user_origin});
+		{%endif%}
         //values.push({name: 'entries', value: JSON.stringify(Entry.data())});
         values.push({name: 'concerns', value: JSON.stringify(selected_concerns())});
         values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
@@ -1313,7 +1323,7 @@ function khsljjlq(id){
                         <div class="row-fluid" style="padding-bottom: 0">
                             <div class="span6">
                                 <div class="control-group">
-                                    <label class="control-label">客户1</label>
+                                    <label class="control-label">客户</label>
 
                                     <div class="controls">
                                         <input id="name" name="name" placeholder="姓名" type="text"
@@ -1388,7 +1398,7 @@ function khsljjlq(id){
                                         </select>
                                     </div>
                                 </div>
-                                {%if user.origin == 19%}
+                                {%if user.origin in (19,27)%}
                                 <div class="control-group">
                                     <label class="control-label">区域</label>
 
@@ -1469,7 +1479,7 @@ function khsljjlq(id){
                                         <input id="expect_time" name="expect_time" class="input-large" type="text"/>
                                     </div>
                                 </div>
-                                {%if user.origin == 19%}
+                                {%if user.origin in (19,27)%}
                                 <div class="control-group">
                                     <label class="control-label">沟通情况</label>
 

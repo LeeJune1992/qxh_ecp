@@ -548,7 +548,7 @@
                 {% endif %}
                 
             	{% if 'service' in show_queries %}
-                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.user_type|type_name }}</code></td>
+                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ config['USER_TYPES'][user.user_type] }}</code></td>
                 <td>{{ user.area }}</td>
                 <td>{% if user.is_valid==1 %}
                 <code style="color:darkcyan">有效</code>

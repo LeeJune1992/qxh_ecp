@@ -2227,7 +2227,7 @@ def pharmacy_report_by_fugouypmx():
     data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
     print data
     return render_template('report/pharmacy_report_by_fugouypmx.html',pharmacys=pharmacys,data=data,period=period)
-#空盒换大礼复购预判明细表
+#服务组复购预判明细表
 @report.route('/pharmacy/khfgypmx')
 @admin_required
 def pharmacy_report_by_khfgypmx():
@@ -2240,8 +2240,7 @@ def pharmacy_report_by_khfgypmx():
     else:
         operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9)
 
-    _conditions = ['`user`.origin = 19']
-    _conditions = []
+    _conditions = ['`user`.user_id not in (select user_id from user_servicelz)']
     assign_operator_id = request.args.get('assign_operator_id','')
     if assign_operator_id:
         _conditions.append('`user`.assign_operator_id="%s"'%assign_operator_id)
@@ -2261,15 +2260,15 @@ def pharmacy_report_by_khfgypmx():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))
-    #print data
+    data = QXHDM_Orderyf.query.outerjoin(User,User.user_id==QXHDM_Orderyf.user_id).filter(db.and_(*_conditions))#.order_by(User.origin,User.area,User.assign_operator_id)
+
     return render_template('report/pharmacy_report_by_khfgypmx.html',operators=operators,data=data,period=period)
 #空盒换大礼服务明细表
 @report.route('/pharmacy/khfwmx')
 @admin_required
 def pharmacy_report_by_khfwmx():
 
-    _conditions = ['`u`.origin = 19']
+    _conditions = ['`u`.origin = 19','`u`.user_id not in (select user_id from user_servicelz)']
     area = request.args.get('area','')
     if area:
         _conditions.append('`u`.area="%s"'%area)
@@ -2334,7 +2333,7 @@ def pharmacy_report_by_khfwmx():
 @report.route('/yy/fgtj')
 @admin_required
 def yy_fgtj():
-    _conditions2 = []
+    _conditions2 = ['user_id not in (select user_id from user_servicelz)']
     _conditions = []
     area = request.args.get('area','')
     if area:
@@ -2677,7 +2676,7 @@ def dlb_new():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
     
-    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_connect=1 THEN 1 ELSE 0 END) as connect,SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sl,SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sccj from user where dlb_type>0 and dlb_new=1 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
+    _sql = 'SELECT dlb_time,count(*) as total,SUM(CASE WHEN dlb_connect=1 THEN 1 ELSE 0 END) as connect,SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,103) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sl,SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,103) and `order`.user_id=`user`.user_id) THEN 1 ELSE 0 END) as sccj from user where dlb_type>0 and dlb_new=1 and %s GROUP BY dlb_time'%' AND '.join(_conditions)
     #print _sql
     #data = User.query.filter(db.and_(*_conditions))
     data = db.session.execute(_sql)
@@ -2723,15 +2722,15 @@ def dlb_jinxian():
     SUM(CASE WHEN (dlb_type=2 and dlb_new=2) THEN 1 ELSE 0 END) as wxold,
     SUM(CASE WHEN (dlb_type=2 and dlb_new=1) THEN 1 ELSE 0 END) as wxnew,
     SUM(CASE WHEN (dlb_type=2 and dlb_connect=1) THEN 1 ELSE 0 END) as wxconnect,
-    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsl,
-    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsccj,
+    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,103) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsl,
+    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,103) and `order`.user_id=`user`.user_id and `user`.dlb_type=2) THEN 1 ELSE 0 END) as wxsccj,
     SUM(CASE WHEN dlb_type=1 THEN 1 ELSE 0 END) as lytotal,
     SUM(CASE WHEN (dlb_type=1 and dlb_valid=2) THEN 1 ELSE 0 END) as lywx,
     SUM(CASE WHEN (dlb_type=1 and dlb_new=2) THEN 1 ELSE 0 END) as lyold,
     SUM(CASE WHEN (dlb_type=1 and dlb_new=1) THEN 1 ELSE 0 END) as lynew,
     SUM(CASE WHEN (dlb_type=1 and dlb_connect=1) THEN 1 ELSE 0 END) as lyconnect,
-    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysl,
-    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,102) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysccj
+    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=18 and status not in (1,103) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysl,
+    SUM(CASE WHEN (SELECT count(order_id) from `order` WHERE order_mode=19 and status not in (1,103) and `order`.user_id=`user`.user_id and `user`.dlb_type=1) THEN 1 ELSE 0 END) as lysccj
      from user where dlb_type>0 and %s GROUP BY dlb_time'''%' AND '.join(_conditions)
         #print _sql
         #data = User.query.filter(db.and_(*_conditions))
@@ -2763,18 +2762,18 @@ def dlb_jinxian():
 @report.route('/sale/scratchjx')
 @admin_required
 def sale_scratchjx():
-    _conditions = []#['`user`.status=1']
+    _conditions = ['`user`.user_id not in (select user_id from user_servicelz)']#['`user`.status=1']
     _start_date = request.args.get('start_date','')
     if _start_date:
-        _conditions.append('`user`.join_time>="%s"'%_start_date)
+        _conditions.append('`user`.assign_time>="%s"'%_start_date)
 
     _end_date = request.args.get('end_date','')
     if _end_date:
-        _conditions.append('`user`.join_time<="%s"'%_end_date)
+        _conditions.append('`user`.assign_time<="%s"'%_end_date)
 
     if not _start_date and not _end_date:
         _today = datetime.now().strftime('%Y-%m-%d')
-        _conditions.append('`user`.join_time>="%s"'%_today)
+        _conditions.append('`user`.assign_time>="%s"'%_today)
         period = _today
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
@@ -2803,7 +2802,7 @@ def sale_scratchjx():
 @report.route('/sale/scratchmx')
 @admin_required
 def sale_scratchmx():
-    _conditions = []#['`user`.status=1']
+    _conditions = ['`user`.user_id not in (select user_id from user_servicelz)']#['`user`.status=1']
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`user`.assign_time>="%s"'%_start_date)
@@ -2820,7 +2819,7 @@ def sale_scratchmx():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    _sql = '''SELECT name,phone,assign_time,area,(SELECT count(id) from `scratchdj` WHERE`scratchdj`.user_id=`user`.user_id) as sfdj,(SELECT count(order_id) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and `arrival_time` IS NOT NULL and status not in (1,102)) as sfsh,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user`.user_id) as fgcs,intent_level,isable_reason,operator.nickname,(SELECT created from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and status not in (1,102)) as djtime FROM `user` LEFT JOIN operator ON operator.id=`user`.assign_operator_id where origin=27 and %s'''%' AND '.join(_conditions)
+    _sql = '''SELECT name,phone,assign_time,area,(SELECT count(id) from `scratchdj` WHERE`scratchdj`.user_id=`user`.user_id) as sfdj,(SELECT count(order_id) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and `arrival_time` IS NOT NULL and status not in (1,103)) as sfsh,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user`.user_id) as fgcs,intent_level,isable_reason,operator.nickname,(SELECT created from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and status not in (1,103)) as djtime FROM `user` LEFT JOIN operator ON operator.id=`user`.assign_operator_id where origin=27 and %s'''%' AND '.join(_conditions)
     #return _sql
     data = db.session.execute(_sql)
     return render_template('report/sale_report_by_scratchmx.html',data=data,period=period)
@@ -2829,18 +2828,18 @@ def sale_scratchmx():
 @report.route('/sale/scratchqyjx')
 @admin_required
 def sale_scratchqyjx():
-    _conditions = []#['`user`.status=1']
+    _conditions = ['`user`.user_id not in (select user_id from user_servicelz)']#['`user`.status=1']
     _start_date = request.args.get('start_date','')
     if _start_date:
-        _conditions.append('`user`.join_time>="%s"'%_start_date)
+        _conditions.append('`user`.assign_time>="%s"'%_start_date)
 
     _end_date = request.args.get('end_date','')
     if _end_date:
-        _conditions.append('`user`.join_time<="%s"'%_end_date)
+        _conditions.append('`user`.assign_time<="%s"'%_end_date)
 
     if not _start_date and not _end_date:
         _today = datetime.now().strftime('%Y-%m-%d')
-        _conditions.append('`user`.join_time>="%s"'%_today)
+        _conditions.append('`user`.assign_time>="%s"'%_today)
         period = _today
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
@@ -2877,3 +2876,83 @@ def sale_scratchqyjx():
     else:
         data = []
     return render_template('report/sale_report_by_scratchqyjx.html',di=0,data=data,operatorcount=operatorcount,period=period)
+
+
+@report.route('/servicelz')
+@admin_required
+def servicelz_report():
+    return render_template('report/servicelz_report.html')
+
+@report.route('/servicelz/mx')
+@admin_required
+def servicelz_report_mx():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user_servicelz`.`time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user_servicelz`.`time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user_servicelz`.`time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user_servicelz`.`time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _s_start_date = request.args.get('s_start_date','')
+    if _s_start_date:
+        _conditions.append('`user_servicelz`.`assign_time`>="%s"'%_s_start_date)
+
+    _s_end_date = request.args.get('s_end_date','')
+    if _s_end_date:
+        _conditions.append('`user_servicelz`.`assign_time`<="%s"'%_s_end_date)
+
+
+    _sql = '''select `user`.`name`,`user`.phone,`user`.area,`user`.origin,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user_servicelz`.user_id) as fgcs,`user_servicelz`.intent_level,`user`.is_valid,`user_servicelz`.assign_time,`user_servicelz`.time from `user_servicelz` LEFT JOIN `user` ON `user`.user_id=`user_servicelz`.user_id where %s '''%' AND '.join(_conditions)
+    #return _sql
+    rows = db.session.execute(_sql)
+    print dir(rows)
+    return render_template('report/servicelz_report_mx.html',rows=rows,period=period)
+
+@report.route('/servicelz/tj')
+@admin_required
+def servicelz_report_tj():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = []
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user_servicelz`.`time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user_servicelz`.`time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user_servicelz`.`time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user_servicelz`.`time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _s_start_date = request.args.get('s_start_date','')
+    if _s_start_date:
+        _conditions.append('`user_servicelz`.`assign_time`>="%s"'%_s_start_date)
+
+    _s_end_date = request.args.get('s_end_date','')
+    if _s_end_date:
+        _conditions.append('`user_servicelz`.`assign_time`<="%s"'%_s_end_date)
+
+
+    _sql = '''select `user`.area,`user`.origin,count(`user`.user_id) as sjl,count(`qxhdm_orderyf`.id) as fgcs from `user` LEFT JOIN `qxhdm_orderyf` ON `user`.user_id=`qxhdm_orderyf`.user_id JOIN `user_servicelz` ON `user_servicelz`.user_id=`user`.user_id where `user`.user_id in (SELECT user_id from user_servicelz) and %s group by `user`.area,`user`.origin'''%' AND '.join(_conditions)
+    #return _sql
+    rows = db.session.execute(_sql)
+    print dir(rows)
+    return render_template('report/servicelz_report_tj.html',rows=rows,period=period)
