@@ -2819,7 +2819,7 @@ def sale_scratchmx():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    _sql = '''SELECT name,phone,assign_time,area,(SELECT count(id) from `scratchdj` WHERE`scratchdj`.user_id=`user`.user_id) as sfdj,(SELECT count(order_id) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and `arrival_time` IS NOT NULL and status not in (1,103)) as sfsh,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user`.user_id) as fgcs,intent_level,isable_reason,operator.nickname,(SELECT created from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and status not in (1,103)) as djtime FROM `user` LEFT JOIN operator ON operator.id=`user`.assign_operator_id where origin=27 and %s'''%' AND '.join(_conditions)
+    _sql = '''SELECT name,phone,assign_time,area,(SELECT count(order_id) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and status not in (1,103)) as sfdj,(SELECT count(order_id) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and `arrival_time` IS NOT NULL and status not in (1,103)) as sfsh,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user`.user_id) as fgcs,intent_level,isable_reason,operator.nickname,(SELECT max(created) from `order` WHERE order_mode=25 and `order`.user_id=`user`.user_id and status not in (1,103)) as djtime FROM `user` LEFT JOIN operator ON operator.id=`user`.assign_operator_id where origin=27 and %s'''%' AND '.join(_conditions)
     #return _sql
     data = db.session.execute(_sql)
     return render_template('report/sale_report_by_scratchmx.html',data=data,period=period)
