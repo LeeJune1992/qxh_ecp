@@ -35,7 +35,12 @@
         <li> <i class="icon-user"></i></li>
         {% for endpoint,name in [
         ('report.servicelz_report_mx','服务流转数据明细表'),
-        ('report.servicelz_report_tj','服务流转数据统计表')] %}
+        ('report.servicelz_report_tj','服务流转数据统计表'),
+        ('report.servicelz_report_khzb','空盒周统计表'),
+        ('report.servicelz_report_khyb','空盒月统计表'),
+        ('report.servicelz_report_zdyb','终端月统计表'),
+        ('report.servicelz_report_ggkzb','刮刮卡周统计表'),
+        ('report.servicelz_report_ggkyb','刮刮卡月统计表')] %}
 {#        {% if current_user.action() %}#}
             {% if endpoint == request.endpoint %}
                 <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>

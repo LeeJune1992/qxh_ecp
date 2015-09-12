@@ -2917,7 +2917,7 @@ def servicelz_report_mx():
     _sql = '''select `user`.`name`,`user`.phone,`user`.area,`user`.origin,(SELECT count(id) from `qxhdm_orderyf` WHERE qxhdm_orderyf.user_id=`user_servicelz`.user_id) as fgcs,`user_servicelz`.intent_level,`user`.is_valid,`user_servicelz`.assign_time,`user_servicelz`.time from `user_servicelz` LEFT JOIN `user` ON `user`.user_id=`user_servicelz`.user_id where %s '''%' AND '.join(_conditions)
     #return _sql
     rows = db.session.execute(_sql)
-    print dir(rows)
+    #print dir(rows)
     return render_template('report/servicelz_report_mx.html',rows=rows,period=period)
 
 @report.route('/servicelz/tj')
@@ -2954,5 +2954,205 @@ def servicelz_report_tj():
     _sql = '''select `user`.area,`user`.origin,count(`user`.user_id) as sjl,count(`qxhdm_orderyf`.id) as fgcs from `user` LEFT JOIN `qxhdm_orderyf` ON `user`.user_id=`qxhdm_orderyf`.user_id JOIN `user_servicelz` ON `user_servicelz`.user_id=`user`.user_id where `user`.user_id in (SELECT user_id from user_servicelz) and %s group by `user`.area,`user`.origin'''%' AND '.join(_conditions)
     #return _sql
     rows = db.session.execute(_sql)
-    print dir(rows)
+    #print dir(rows)
     return render_template('report/servicelz_report_tj.html',rows=rows,period=period)
+
+#空盒周报
+@report.route('/servicelz/khzb')
+@admin_required
+def servicelz_report_khzb():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=19']
+    _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    _conditions2 = ['`user`.origin=19']
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_start_date)
+        _conditions2.append('`created`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_end_date)
+        _conditions2.append('`created`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user`.`assign_time`<="%s 23:59:59"'%_today)
+        _conditions2.append('`created`>="%s 00:00:00"'%_today)
+        _conditions2.append('`created`<="%s 23:59:59"'%_today)
+
+
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT `user`.area,count(`user`.user_id) as jxzs,
+SUM(CASE WHEN (SELECT count(id) from qxhkjdj where qxhkjdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj,
+SUM(CASE WHEN `user`.intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN `user`.intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` where %s GROUP BY `user`.area ORDER BY area'''%' AND '.join(_conditions)
+    #return _sql
+    rows = db.session.execute(_sql)
+    _sql2 = 'SELECT `user`.area,COUNT(qxhdm_orderyf.id) as fgds from user LEFT JOIN qxhdm_orderyf on qxhdm_orderyf.user_id=`user`.user_id where %s GROUP BY `user`.area ORDER BY area'%' AND '.join(_conditions2)
+    rows2 = db.session.execute(_sql2)
+    #print dir(rows)
+    return render_template('report/servicelz_report_khzb.html',rows=rows,rows2=rows2,period=period)
+
+
+#空盒月报
+@report.route('/servicelz/khyb')
+@admin_required
+def servicelz_report_khyb():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=19']
+    _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT area,count(*) as jxzs,SUM(CASE WHEN (SELECT count(id) from qxhkjdj where qxhkjdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj
+,SUM(CASE WHEN (SELECT count(id) from qxhkjdj where qxhkjdj.user_id=`user`.user_id and qxhkjdj.receive=1)>0 THEN 1 ELSE 0 END) as ydjlq,
+SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area
+
+'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_khyb.html',rows=rows,period=period)
+
+#终端月报
+@report.route('/servicelz/zdyb')
+@admin_required
+def servicelz_report_zdyb():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=18']
+    _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT area,count(*) as jxzs
+,SUM(CASE WHEN is_valid=1 THEN 1 ELSE 0 END) as yxl
+,SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN intent_level='F' THEN 1 ELSE 0 END) as lsl
+ from `user` where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area
+
+'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_zdyb.html',rows=rows,period=period)
+
+
+#刮刮卡周报
+@report.route('/servicelz/ggkzb')
+@admin_required
+def servicelz_report_ggkzb():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=27']
+    _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    _conditions2 = ['`user`.origin=27']
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_start_date)
+        _conditions2.append('`created`>="%s"'%_start_date)
+
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_end_date)
+        _conditions2.append('`created`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user`.`assign_time`<="%s 23:59:59"'%_today)
+        _conditions2.append('`created`>="%s 00:00:00"'%_today)
+        _conditions2.append('`created`<="%s 23:59:59"'%_today)
+        
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT area,count(*) as jxzs,SUM(CASE WHEN (SELECT count(id) from scratchdj where scratchdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj,
+SUM(CASE WHEN intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    _sql2 = 'SELECT `user`.area,COUNT(qxhdm_orderyf.id) as fgds from user LEFT JOIN qxhdm_orderyf on qxhdm_orderyf.user_id=`user`.user_id where %s GROUP BY `user`.area ORDER BY area'%' AND '.join(_conditions2)
+    rows2 = db.session.execute(_sql2)
+
+    #print dir(rows)
+    return render_template('report/servicelz_report_ggkzb.html',rows=rows,rows2=rows2,period=period)
+
+#刮刮卡月报
+@report.route('/servicelz/ggkyb')
+@admin_required
+def servicelz_report_ggkyb():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=27']
+    _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`user`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT area,count(*) as jxzs,SUM(CASE WHEN (SELECT count(id) from scratchdj where scratchdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj,
+SUM(CASE WHEN (SELECT count(order_id) from `order` where `order`.user_id=`user`.user_id AND `order`.order_mode=25 and `order`.`arrival_time` IS NOT NULL and `order`.`status` not in (1,103))>0 THEN 1 ELSE 0 END) as dhds,
+SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_ggkyb.html',rows=rows,period=period)
