@@ -369,6 +369,10 @@ ENDPOINTS = [
     ('servicelz_report_ggkzb',u'[服务]刮刮卡周统计表','E'),
     ('servicelz_report_ggkyb',u'[服务]刮刮卡月统计表 ','E'),
 
+    ('waih_report',u'外呼报表','E'),
+    ('waih_report_tq',u'[外呼]TQ进线报表','E'),
+
+
 
 
 
@@ -1002,6 +1006,18 @@ WEIXINS = {
     'D':u'已关注医师微信',
     'E':u'空缺',
 }
+#TQ
+TQ_ORIGIN = {
+    1:u'PC端',
+    2:u'MT端',
+}
+TQ_TYPE = {
+    1:u'TQ',
+    2:u'留言',
+    3:u'网单',
+}
+
+
 #大礼包类型
 DLB_TYPES = {
     1:u'留言',

@@ -813,6 +813,10 @@ class User(db.Model):
     grade = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#客户等级
     intent_level = Column(db.String(2),nullable=False,default='A')#意向等级
     origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#来源
+    tq_origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq来源
+    tq_type = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq类型
+
+
     email = Column(db.String(50))#邮箱地址
     remark = Column(db.String(500))#备注
     operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=False)#初始操作人员

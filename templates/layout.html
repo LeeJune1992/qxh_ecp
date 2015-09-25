@@ -108,6 +108,9 @@
                             {% if current_user.action('servicelz_report') %}
                                 <li><a href="{{ url_for('report.servicelz_report') }}"><i class="icon-briefcase"></i> 服务流转报表</a></li>
                             {% endif %}
+                            {% if current_user.action('waih_report') %}
+                                <li><a href="{{ url_for('report.waih_report') }}"><i class="icon-briefcase"></i> 外呼报表</a></li>
+                            {% endif %}
                         </ul>
                         </li>
                     {% endif %}

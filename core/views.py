@@ -2825,6 +2825,9 @@ def _edit_user(user):
 
         intent_level = request.form['intent_level']
 
+        user.tq_origin = int(request.form.get('tq_origin','0'))
+        user.tq_type = int(request.form.get('tq_type','0'))
+
         #entries = request.form['entries']
         user.name = username
         user.gender = gender
@@ -3015,7 +3018,8 @@ def _add_user():
     try:
         username = request.form['name']
         origin = int(request.form['origin'])
-
+        tq_origin = int(request.form.get('tq_origin','0'))
+        tq_type = int(request.form.get('tq_type','0'))
         #客户号码校验
         phones = []
         phone = format_phone(request.form['phone'])
@@ -3063,6 +3067,8 @@ def _add_user():
             dialog_type = int(dialog_type)
 
         user = User()
+        user.tq_origin = tq_origin
+        user.tq_type = tq_type
         user.name = username
         user.gender = gender
         user.phone = phone
