@@ -452,6 +452,22 @@ $(function () {
                             </td>
                         </tr>
                         <tr>
+                            <td class="title">TQ进线情况</td>
+                            <td colspan="3">
+                                {{ config['TQ_ORIGIN'][user.tq_origin] }},{{ config['TQ_TYPE'][user.tq_type] }}
+                            </td>
+                        </tr>
+                        {% if is_lz > 0 %}
+                        <tr>
+                            <td class="title">流转数据是否有效</td>
+                            <td colspan="3">
+                                {% if user.lz_valid == 1 %}有效
+								{%elif user.lz_valid == 2 %}无效
+								{%endif%}
+                            </td>
+                        </tr>
+                        {%endif%}
+                        <tr>
                             <td class="title">微信情况</td>
                             <td colspan="3">
                                 {% for k in user.weixin %}

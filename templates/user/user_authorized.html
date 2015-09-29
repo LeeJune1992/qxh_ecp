@@ -1500,6 +1500,30 @@ function khsljjlq(id){
                         <div class="row-fluid">
                             <hr/>
                             <div class="span12">
+                        		{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+                                <div class="control-group">
+                                    <label class="control-label">TQ进线选择</label>
+        
+                                    <div class="controls">
+                                        来源:{% for k,v in config['TQ_ORIGIN'].iteritems() %}
+                                            <label class="inline radio"><input type="radio" name="tq_origin" {% if user.tq_origin == k %}checked{%endif%} value="{{ k }}"/>{{ v }}</label>
+                                        {% endfor %}<input type="radio" name="tq_origin" {% if user.tq_origin == 0 %}checked{%endif%} value="0" />
+                                        &nbsp;&nbsp;&nbsp;&nbsp;类型:{% for k,v in config['TQ_TYPE'].iteritems() %}
+                                            <label class="inline radio"><input type="radio" name="tq_type" {% if user.tq_type == k %}checked{%endif%} value="{{ k }}"/>{{ v }}</label>
+                                        {% endfor %}<input type="radio" style="display:none;" name="tq_type"  {% if user.tq_type == k %}checked{%endif%} value="0" />
+                                    </div>
+                                </div>
+                                {% if is_lz > 0 %}
+                                <div class="control-group">
+                                    <label class="control-label">流转数据是否有效</label>
+        
+                                    <div class="controls">
+                                        <label class="inline radio"><input type="radio" name="lz_valid" {% if user.lz_valid == 1 %}checked{%endif%} value="1"/>有效</label>
+                                        <label class="inline radio"><input type="radio" name="lz_valid" {% if user.lz_valid == 2 %}checked{%endif%} value="2"/>无效</label>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endif %}
                                 <div class="control-group">
                                     <label class="control-label">微信情况</label>
 

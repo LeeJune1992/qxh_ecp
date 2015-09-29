@@ -371,6 +371,7 @@ ENDPOINTS = [
 
     ('waih_report',u'外呼报表','E'),
     ('waih_report_tq',u'[外呼]TQ进线报表','E'),
+    ('waih_report_lz',u'[外呼]流转数据跟进统计','E'),
 
 
 

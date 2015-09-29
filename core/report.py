@@ -3167,7 +3167,10 @@ def waih_report():
 @report.route('/waih/tq')
 @admin_required
 def waih_report_tq():
-    operators = Operator.query.filter(Operator.team.like('B%'))
+    _conditions2 = ['team like "A%" or team like "B%"']
+    _conditions2.append('status <> 0')
+    operators = Operator.query.filter(' AND '.join(_conditions2))
+
     period = ''
     #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
     _conditions = ['`user`.origin=4']
@@ -3211,3 +3214,54 @@ def waih_report_tq():
     rows = db.session.execute(_sql)
     #print dir(rows)
     return render_template('report/waih_report_tq.html',rows=rows,operators=operators,period=period)
+
+#流转数据跟进统计
+@report.route('/waih/lz')
+@admin_required
+def waih_report_lz():
+    _conditions2 = ['team like "A%" or team like "B%"']
+    _conditions2.append('status <> 0')
+    operators = Operator.query.filter(' AND '.join(_conditions2))
+    #print operators
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = []
+    #_conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`user`.`assign_operator_id`="%s"'%assign_operator_id)
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`user_servicelz`.`time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`user_servicelz`.`time`<="%s"'%_end_date)
+
+
+    _sstart_date = request.args.get('sstart_date','')
+    if _sstart_date:
+        _conditions.append('`user`.`assign_time`>="%s"'%_sstart_date)
+
+    _send_date = request.args.get('send_date','')
+    if _send_date:
+        _conditions.append('`user`.`assign_time`<="%s"'%_send_date)
+
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`user_servicelz`.`time`>="%s 00:00:00"'%_today)
+        #_conditions.append('`user`.`join_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+
+    _sql = '''SELECT `user`.origin,user_servicelz.intent_level,count(`user`.user_id) khsl,SUM(CASE WHEN `user`.lz_valid=1 THEN 1 ELSE 0 END) as yxsl,sum(`order`.item_fee) as cjje,count(`order`.order_id) as cjds FROM `user_servicelz` LEFT JOIN `user` ON `user`.user_id=user_servicelz.user_id LEFT JOIN `order` ON `order`.user_id=user_servicelz.user_id AND `order`.`status` NOT IN (1,103)
+     where '''+' AND '.join(_conditions)+''' GROUP BY `user`.origin,user_servicelz.intent_level ORDER BY `user`.origin,user_servicelz.intent_level'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/waih_report_lz.html',rows=rows,operators=operators,period=period)

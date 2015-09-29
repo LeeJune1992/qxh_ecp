@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import Scratch,SCRATCHDJ,User_Integration,Integration,User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import User_Servicelz,Scratch,SCRATCHDJ,User_Integration,Integration,User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -2570,7 +2570,9 @@ def user(user_id,token):
     if current_user.assign_user_type == 5:
         is_service = True
     
-    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms=perms,is_service=is_service)
+    is_lz = User_Servicelz.query.filter(User_Servicelz.user_id==user_id).count()
+    
+    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,is_lz = is_lz,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms=perms,is_service=is_service)
 
 
 @admin.route('/user/drop/<int:user_id>',methods=['POST'])
@@ -2827,6 +2829,7 @@ def _edit_user(user):
 
         user.tq_origin = int(request.form.get('tq_origin','0'))
         user.tq_type = int(request.form.get('tq_type','0'))
+        user.lz_valid = int(request.form.get('lz_valid','0'))
 
         #entries = request.form['entries']
         user.name = username

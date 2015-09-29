@@ -629,6 +629,20 @@
 
                     <div class="span12">
                         <hr/>
+                        {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+                        <div class="control-group">
+                            <label class="control-label">TQ进线选择</label>
+
+                            <div class="controls">
+                                来源:{% for k,v in config['TQ_ORIGIN'].iteritems() %}
+                                    <label class="inline radio"><input type="radio" name="tq_origin" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}<input type="radio" style="display:none;" name="tq_origin" checked="checked" value="0" />
+                                &nbsp;&nbsp;&nbsp;&nbsp;类型:{% for k,v in config['TQ_TYPE'].iteritems() %}
+                                    <label class="inline radio"><input type="radio" name="tq_type" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}<input type="radio" style="display:none;" name="tq_type" checked="checked" value="0" />
+                            </div>
+                        </div>
+                        {% endif %}
                         <div class="control-group">
                             <label class="control-label">微信情况</label>
 

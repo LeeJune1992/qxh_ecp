@@ -24,8 +24,8 @@
         
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
-        <input id="sstart_date" name="sstart_date" class="timepicker" type="text" value="{{ request.args['sstart_date'] }}" placeholder="下单开始时间" />
-        <input id="send_date" name="send_date" class="timepicker" type="text" value="{{ request.args['send_date'] }}" placeholder="下单结束时间" />
+        <input id="sstart_date" name="sstart_date" class="timepicker" type="text" value="{{ request.args['sstart_date'] }}" placeholder="分配开始时间" />
+        <input id="send_date" name="send_date" class="timepicker" type="text" value="{{ request.args['send_date'] }}" placeholder="分配结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
                 class="icon-search icon-white"></i>
             查询
@@ -37,8 +37,9 @@
         <thead>
         <tr>
             <th rowspan="2">来源</th>
-            <th rowspan="2">类型</th>
+            <th rowspan="2">客户等级</th>
             <th rowspan="2">客户数</th>
+            <th rowspan="2">有效数</th>
             <th rowspan="2">成交金额</th>
             <th rowspan="2">成交单数</th>
             <th rowspan="2">均额</th>
@@ -47,12 +48,13 @@
         <tbody>
         {% for d in rows %}
             <tr>
-            <td>{{ config['TQ_ORIGIN'][d.tq_origin] }}</td>
-            <td>{{ config['TQ_TYPE'][d.tq_type] }}</td>
-            <td>{{ d.yhs }}</td>
-            <td>{{ '%.2f'|format(d.zje|float * 1.0) }}</td>
-            <td>{{ d.zds }}</td>
-            <td>{% if not d.zds %}0{% else %}{{ '%.2f'|format(d.zje|float * 1.0 / d.zds|int) }}{% endif %}</td>
+            <td>{{ config['USER_ORIGINS'][d.origin] }}</td>
+            <td>{{ d.intent_level }}</td>
+            <td>{{ d.khsl }}</td>
+            <td>{{ d.yxsl }}</td>
+            <td>{{ '%.2f'|format(d.cjje|float * 1.0) }}</td>
+            <td>{{ d.cjds }}</td>
+            <td>{% if not d.cjds %}0{% else %}{{ '%.2f'|format(d.cjje|float * 1.0 / d.cjds|int) }}{% endif %}</td>
             </tr>
         {% endfor %}
         </tbody>

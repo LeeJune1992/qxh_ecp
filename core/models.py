@@ -815,7 +815,7 @@ class User(db.Model):
     origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#来源
     tq_origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq来源
     tq_type = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq类型
-
+    lz_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#流转是否有效1有效，2无效
 
     email = Column(db.String(50))#邮箱地址
     remark = Column(db.String(500))#备注
