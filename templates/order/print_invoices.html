@@ -67,72 +67,134 @@
 </head>
 <body align=center>
 {% for order in orders %}
-<div align="center" style="font-size: 16pt{% if loop.index>1 %};page-break-before: always{% endif %}">爱妻美发货单</div>
-<table style="margin:0 auto;margin-top:3pt;width: 540pt" class="head">
-    <tr>
-        <td class="right">客户名：</td>
-        <td class="content" style="width: 340pt">{{ order.shipping_address.ship_to }}</td>
-        <td class="right">发货日期：</td>
-        <td style="width: 80pt" class="content">{{ date }}</td>
-        <td class="right">订单号：</td>
-        <td style="width: 80pt" class="content">{{ order.order_id }}</td>
-    </tr>
-    <tr>
-        <td class="right">地 址：</td>
-        <td class="content" style="width: 340pt">{{ order.shipping_address.format_address }}</td>
-        <td class="right">销售部门：</td>
-        <td class="content">销售部</td>
-        <td class="right">发货单号：</td>
-        <td class="content">{{ order.order_id }}</td>
-    </tr>
-</table>
-
-<table style="margin:0 auto;margin-top:8pt;width: 540pt" class="items">
-    <thead>
-    <tr>
-        <th>产品编号</th>
-        <th>名称</th>
-        <th>规格</th>
-        <th>单位</th>
-        <th>数量</th>
-        <th>单价</th>
-        <th>小计</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for order_item in order.order_items %}
+    {% set sums=[] %}
+    {% set qxhsums=[] %}
+    {% set flag=0 %}
+    {% set flagqxh=0 %}
+    {% for order_item in order.order_items if flagqxh==0 and order_item.sku_id in (10001,10002,10003) %}
+    {% set flagqxh=1 %}
+    <div align="center" style="font-size: 16pt;page-break-before: always;">今正大药房发货单</div>
+    <table style="margin:0 auto;margin-top:3pt;width: 540pt" class="head">
         <tr>
-            <td>{{ order_item.sku_id }}</td>
-            <td style="text-align: left">{{ order_item.name }}</td>
-            <td>{{ order_item.sku.properties.get('p1','') }}</td>
-            <td>{{ order_item.unit|default('-',true) }}</td>
-            <td>{{ order_item.quantity }}</td>
-            <td>{{ order_item.price }}</td>
-            <td>{{ order_item.price*order_item.quantity }}</td>
+            <td class="right">客户名：</td>
+            <td class="content" style="width: 340pt">{{ order.shipping_address.ship_to }}</td>
+            <td class="right">发货日期：</td>
+            <td style="width: 80pt" class="content">{{ date }}</td>
+            <td class="right">订单号：</td>
+            <td style="width: 80pt" class="content">{{ order.order_id }}</td>
         </tr>
+        <tr>
+            <td class="right">地 址：</td>
+            <td class="content" style="width: 340pt">{{ order.shipping_address.format_address }}</td>
+            <td class="right">销售部门：</td>
+            <td class="content">销售部</td>
+            <td class="right">发货单号：</td>
+            <td class="content">{{ order.order_id }}</td>
+        </tr>
+    </table>
+    
+    <table style="margin:0 auto;margin-top:8pt;width: 540pt" class="items">
+        <thead>
+        <tr>
+            <th>产品编号</th>
+            <th>名称</th>
+            <th>规格</th>
+            <th>单位</th>
+            <th>数量</th>
+            <th>单价</th>
+            <th>小计</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order_item in order.order_items if order_item.sku_id in (10001,10002,10003) %}
+            <tr>
+                <td>{{ order_item.sku_id }}</td>
+                <td style="text-align: left">{{ order_item.name }}{% if order_item.price == 0 and order_item.name.find('【赠品】') ==-1 %}【兑换产品】{% endif %}</td>
+                <td>{{ order_item.sku.properties.get('p1','') }}</td>
+                <td>{{ order_item.unit|default('-',true) }}</td>
+                <td>{{ order_item.quantity }}</td>
+                <td>{{ order_item.price }}</td>
+                <td>{{ order_item.price*order_item.quantity }}</td>
+            </tr><div style="display:none;">{{ qxhsums.append(order_item.price*order_item.quantity) }}</div>
+        {% endfor %}
+    
+        <tr style="background-color: #f1f1f1;text-align: left">
+            <td align="right" style="font-weight: bold">合计</td>
+            <td colspan="2" style="font-weight: bold">￥{{ qxhsums|sum }}</td>
+            <td align="right" style="font-weight: bold">应付金额</td>
+            <td colspan="2" style="font-weight: bold">￥{{ qxhsums|sum }}</td>
+            <td style="text-align: center">{% if order.need_invoice %}***{% endif %}</td>
+        </tr>
+        </tbody>
+    </table>
     {% endfor %}
-        {% if order.voucher_fee %}
+    {% for order_item in order.order_items if flag==0 and order_item.sku_id not in (10001,10002,10003) %}
+    {% set flag=1 %}
+    <div align="center" style="font-size: 16pt;page-break-before: always;">气血和发货单</div>
+    <table style="margin:0 auto;margin-top:3pt;width: 540pt" class="head">
         <tr>
-        <td>99999</td>
-        <td style="text-align: left">代金卷(抵扣)</td>
-        <td>一张</td>
-        <td>张</td>
-        <td>1</td>
-        <td>{{ order.voucher_fee }}</td>
-        <td>{{ order.voucher_fee }}</td>
+            <td class="right">客户名：</td>
+            <td class="content" style="width: 340pt">{{ order.shipping_address.ship_to }}</td>
+            <td class="right">发货日期：</td>
+            <td style="width: 80pt" class="content">{{ date }}</td>
+            <td class="right">订单号：</td>
+            <td style="width: 80pt" class="content">{{ order.order_id }}</td>
         </tr>
-        {% endif %}
-
-    <tr style="background-color: #f1f1f1;text-align: left">
-        <td align="right" style="font-weight: bold">合计</td>
-        <td colspan="2" style="font-weight: bold">￥{{ order.item_fee }}</td>
-        <td align="right" style="font-weight: bold">应付金额</td>
-        <td colspan="2" style="font-weight: bold">￥{{ order.actual_fee }}</td>
-        <td style="text-align: center">{% if order.need_invoice %}***{% endif %}</td>
-    </tr>
-    </tbody>
-</table>
-<p align=center>爱妻美品牌旗下产品：气血和胶囊、芪枣健胃茶、营养品、化妆品 ......</p>
+        <tr>
+            <td class="right">地 址：</td>
+            <td class="content" style="width: 340pt">{{ order.shipping_address.format_address }}</td>
+            <td class="right">销售部门：</td>
+            <td class="content">销售部</td>
+            <td class="right">发货单号：</td>
+            <td class="content">{{ order.order_id }}</td>
+        </tr>
+    </table>
+    <table style="margin:0 auto;margin-top:8pt;width: 540pt" class="items">
+        <thead>
+        <tr>
+            <th>产品编号</th>
+            <th>名称</th>
+            <th>规格</th>
+            <th>单位</th>
+            <th>数量</th>
+            <th>单价</th>
+            <th>小计</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order_item in order.order_items if order_item.sku_id not in (10001,10002,10003) %}
+            <tr>
+                <td>{{ order_item.sku_id }}</td>
+                <td style="text-align: left">{{ order_item.name }}{% if order_item.price == 0 and order_item.name.find('【赠品】') ==-1 %}【兑换产品】{% endif %}</td>
+                <td>{{ order_item.sku.properties.get('p1','') }}</td>
+                <td>{{ order_item.unit|default('-',true) }}</td>
+                <td>{{ order_item.quantity }}</td>
+                <td>{{ order_item.price }}</td>
+                <td>{{ order_item.price*order_item.quantity }}</td>
+            </tr><div style="display:none;">{{ sums.append(order_item.price*order_item.quantity) }}</div>
+        {% endfor %}
+            {% if order.voucher_fee %}
+            <tr>
+            <td>99999</td>
+            <td style="text-align: left">代金卷(抵扣)</td>
+            <td>一张</td>
+            <td>张</td>
+            <td>1</td>
+            <td>{{ order.voucher_fee }}</td>
+            <td>{{ order.voucher_fee }}</td>
+            </tr>
+            {% endif %}
+    
+        <tr style="background-color: #f1f1f1;text-align: left">
+            <td align="right" style="font-weight: bold">合计</td>
+            <td colspan="2" style="font-weight: bold">￥{{ order.item_fee-qxhsums|sum }}</td>
+            <td align="right" style="font-weight: bold">应付金额</td>
+            <td colspan="2" style="font-weight: bold">￥{{ order.actual_fee-qxhsums|sum }}</td>
+            <td style="text-align: center">{% if order.need_invoice %}***{% endif %}</td>
+        </tr>
+        </tbody>
+    </table>
+    {% endfor %}
 {% endfor %}
 </body>
 </html>
