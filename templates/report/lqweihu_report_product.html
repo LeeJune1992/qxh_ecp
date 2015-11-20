@@ -1,0 +1,56 @@
+{% extends "report/lqweihu_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'归属员工'
+        });
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select> 
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>姓名</th>
+            <th>总客户数</th>
+            <th>总销售额</th>
+            <th>总订单量</th>
+            <th>产品类型</th>
+            <th>销售额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in rows %}
+            {% set num = d['protype']|length %}
+            <tr>
+            <td rowspan="{{ num + 1 }}">{{ d['nickname'] }}</td>
+            <td rowspan="{{ num + 1 }}">{{ d['usersc'] }}</td>
+            <td rowspan="{{ num + 1 }}">{{ '%.2f'|format(d['allfee']) }}</td>
+            <td rowspan="{{ num + 1 }}">{{ d['allorder'] }}</td>
+            </tr>
+            {% for item in d['protype'] %}
+            <tr><td style="text-align: left">{{ config['ITEM_CATEGORYS'][item['protype']] }}</td><td>{{ '%.2f'|format(item['allsale']) }}</td></tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -373,6 +373,14 @@ ENDPOINTS = [
     ('waih_report_tq',u'[外呼]TQ进线报表','E'),
     ('waih_report_lz',u'[外呼]流转数据跟进统计','E'),
 
+    ('lqweihu_report',u'维护报表','E'),
+    ('lqweihu_report_laiyuan',u'[维护]客户来源数据量统计','E'),
+    ('lqweihu_report_dengji',u'[维护]客户等级数据量统计','E'),
+    ('lqweihu_report_product',u'[维护]产品类型销售统计','E'),
+    ('lqweihu_report_cusAges',u'[维护]客户年龄统计','E'),
+    ('lqweihu_report_user_time',u'[维护]客户保留时间段统计','E'),
+
+
 
 
 

@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-from .models import Operator,Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
+from .models import Order,Operator,Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -842,7 +842,10 @@ def financial_report_by_paidan():
     express_id = request.args.get('express_id',0)
     if express_id:
         _conditions.append('`order`.express_id=%s'%express_id)
-
+    #_conditions = ["`order`.created>'2015-03-01'"]
+    #_conditions.append("`order`.created<'2015-10-01'")
+    #_conditions.append("`order`.user_id in (SELECT user_id from `user_phone` WHERE phone in (82124201))")
+    
     _sql = '''SELECT `order`.order_type,`operator`.nickname,`order`.team,`order`.delivery_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee FROM `order_item`
 JOIN `order` ON `order_item`.order_id=`order`.order_id AND `order`.delivery_time IS NOT NULL
 JOIN `address` ON `order`.shipping_address_id=`address`.id
@@ -963,7 +966,7 @@ def financial_report_by_qianshou():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
     #_conditions.append('`user`.remark="527微信抽奖"')
-    #_conditions.append('`order`.created>"2015-07-08" and `order`.created<"2015-09-01"')
+    #_conditions.append('`order`.created>"2015-09-01" and `order`.created<"2015-11-01"')
     _s_start_date = request.args.get('s_start_date','')
     if _s_start_date:
         _conditions.append('`order`.`delivery_time`>="%s"'%_s_start_date)
@@ -3040,6 +3043,53 @@ SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_
     #print dir(rows)
     return render_template('report/servicelz_report_khyb.html',rows=rows,period=period)
 
+#空盒月报
+@report.route('/servicelz/khyblz')
+@admin_required
+def servicelz_report_khyblz():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=19']
+    #_conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`us`.`assign_time`>="%s"'%_start_date)
+    
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`us`.`assign_time`<="%s"'%_end_date)
+    
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`us`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`us`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _start_date1 = request.args.get('start_date1','')
+    if _start_date1:
+        _conditions.append('`us`.`time`>="%s"'%_start_date1)
+    
+    _end_date1 = request.args.get('end_date1','')
+    if _end_date1:
+        _conditions.append('`us`.`time`<="%s"'%_end_date1)
+    
+    
+
+    _sql = '''SELECT area,count(*) as jxzs,SUM(CASE WHEN (SELECT count(id) from qxhkjdj where qxhkjdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj
+,SUM(CASE WHEN (SELECT count(id) from qxhkjdj where qxhkjdj.user_id=`user`.user_id and qxhkjdj.receive=1)>0 THEN 1 ELSE 0 END) as ydjlq,
+SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN us.intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN us.intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` LEFT JOIN user_servicelz us on `user`.user_id=us.user_id where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area
+
+'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_khyblz.html',rows=rows,period=period)
+
 #终端月报
 @report.route('/servicelz/zdyb')
 @admin_required
@@ -3077,6 +3127,53 @@ def servicelz_report_zdyb():
     rows = db.session.execute(_sql)
     #print dir(rows)
     return render_template('report/servicelz_report_zdyb.html',rows=rows,period=period)
+
+#终端月报
+@report.route('/servicelz/zdyblz')
+@admin_required
+def servicelz_report_zdyblz():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=18']
+    #_conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`us`.`assign_time`>="%s"'%_start_date)
+    
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`us`.`assign_time`<="%s"'%_end_date)
+    
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`us`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`us`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+    
+    _start_date1 = request.args.get('start_date1','')
+    if _start_date1:
+        _conditions.append('`us`.`time`>="%s"'%_start_date1)
+    
+    _end_date1 = request.args.get('end_date1','')
+    if _end_date1:
+        _conditions.append('`us`.`time`<="%s"'%_end_date1)
+    
+    
+
+    _sql = '''SELECT area,count(*) as jxzs
+,SUM(CASE WHEN is_valid=1 THEN 1 ELSE 0 END) as yxl
+,SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN (is_valid=1 and (us.intent_level='A' or us.intent_level='F')) THEN 1 ELSE 0 END) as lsl
+ from `user` LEFT JOIN user_servicelz us on `user`.user_id=us.user_id where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area
+
+'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_zdyblz.html',rows=rows,period=period)
 
 
 #刮刮卡周报
@@ -3157,6 +3254,50 @@ SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_
     rows = db.session.execute(_sql)
     #print dir(rows)
     return render_template('report/servicelz_report_ggkyb.html',rows=rows,period=period)
+
+#刮刮卡月报
+@report.route('/servicelz/ggkyblz')
+@admin_required
+def servicelz_report_ggkyblz():
+    period = ''
+    #_conditions = ['`order_log`.to_status=60','`order_log`.`order_id` = `order`.`order_id`','`order`.order_type<100']
+    _conditions = ['`user`.origin=27']
+    #_conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
+    
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`us`.`assign_time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`us`.`assign_time`<="%s"'%_end_date)
+
+    if not _start_date and not _end_date:
+        _today = datetime.now().strftime('%Y-%m-%d')
+        _conditions.append('`us`.`assign_time`>="%s 00:00:00"'%_today)
+        _conditions.append('`us`.`assign_time`<="%s 23:59:59"'%_today)
+        period = _today
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _start_date1 = request.args.get('start_date1','')
+    if _start_date1:
+        _conditions.append('`us`.`time`>="%s"'%_start_date1)
+
+    _end_date1 = request.args.get('end_date1','')
+    if _end_date1:
+        _conditions.append('`us`.`time`<="%s"'%_end_date1)
+
+
+    _sql = '''SELECT area,count(*) as jxzs,SUM(CASE WHEN (SELECT count(id) from scratchdj where scratchdj.user_id=`user`.user_id)>0 THEN 1 ELSE 0 END) as ydj,
+SUM(CASE WHEN (SELECT count(order_id) from `order` where `order`.user_id=`user`.user_id AND `order`.order_mode=25 and `order`.`arrival_time` IS NOT NULL and `order`.`status` not in (1,103))>0 THEN 1 ELSE 0 END) as dhds,
+SUM(CASE WHEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id)>0 THEN (SELECT count(id) fgs from qxhdm_orderyf where qxhdm_orderyf.user_id=`user`.user_id) ELSE 0 END) as fgds
+,SUM(CASE WHEN us.intent_level='A' THEN 1 ELSE 0 END) as zsls,SUM(CASE WHEN us.intent_level='F' THEN 1 ELSE 0 END) as fqsj
+ from `user` LEFT JOIN user_servicelz us on `user`.user_id=us.user_id where '''+' AND '.join(_conditions)+''' GROUP BY area ORDER BY area'''
+    #return _sql
+    rows = db.session.execute(_sql)
+    #print dir(rows)
+    return render_template('report/servicelz_report_ggkyblz.html',rows=rows,period=period)
 
 @report.route('/waih')
 @admin_required
@@ -3265,3 +3406,302 @@ def waih_report_lz():
     rows = db.session.execute(_sql)
     #print dir(rows)
     return render_template('report/waih_report_lz.html',rows=rows,operators=operators,period=period)
+
+
+@report.route('/cy')
+@admin_required
+def cy_report():
+    return render_template('report/cy_report.html')
+
+#
+@report.route('/cy/cy1')
+@admin_required
+def cy_report_1():
+    rstr = request.args.items().__str__()
+    if rstr != '[]':
+        _conditions = ['o.`status` not in (1,102)']
+        
+        user_origin = request.args.get('user_origin','')
+        if user_origin:
+            _conditions.append('`u`.`origin`=%s'%user_origin)    
+        
+        user_remark = request.args.get('user_remark','')
+        if user_remark:
+            _conditions.append('`u`.`remark`="%s"'%user_remark)
+        
+        
+        _start_date = request.args.get('start_date','')
+        if _start_date:
+            _conditions.append('o.created>="%s"'%_start_date)
+
+        _end_date = request.args.get('end_date','')
+        if _end_date:
+            _conditions.append('o.created<="%s"'%_end_date)
+
+
+        _sql = '''SELECT o.order_id,u.name,op.nickname,o.item_fee from `order` o LEFT JOIN `user` u on o.user_id=u.user_id LEFT JOIN operator op on op.id=u.assign_operator_id where '''+' AND '.join(_conditions)
+        #return _sql
+        rows = db.session.execute(_sql)
+        #print dir(rows)
+    else:
+        rows = []
+    return render_template('report/cy_report_1.html',rows=rows)
+
+@report.route('/cy/cy2')
+@admin_required
+def cy_report_2():
+    rstr = request.args.items().__str__()
+    if rstr != '[]':
+        #return rstr
+        #_conditions = ['''user_id in (select user_id from user where assign_operator_id in (SELECT id from operator where team like 'C%'))''']
+        _conditions = ['''user_id in (select user_id from user where user_type=2)''']
+        _start_date = request.args.get('start_date','')
+        if _start_date:
+            _conditions.append('created>="%s"'%_start_date)
+        
+        _end_date = request.args.get('end_date','')
+        if _end_date:
+            _conditions.append('created<="%s"'%_end_date)
+        
+        _conditions.append("created=(SELECT max(created) from `order` as b where `order`.user_id=b.user_id)")
+        rows = Order.query.filter(db.and_(*_conditions))
+    else:
+        rows = []
+    return render_template('report/cy_report_2.html',rows=rows)
+
+
+
+@report.route('/lqweihu')
+@admin_required
+def lqweihu_report():
+    return render_template('report/lqweihu_report.html')
+
+#
+@report.route('/lqweihu/laiyuan')
+@admin_required
+def lqweihu_report_laiyuan():
+    operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    _conditions = [r"""op.team like 'C%'"""]
+    _conditions.append('`op`.`assign_user_type`>0')
+    _conditions.append('`op`.`status`<>9')
+
+    user_origin = request.args.get('user_origin','')
+    if user_origin:
+        _conditions.append('`u`.`origin`=%s'%user_origin)    
+    
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`u`.`assign_operator_id`=%s'%assign_operator_id)    
+    
+    
+
+    _sql = '''SELECT op.id,op.nickname,u.origin,count(distinct u.user_id) as countu,count(o.order_id) as counto,IFNULL(sum(o.item_fee),0) as sumo from operator op LEFT JOIN `user` u ON op.id=u.assign_operator_id LEFT JOIN `order` o ON (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+ where %s GROUP BY op.id,op.nickname,u.origin
+'''%' AND '.join(_conditions)
+    #return _sql
+    rows = db.session.execute(_sql)
+    data = OrderedDict()
+    for id,nickname,origin,countu,counto,sumo in rows:
+        if not data.has_key(id):
+            data[id] = {'nickname':nickname,
+                              'countu':countu,
+                              'counto':counto,
+                              'sumo':sumo,
+                              'items':[],
+
+            }
+        else:
+            data[id]['countu'] = data[id]['countu']+countu
+            data[id]['counto'] = data[id]['counto']+counto
+            data[id]['sumo'] = data[id]['sumo']+sumo
+        data[id]['items'].append({'origin':origin,'countu':countu,'counto':counto,'sumo':sumo})
+    _data = data.values()
+    _data = sorted(_data,key=lambda d:d['nickname'])
+
+    #print dir(rows)
+    return render_template('report/lqweihu_report_laiyuan.html',operators=operators,rows=_data)
+
+@report.route('/lqweihu/dengji')
+@admin_required
+def lqweihu_report_dengji():
+    operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    _conditions = [r"""op.team like 'C%'"""]
+    _conditions.append('`op`.`assign_user_type`>0')
+    _conditions.append('`op`.`status`<>9')
+    intent_level = request.args.get('intent_level','')
+    if intent_level:
+        _conditions.append('`u`.`intent_level`="%s"'%intent_level)    
+    
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`u`.`assign_operator_id`=%s'%assign_operator_id)    
+    
+    
+
+    _sql = '''SELECT op.id,op.nickname,u.intent_level,count(distinct u.user_id) as countu,count(o.order_id) as counto,IFNULL(sum(o.item_fee),0) as sumo from operator op LEFT JOIN `user` u ON op.id=u.assign_operator_id LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+ where %s GROUP BY op.id,op.nickname,u.intent_level
+'''%' AND '.join(_conditions)
+    #return _sql
+    rows = db.session.execute(_sql)
+    data = OrderedDict()
+    for id,nickname,intent_level,countu,counto,sumo in rows:
+        if not data.has_key(id):
+            data[id] = {'nickname':nickname,
+                              'countu':countu,
+                              'counto':counto,
+                              'sumo':sumo,
+                              'items':[],
+
+            }
+        else:
+            data[id]['countu'] = data[id]['countu']+countu
+            data[id]['counto'] = data[id]['counto']+counto
+            data[id]['sumo'] = data[id]['sumo']+sumo
+        data[id]['items'].append({'intent_level':intent_level,'countu':countu,'counto':counto,'sumo':sumo})
+    _data = data.values()
+    _data = sorted(_data,key=lambda d:d['nickname'])
+
+    #print dir(rows)
+    return render_template('report/lqweihu_report_dengji.html',operators=operators,rows=_data)
+@report.route("/lqweihu/product")
+@admin_required
+def lqweihu_report_product():
+
+    operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    _conditions = [r"""op.team like 'C%'"""]
+    _conditions.append('`op`.`assign_user_type`>0')
+    _conditions.append('`op`.`status`<>9')
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`op`.`id`="%s"'%assign_operator_id)
+        
+    sql = '''SELECT op.id,op.nickname,sum(oi.fee) as allsale, count(o.order_id) as allorder,i.category_id as protype
+		from operator as op LEFT JOIN `user` u ON u.assign_operator_id=op.id
+			LEFT JOIN `order`o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+			LEFT JOIN order_item oi ON oi.order_id=o.order_id
+			LEFT JOIN sku s ON s.id=oi.sku_id
+			LEFT JOIN item i ON i.id=s.item_id
+			WHERE %s GROUP BY op.id,protype'''%' AND '.join(_conditions)
+    rows = db.session.execute(sql)
+    data = OrderedDict()
+    for id,nickname,allsale,allorder,protype in rows:
+        if not data.has_key(id):
+            data[id] = {'nickname':nickname,
+                                      'protype':[],
+
+            }
+        sql2 = """select count(DISTINCT u.user_id) as usersc,count(o.order_id) as allorder,IFNULL(sum(o.item_fee),0) as allfee from operator as op LEFT JOIN `user` u ON u.assign_operator_id=op.id
+			LEFT JOIN `order`o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2) where op.id="""+str(id)
+        rows2 = db.session.execute(sql2)
+        for usersc,allorder,allfee in rows2:
+            data[id]['usersc'] = usersc
+            data[id]['allorder'] = allorder
+            data[id]['allfee'] = allfee
+        if protype:
+            data[id]['protype'].append({'protype':protype,'allsale':allsale})
+    _data = data.values()
+    _data = sorted(_data,key=lambda d:d['nickname'])
+        
+    return render_template('report/lqweihu_report_product.html', operators=operators, rows=_data)
+   
+
+
+@report.route("/lqweihu/cusAges")
+@admin_required
+def lqweihu_report_cusAges():
+    operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    _conditions = [r"""op.team like 'C%'"""]
+    _conditions.append('`op`.`assign_user_type`>0')
+    _conditions.append('`op`.`status`<>9')
+    assign_operator_id = request.args.get('assign_operator_id','')
+    ages = request.args.get('ages','')
+    if assign_operator_id:
+        _conditions.append('`u`.`assign_operator_id`="%s"'%assign_operator_id)
+    if not ages:
+        sql2 = '''
+                sum(CASE WHEN u.ages<=20 THEN 1 ELSE 0 END) as age20, 
+					sum(CASE WHEN u.ages>20 AND u.ages<=30 THEN 1 ELSE 0 END) as age30, 
+					sum(CASE WHEN u.ages>30 AND u.ages<=40 THEN 1 ELSE 0 END) as age40, 
+					sum(CASE WHEN u.ages>40 AND u.ages<=50 THEN 1 ELSE 0 END) as age50, 
+					sum(CASE WHEN u.ages>50 THEN 1 ELSE 0 END) as age60
+                '''
+    if ages:
+        if ages=='1':
+            sql2 = '''
+                sum(CASE WHEN u.ages<=20 THEN 1 ELSE 0 END) as age20, 
+					sum(CASE WHEN u.ages>20 AND u.ages<=30 THEN 1 ELSE 0 END) as age30, 
+					sum(CASE WHEN u.ages>30 AND u.ages<=40 THEN 1 ELSE 0 END) as age40, 
+					sum(CASE WHEN u.ages>40 AND u.ages<=50 THEN 1 ELSE 0 END) as age50, 
+					sum(CASE WHEN u.ages>50 THEN 1 ELSE 0 END) as age60
+                '''
+            age_condition = 1
+        if ages=='2':
+            sql2 = 'sum(CASE WHEN u.ages<=20 THEN 1 ELSE 0 END) as age20'
+            age_condition = 2
+        if ages=='3':
+            sql2 = 'sum(CASE WHEN u.ages>20 AND u.ages<=30 THEN 1 ELSE 0 END) as age30'
+            age_condition = 3
+        if ages=='4':
+            sql2 = 'sum(CASE WHEN u.ages>30 AND u.ages<=40 THEN 1 ELSE 0 END) as age40'
+            age_condition = 4
+        if ages=='5':
+            sql2 = 'sum(CASE WHEN u.ages>40 AND u.ages<=50 THEN 1 ELSE 0 END) as age50'
+            age_condition = 5
+        if ages=='6':
+            sql2 = 'sum(CASE WHEN u.ages>50 THEN 1 ELSE 0 END) as age60'
+            age_condition = 6
+        
+    sql = '''SELECT op.id, op.nickname, count(distinct u.user_id) as coutu,%s                                  
+            from operator as op
+            LEFT JOIN `user` u ON op.id=u.assign_operator_id
+            WHERE %s GROUP BY op.id, op.nickname'''%(sql2,' AND '.join(_conditions))
+    rows = db.session.execute(sql)
+    return render_template('report/lqweihu_report_cusAges.html', operators=operators,rows=rows)
+
+@report.route('/lqweihu/user_time')
+@admin_required
+def lqweihu_report_user_time():
+    
+    operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    _conditions = [r"""op.team like 'C%'"""]
+    _conditions.append('`op`.`assign_user_type`>0')
+    _conditions.append('`op`.`status`<>9')
+    assign_operator_id = request.args.get('assign_operator_id','')
+    if assign_operator_id:
+        _conditions.append('`op`.`id`="%s"'%assign_operator_id)
+
+    sql='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
+	FROM operator as op 
+	LEFT JOIN `user` u ON u.assign_operator_id=op.id
+	LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+            WHERE %s GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30),ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360)''' %' AND '.join(_conditions)
+    
+    
+    rows = db.session.execute(sql)
+    data = OrderedDict()
+    
+    for id,nickname,usertime,usertime2,alluser,allfee,allorder in rows:
+        if not data.has_key(id):
+            data[id] = {'nickname':nickname,
+                        'alluser':alluser,
+                        'allfee':allfee,
+                        'allorder':allorder,
+                        'items':[],
+                        'items2':[],
+                        'items3':[],
+            }
+        else:
+            data[id]['alluser'] = data[id]['alluser']+alluser
+            data[id]['allfee'] = data[id]['allfee']+allfee
+            data[id]['allorder'] = data[id]['allorder']+allorder
+        
+        if usertime2>1:
+            data[id]['items2'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+        else:
+            if usertime<=1:
+                data[id]['items3'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+            else:
+                data[id]['items'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+    _data = data.values()
+    _data = sorted(_data,key=lambda d:d['nickname'])
+    return render_template('report/lqweihu_report_user_time.html', operators=operators, rows=_data)

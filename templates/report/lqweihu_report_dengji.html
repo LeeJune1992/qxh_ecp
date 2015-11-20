@@ -1,0 +1,72 @@
+{% extends "report/lqweihu_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#intent_level').select2({
+            width:'150px',
+            placeholder:'等级',
+            allowClear:true
+        });
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'归属员工'
+        });
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select>
+        <select id="intent_level" name="intent_level" class="select2" style="width: 120px">
+            <option></option>
+            <option value="">所有等级</option>
+            {% set intent_level = request.args.get('intent_level','') %}
+            {%- for k in config['USER_INTENT_LEVELS'] -%}
+                <option value="{{ k }}" {% if k==intent_level %}selected="selected"{% endif %}>{{ k }}</option>
+            {%- endfor -%}
+        </select>
+        
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>姓名</th>
+            <th>总客户数</th>
+            <th>总订单量</th>
+            <th>总销售额</th>
+            <th>客户等级</th>
+            <th>客户数量</th>
+            <th>订单量</th>
+            <th>销售额</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in rows %}
+            {% set num = d['items']|length %}
+            <tr>
+            <td rowspan="{{ num + 1 }}">{{ d['nickname'] }}</td>
+            <td rowspan="{{ num + 1 }}">{{ d['countu'] }}</td>
+            <td rowspan="{{ num + 1 }}">{{ d['counto'] }}</td>
+            <td rowspan="{{ num + 1 }}">{{ '%.2f'|format(d['sumo']) }}</td>
+            </tr>
+            {% for item in d['items'] %}
+            <tr><td style="text-align: left">{{ item['intent_level'] }}</td><td>{{ item['countu'] }}</td><td>{{ item['counto'] }}</td><td>{{ '%.2f'|format(item['sumo']) }}</td></tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

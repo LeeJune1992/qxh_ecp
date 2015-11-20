@@ -111,6 +111,12 @@
                             {% if current_user.action('waih_report') %}
                                 <li><a href="{{ url_for('report.waih_report') }}"><i class="icon-briefcase"></i> 外呼报表</a></li>
                             {% endif %}
+                            {% if current_user.action('cy_report') %}
+                                <li><a href="{{ url_for('report.cy_report') }}"><i class="icon-briefcase"></i> 常用报表</a></li>
+                            {% endif %}
+                            {% if current_user.action('lqweihu_report') %}
+                                <li><a href="{{ url_for('report.lqweihu_report') }}"><i class="icon-briefcase"></i> 维护报表</a></li>
+                            {% endif %}
                         </ul>
                         </li>
                     {% endif %}

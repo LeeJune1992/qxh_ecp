@@ -1,0 +1,69 @@
+{% extends "report/lqweihu_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'归属员工'
+        });
+		$('#ages').select2({
+            width:'120px',
+            placeholder:'年龄段'
+        });
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select> 
+        <select id="ages" name="ages">
+            {% set ages = request.args.get('ages',0)|int %}
+            <option></option>
+        	<option value="1" {% if 1==ages %}selected="selected"{% endif %}>年龄段</option>
+            <option value="2" {% if 2==ages %}selected="selected"{% endif %}>小于20</option>
+            <option value="3" {% if 3==ages %}selected="selected"{% endif %}>21-30</option>
+            <option value="4" {% if 4==ages %}selected="selected"{% endif %}>31-40</option>
+            <option value="5" {% if 5==ages %}selected="selected"{% endif %}>41-50</option>
+            <option value="6" {% if 6==ages %}selected="selected"{% endif %}>51以上</option>
+        </select>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>姓名</th>
+            <th>总客户数</th>
+            <th>20以下</th>
+            <th>21-30</th>
+            <th>31-40</th>
+            <th>41-50</th>
+            <th>51及以上</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in rows %}
+            <tr>
+            <td >{{ d['nickname'] }}</td>           
+            <td >{{ d['coutu'] }}</td>          
+            <td >{{ d['age20'] }}</td>          
+            <td >{{ d['age30'] }}</td>         
+            <td >{{ d['age40'] }}</td>
+            <td >{{ d['age50'] }}</td>
+            <td >{{ d['age60'] }}</td>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
