@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% set category='report' %}
-{% block title %}服务流转报表{% endblock %}
+{% block title %}常用报表{% endblock %}
 {% block css %}
     {{ super() }}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
@@ -31,19 +31,11 @@
 {% endblock %}
 {% block content %}
     <ul class="breadcrumb">
-        <li class="pull-right"><blockquote style="color: #ccc">服务流转报表</blockquote></li>
+        <li class="pull-right"><blockquote style="color: #ccc">外呼报表</blockquote></li>
         <li> <i class="icon-user"></i></li>
         {% for endpoint,name in [
-        ('report.servicelz_report_mx','服务流转数据明细表'),
-        ('report.servicelz_report_tj','服务流转数据统计表'),
-        ('report.servicelz_report_khzb','空盒周统计表'),
-        ('report.servicelz_report_khyb','空盒月统计表'),
-        ('report.servicelz_report_khyblz','空盒流转月统计表'),
-        ('report.servicelz_report_zdyb','终端月统计表'),
-        ('report.servicelz_report_zdyblz','终端流转月统计表'),
-        ('report.servicelz_report_ggkzb','刮刮卡周统计表'),
-        ('report.servicelz_report_ggkyb','刮刮卡月统计表'),
-        ('report.servicelz_report_ggkyblz','刮刮卡流转数据月统计表')] %}
+        ('report.cy_report_1','根据客户来源备注获取订单情况'),
+        ('report.cy_report_2','会员客户最后订单情况数据')] %}
 {#        {% if current_user.action() %}#}
             {% if endpoint == request.endpoint %}
                 <li class="active">{{ name }} {% if not loop.last %}<span class="divider">|</span>{% endif %}</li>

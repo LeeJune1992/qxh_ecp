@@ -1,0 +1,72 @@
+{% extends "report/servicelz_report.html" %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+    $(function(){
+        $('#express_id').select2({
+            width:'150px',
+            placeholder:'快递公司',
+            allowClear:true
+        })
+    });
+</script>
+{% endblock %}
+{% block report %}
+    <form action="" method="get" class="form-search inline">
+        <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="分配开始时间" />
+        <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="分配结束时间" />
+        <input id="start_date1" name="start_date1" class="timepicker" type="text" value="{{ request.args['start_date1'] }}" placeholder="流转开始时间" />
+        <input id="end_date1" name="end_date1" class="timepicker" type="text" value="{{ request.args['end_date1'] }}" placeholder="流转结束时间" />
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
+                class="icon-search icon-white"></i>
+            查询
+        </button>
+    </form>
+    <hr>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th rowspan="2">区域</th>
+            <th rowspan="2">进线总数</th>
+            <th rowspan="2">未登记</th>
+            <th rowspan="2">已登记</th>
+            <th rowspan="2">登记率</th>
+            <th rowspan="2">已领取</th>
+            <th rowspan="2">领取率</th>
+            <th rowspan="2">复购单数</th>
+            <th rowspan="2">复购率</th>
+            <th colspan="3">流失量</th>
+            <th rowspan="2">流失率</th>
+        </tr>
+        <tr>
+          <th>暂时流失</th>
+          <th>放弃数据</th>
+          <th>合计</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in rows %}
+            <tr>
+            <td>{{ d.area }}</td>
+            <td>{{ d.jxzs }}</td>
+            <td>{{ d.jxzs|int-d.ydj|int }}</td>
+            <td>{{ d.ydj }}</td>
+            <td>{% if not d.ydj %}0{% else %}{{ '%.2f'|format(d.ydj|int * 100.0 / d.jxzs|int) }}%{% endif %}</td>
+            <td>{{ d.ydjlq }}</td>
+            <td>{% if not d.ydjlq %}0{% else %}{{ '%.2f'|format(d.ydjlq|int * 100.0 / d.ydj|int) }}%{% endif %}</td>
+            <td>{{ d['fgds'] }}</td>
+            <td>{% if not d.fgds %}0{% else %}{{ '%.2f'|format(d.fgds|int * 100.0 / d.jxzs|int) }}%{% endif %}</td>
+            <td>{{ d.zsls }}</td>
+            <td>{{ d.fqsj }}</td>
+            <td>{{ d.zsls+d.fqsj }}</td>
+            <td>{% if not (d.zsls+d.fqsj) %}0{% else %}{{ '%.2f'|format((d.zsls+d.fqsj)|int * 100.0 / d.jxzs|int) }}%{% endif %}</td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+<hr>
+    <blockquote class="pull-left">统计日期：<br/><span class="label label-success">{{ period }}</span></blockquote>
+
+{% endblock %}

@@ -368,6 +368,10 @@ ENDPOINTS = [
     ('servicelz_report_zdyb',u'[服务]终端月统计表 ','E'),
     ('servicelz_report_ggkzb',u'[服务]刮刮卡周统计表','E'),
     ('servicelz_report_ggkyb',u'[服务]刮刮卡月统计表 ','E'),
+    ('servicelz_report_khyblz',u'[服务]空盒流转月统计表','E'),
+    ('servicelz_report_zdyblz',u'[服务]终端流转月统计表 ','E'),
+    ('servicelz_report_ggkyblz',u'[服务]刮刮卡流转月统计表 ','E'),
+
 
     ('waih_report',u'外呼报表','E'),
     ('waih_report_tq',u'[外呼]TQ进线报表','E'),
