@@ -3703,5 +3703,5 @@ def lqweihu_report_user_time():
             else:
                 data[id]['items'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
     _data = data.values()
-    _data = sorted(_data,key=lambda d:d['nickname'])
+    _data = sorted(_data,key=lambda d:d['nickname']) 
     return render_template('report/lqweihu_report_user_time.html', operators=operators, rows=_data)
