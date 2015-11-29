@@ -3,10 +3,10 @@ python-flask qxh_ecp
 
 need some plugins，for example：
 Flask==0.9
-flask-login
+flask-login   用于登录模块的扩展
 flask-openid
 flask-mail
-sqlalchemy==0.7.9
+sqlalchemy==0.7.9  
 flask-sqlalchemy==0.16
 sqlalchemy-migrate
 flask-whooshalchemy==0.54a
@@ -16,6 +16,6 @@ flask-babel==0.8
 flup
 mako
 flask-script
-wtform==1.0
+wtform==1.0  
 simplejson
 
