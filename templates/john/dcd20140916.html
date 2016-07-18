@@ -1,0 +1,22 @@
+
+<table>
+{% for user in pagination %}
+{% if user.mobile_phones and ',' in user.mobile_phones %}
+    {% set p= user.mobile_phones.split(',') %}
+    {% if p %}
+    <tr>
+    <td>{{ p[0] }}</td>
+    <td>{{ config['PRODUCT_INTENTION'][user.product_intention] }}
+    </td>
+    <tr>
+    {% endif %}
+{% elif user.mobile_phones %}
+    <tr>
+    <td>{{ user.mobile_phones }}
+    </td>
+    <td>{{ config['PRODUCT_INTENTION'][user.product_intention] }}
+    </td>
+    </tr>
+{% endif %}
+{% endfor %}
+</table>

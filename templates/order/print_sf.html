@@ -29,6 +29,7 @@
         $(function(){
       function generateBarcode(){
         var value = '{{ order.express_number }}';
+        var value_order_id = '{{ order.order_id }}';
         var btype = 'code128';
         var renderer = 'css';
         
@@ -38,8 +39,32 @@
           output:renderer,
           bgColor: '#FFFFFF',
           color: '#000000',
+          barWidth: 3,
+          barHeight: 60,
+          moduleSize: 5,
+          posX: 10,
+          posY: 20,
+		  fontSize: 18,
+          addQuietZone: 1
+        };
+        var settings1 = {
+          output:renderer,
+          bgColor: '#FFFFFF',
+          color: '#000000',
           barWidth: 2,
-          barHeight: 40,
+          barHeight: 50,
+          moduleSize: 5,
+          posX: 10,
+          posY: 20,
+		  fontSize: 12,
+          addQuietZone: 1
+        };
+        var settings_order_id = {
+          output:renderer,
+          bgColor: '#FFFFFF',
+          color: '#000000',
+          barWidth: 1,
+          barHeight: 30,
           moduleSize: 5,
           posX: 10,
           posY: 20,
@@ -47,7 +72,8 @@
           addQuietZone: 1
         };
 		$("#code1").html("").show().barcode(value, btype, settings);
-		$("#code2").html("").show().barcode(value, btype, settings);
+		$("#code1_1").html("").show().barcode(value, btype, settings1);
+		$("#code2").html("").show().barcode(value_order_id, btype, settings_order_id);
       }
           
       function showConfig1D(){
@@ -64,7 +90,7 @@
         });
     </script>
 </head>
-<body style="width:480px; margin:0 auto;">
+<body style="width:480px;">
 	<div id="a4_template" class="hidden">
 				<style>
 				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
@@ -86,6 +112,7 @@
 				a:hover {text-decoration:underline;}
 				h4, .f14{font-size:14px;}
 				.f12{font-size:12px ;}
+				.f6{font-size:6px;}
 				.f16{font-size:16px;}
 				.f18{font-size:18px;}
 				.f24{font-size:24px;}
@@ -191,6 +218,7 @@
 				
 				/***电子运单***/
 				.brd{border:2px solid #000000;}
+				.brd_l{border-left:2px solid #000000;}
 				.brd_r{border-right:2px solid #000000;}
 				.brd_b{border-bottom:2px solid #000000;}
 				.brd_t{border-top:2px solid #000000;}
@@ -208,7 +236,7 @@
 				.a5_waybill_cnt{width:480px;height:auto;}
 				
 				.waybill_logo{height:112px;width:236px;text-align:center;}
-				.a5_waybill_logo{height:62px;width:186px;text-align:center;}
+				.a5_waybill_logo{height:65px;width:175px;text-align:center;}
 				
 				.bar_code{width:419px;}
 				.wb_sender,.wb_reviver{width:752px;}
@@ -217,7 +245,7 @@
 				.wb_old_post,.wb_target{width:213px;}
 				.wb_reviver,.wb_target{height:100px;}
 				.fact_info_hd{height:28px;width:16.5%;}
-				.a5_fact_info_hd{height:28px;}
+				.a5_fact_info_hd{height:18px;}
 				
 				.fact_info_cnt{height:56px;line-height:56px;}
 				.pay_type{width:329px;height:56px;}
@@ -232,7 +260,7 @@
 				.append_service{width:328px;height:170px;}
 				.append_info{width:328px;height:170px;}
 				.reciver_sign , .sr_person{height:56px;}
-				.total_cost{width:474px;}
+				.total_cost{width:404px;}
 				.down_cnt{width:758px;margin:0 auto;color:#FF00FF;margin-bottom:20px;}
 				.printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:624px;}
 				.a5_printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:333px;}
@@ -258,7 +286,7 @@
 				.adh_bold{font-weight:bold;}
 				.target_font{display:inline-block;font-size:34px;font-weight:bold;}
 				.a5_target_font{display:inline-block;font-size:30px;font-weight:bold;}
-				
+
 				.adh_pay_type{height:38px;width:401px;}
 				.second_hd{width:179px;}
 				.wb_sender_info2{width:268px;}
@@ -272,7 +300,7 @@
 				
 				/****************A5**********************/
 				.a5_sender{width:356px;height:40px;overflow:hidden;}
-				.a5_wb_old_post, .a5_wb_target{width:213px;}
+				.a5_wb_old_post, .a5_wb_target{width:130px;}
 				.transalteClsIE{filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3)}
 				.transalteClsNOTIE{-moz-transform:-90deg;-webkit-transform:-90deg}
 				/****************A5**********************/
@@ -283,231 +311,193 @@
 				.line2{width:297px;overflow:hidden;height:42px}
 				.line3{width:297px;overflow:hidden;height:63px}
 				.line4{width:297px;overflow:hidden;height:84px}
+
+				.bar_code_new{width:350px;}
+				.a5_target_font_new{display:inline-block;font-size:25px;font-weight:bold;}
+				.a5_target_font_new_new{display:inline-block;font-size:65px;font-weight:bold;}
+				.td_l{width:40px; font-size:13px;}
+				.td_h{height:20px;}
+				.td_j{width:44px; font-size:13px;}
+				.td_jj{width:44px; font-size:8px;}
+				.td_r{width:440px;}
+				.ml15{margin-left:15px;}
+				.ddh{width:150px; font-size:13px; border-top:2px solid #000000;}
+				.code2_s{margin-top:5px;}
+				.ms_l{width:20px; line-height:14px;}
+				.td_ms{line-height:12px;margin-top:1px;margin-bottom:1px;}
 		</style>
-		<div class="a5_waybill_cnt brd prelative print_mt20">
 				<table>
-					<tbody><tr>
-						<td class="a5_waybill_logo brd_r brd_b">
-							<img src="/static/img/awd_logo_A5.png">
-						</td>
-						<td class="bar_code brd_b"><div id="code1" class="barcode2"></div>
-						</td>
-					</tr>
-				</tbody></table>
+					<tbody>
+						<tr>
+							<td class="a5_waybill_logo brd_b"></td>
+							<td class="bar_code brd_b" style="font-size:40px;font-weight:bold;">{% if order.payment_type==1 %} COD {% else %}{% endif %}</td>
+						</tr>
+					</tbody>
+				</table>
 				<table>
-					<tbody><tr>
-						<td valign="top" class="a5_wb_sender brd_r">
-							<ul>
-								<li class="h24 lh24 ml5 a5_sender adh_wb_sender_shipperInfo1">
-									<span class="adh_bold f14">寄方 : </span>
-									<span class="ml5 f14 show">四川省成都市成华区白莲村2组103号 爱妻美 4006002000</span>
-									<span class="hidden"></span>
-								</li>
-							</ul>
-						</td>
-						<td valign="top" class="a5_wb_old_post">
-							<ul>
-								<li class="f14 ml5"><span class="adh_bold">原寄地 : </span></li>
-								<li class="h26 lh26 tc mb5"><span class="a5_target_font shipperAddressCode1">028</span></li>
-							</ul>
-						</td>
-					</tr>
-				</tbody></table>
-				<table>
-					<tbody><tr>
-						<td valign="top" class="a5_wb_reviver brd_r brd_t">
-							<ul>
-								<li class="h24 lh24 ml5 a5_sender">
-									<span class="adh_bold f14">收方 : </span>
-									<span class="ml5 f14 adh_wb_sender_receiver1"><!--{{ order.shipping_address.province|format_address }}&nbsp;{{ order.shipping_address.city|format_address }}&nbsp;{{ order.shipping_address.district|format_address }}&nbsp;-->{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;******
-                                    <!--{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;{{ order.shipping_address.ship_to }}&nbsp;{{ order.shipping_address.phone }}&nbsp;{{ order.shipping_address.tel|default('',true) }}--></span>
-									<!-- 
-									<span class="ml5 f14">{receiverName}</span>
-									<span class="ml5 f14">{receiverPhone}</span>
-									<span class="ml5 f14">{receiverFullAddress}</span>
-									 -->
-								</li>
-							</ul>
-						</td>
-						<td valign="top" class="a5_wb_target brd_t">
-							<ul>
-								<li class="f14 ml5"><span class="adh_bold">目的地 : </span></li>
-								<li class="h26 lh26 tc mb5"><span class="a5_target_font receiverAddressCode1">{{order.express_sfdestcode}}</span></li>
-							</ul>
-						</td>
-					</tr>
-				</tbody></table>
-				<table>
-					<tbody><tr>
-						<td valign="top" class="a5_wb_reviver brd_r brd_t">
-							<ul>
-								<li class="ml5 a5_sender">
-									<span class="adh_bold f14">托寄物内容 : </span>
-									<span class="ml5 f14 signGoodsName">保健品</span>
-								</li>
-							</ul>
-						</td>
-						<td valign="top" class="a5_wb_target brd_t">
-							<ul>
-								<li class="h24 lh24 ml5">
-									<span class="adh_bold f14">业务类型 : </span>
-								</li>
-								<li class="h24 lh24 ml5">
-									<span class="ml5 f14 signExpressType">电商特惠</span>
-								</li>
-							</ul>
-						</td>
-					</tr>
-				</tbody></table>
-				<table class="u_item_opts">
-					<tbody><tr>
-						<td class="a5_fact_info_hd tc brd brd_l_n f14 adh_bold">件数</td>
-						<td class="a5_fact_info_hd tc brd f14 adh_bold">托寄物数量</td>
-						<td class="a5_fact_info_hd tc brd f14 adh_bold">实际重量</td>
-						<td class="a5_fact_info_hd tc brd f14 adh_bold">计费重量</td>
-						<td class="a5_fact_info_hd tc brd f14 adh_bold">费用</td>
-						<td class="a5_fact_info_hd tc brd brd_r_n f14 adh_bold">费用合计</td>
-					</tr>
 					<tr>
-						<td class="h28 lh28 tc brd brd_l_n brd_b_n">1</td>
-						<td class="h28 lh28 tc brd brd_b_n">{{ocount}}</td>
-						<td class="h28 lh28 tc brd brd_b_n">&nbsp;</td>
-						<td class="h28 lh28 tc brd brd_b_n signPackWeight"></td>
-						<td class="h28 lh28 tc brd brd_b_n"><span class="orderAmount hidden"></span></td>
-						<td class="h28 lh28 tc brd brd_r_n brd_b_n signTotalMoney">&nbsp;</td>
-					</tr>
-				</tbody></table>
-				<table>
-					<tbody><tr>
-						<td class="a5_pay_type brd_t brd_r">
-							<ul>
-								<li>
-									<span class="f14 adh_bold ml5">付款方式 : <span class="signExpressPayMethod">寄付</span></span>
-									
-								</li>
-								<li>
-									<span class="f14 adh_bold ml5">月结卡号 : <span class="">0283439931</span></span>
-								</li>
-								<li>
-									<span class="f14 adh_bold ml5">第三方地区 : </span>
-									<span></span>
-								</li>
-							</ul>
-						</td>
-						<td valign="top" class="a5_sign_name brd_t brd_r">
-							<ul>
-								<li><span class="f14 adh_bold ml5">寄方签名 : </span></li>
-								<li style="width:108px;overflow:hidden;"><span class="f14 ml5">爱妻美</span>{{ order.order_id }}</li>
-							</ul>
-						</td>
-						<td valign="top" class="a5_reciver brd_t">
-							<ul>
-								<li><span class="f14 adh_bold ml5">收件员 : </span></li>
-								<li><span class="f14 ml5"></span></li>
-							</ul>
-						</td>
-					</tr>
-				</tbody></table>
-				<table>
-					<tbody><tr>
-						<td valign="top" class="append_service brd_t brd_r" style="height:134px;width:302px;">
-							<ul style="width: 302px;">
-								<li class="h16 lh16 ml5">
-									<span class="adh_bold f14">附加服务:</span>
-								</li>
-								<li class="ml5 signOtherService" id="a5_additional_service">
-                                    <div class="f14">月结卡号:&nbsp;<span class="codAmount">0283439931</span></div>
-                                    {%if order.payment_type==1 and order.actual_fee > 0%}
-                                    <div class="f14">代收货款:&nbsp;<span class="codAmount">{{order.actual_fee if order.payment_type==1 else 0 }}</span></div><!-- class="{codAmount_hid}" -->
-                                    {%endif%}
-								</li>
-							</ul>
-						</td>
-						<td valign="top" class="append_info brd_t" style="height:134px;">
-							<table class="u_item_opts">
-								<tbody><tr>
-									<td class="h24 lh24" colspan="2">
-										<span class="f14 adh_bold">&nbsp;&nbsp;寄件日期:{{datat}}</span>
-										<span></span>
-									</td>
-								</tr>
-								<tr>
-									<td valign="top" class="h40 lh40 brd_t brd_r">
+						<td class="bar_code_new brd_b brd_r"><div id="code1" class="barcode2" style="margin-left:0px;"></div>
+						<td class="brd_b">
+							<table>
+								<tbody>
+									<tr><td class="brd_b" style="width:150px;"><span class="ml5 a5_target_font_new">顺丰次日</span></td></tr>
+									<tr><td class="">
 										<ul>
-											<li><span class="f14 adh_bold ml5">收方签名: </span></li>
-											<li><span class="f14 ml5"></span></li>
-										</ul>
-									</td>
-									<td valign="top" class="h40 lh40 brd_t">
-										<ul>
-											<li><span class="f14 adh_bold ml5">派件员: </span></li>
-											<li><span class="f14 ml5"></span></li>
-										</ul>
-									</td>
-								</tr>
-								<tr><td class="h24 lh24 brd_t" colspan="2">
-										<span class="f14 adh_bold">&nbsp;&nbsp;派件日期:&nbsp;</span>
-										<span></span>
-									</td>
-								</tr>
-								<tr><td valign="top" class="h24 lh24 brd_t" colspan="2">
-										<ul>
-											<li class="h24 lh24 ml5" style="overflow:hidden;height:40px;">
-												<span class="f14 adh_bold">备注栏 :</span>
-												<span class="f14">请本人签收!谢谢!</span>
+											<li>
+												<span class="ml5" style="line-height:37px; font-size:25px;font-weight:bold;">{% if order.payment_type==1 %}代收货款{% else %}{% endif %}</span>
+											</li>
+											<li>
+												<span class="ml5">{% if order.payment_type==1 %}卡号:0293064669{% else %}{% endif %}</span>
+											</li>
+											<li>
+												<span class="f12 adh_bold ml5"><span class="" style="font-size:15px;font-weight:bold;">{% if order.payment_type==1 %} {{ order.item_fee }}元 {% else %} {% endif %}</span></span>
 											</li>
 										</ul>
-									</td>
-								</tr>
-							</tbody></table>
+									</td></tr>
+								</tbody>
+							</table>
 						</td>
 					</tr>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td class="td_l brd_r brd_b" ><div class="ml15 td_ms">目的地</div></td>
+							<!--<td class="brd_b td_r"><span class="a5_target_font receiverAddressCode1 ml15 brd">{{order.express_sfdestcode}}</span></td>-->
+							<td class="brd_b td_r"><div style="width:50px; height:70px; margin-top:-23px;" class="a5_target_font_new_new ml15"><span class="">{{order.express_sfdestcode}}</span></div></td>
+						</tr>
+						<tr>
+							<td class="td_l brd_r brd_b"><div class="ml15 td_ms" >收件人</div></td>
+							<td class="brd_b td_r">
+								<span class="ml5 f14 adh_wb_sender_receiver1">
+									{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;{{ order.shipping_address.ship_to }} &nbsp; {{ order.shipping_address.phones|join('')|safe }}
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td class="td_j brd_r"><div class="ml15" style="line-height:14px;">寄件人</div></td>
+							<td class="td_r brd_r">
+								<span class="ml5 f14 show">气血和 4006002000 气血和 陕西省西安市</span>
+							</td>
+							<td class="a5_wb_target"><span class="a5_target_font receiverAddressCode1"></span></td>
+						</tr>
+					</tbody>
+				</table>
+				<table class="u_item_opts">
+					<tbody>
+						<tr>
+							<td class="a5_fact_info_hd tl brd_t brd_l_n f12 adh_bold"><div class="ml5">件数:1</div></td>
+							<td class="a5_fact_info_hd tl brd_t f12 adh_bold" style="width:160px;">实际重量:</td>
+							<td class="a5_fact_info_hd tl brd_r brd_t f12 adh_bold" style="width:130px;">计费重量:</td>
+							<td class="brd_t" style="width:95px; border-left:2px solid #000000;"><span class="f14">签名</span></td>
+						</tr>
+						<tr>
+							<td class="a5_fact_info_hd tl  brd_r brd_r_n f12 adh_bold"><div class="ml5">运费:</div></td>
+							<td class="a5_fact_info_hd tl  brd_r_n f12">月结账号:0293064669</td>
+							<td class="a5_fact_info_hd tl  f12 adh_bold">付款方式:寄付月结</td>
+							<td class="" style="border-left:2px solid #000000;"></td>
+						</tr>
+						<tr>
+							<td class="a5_fact_info_hd tl  f12 adh_bold brd_b"></td>
+							<td class="a5_fact_info_hd tl  brd_r_n f12 adh_bold brd_b"></td>
+							<td class="a5_fact_info_hd tl  brd_r brd_r_n f12 adh_bold brd_b"></td>
+							<td class="" style="border-left:2px solid #000000;"></td>
+						</tr>
 				</tbody></table>
 				<table>
-					<tbody><tr><td class="brd_t brd_b"><img  src="/static/img/a5_div_line.png"></td></tr>
-				</tbody></table>
+					<tbody>
+						<tr>
+							<td class="td_jj brd_r"><div class="ml15" style="line-height:15px; margin-top:-3px;">托寄物</div></td>
+							<td class="brd_r" style="width:290px;">
+								<span class="ml5 f14 show">气血和</span>
+							</td>
+							<td class="brd_r" style="width:184px;">
+								<ul>
+									<li style="line-height:5px; margin-top:5px;"><span class="adh_bold ml5" style="font-size:1px;">收件员 : <span class="signExpressPayMethod"></span></span></li>
+									<li style="line-height:16px;"><span class="adh_bold ml5" style="font-size:1px;">寄件日期 : <span class="signExpressPayMethod"></span></span></li>
+									<li style="line-height:10px;"><span class="adh_bold ml5" style="font-size:1px;">派单员 : <span class="signExpressPayMethod"></span></span></li>
+								</ul>
+							</td>
+							<td class="" style="width:95px;">
+								<ul>
+									<li style="height:18px;"></li>
+									<!--<li style="height:20px;"></li>-->
+									<li><span class="f14 adh_bold " style="margin-left:41px;">&nbsp;&nbsp;&nbsp;月&nbsp;&nbsp;&nbsp;日</span></li>
+								</ul>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<!--<table>-->
+					<!--<tbody><tr><td class="brd_t brd_b"><img  src="/static/img/a5_div_line.png"></td></tr>-->
+				<!--</tbody></table>-->
 				
 				<!-- ===============================================其他运单================================================== -->
+				<br/>
+				<table>
+					<tbody>
+						<tr>
+							<td class="a5_waybill_logo brd_r brd_b"><div style="margin-top:10px;"><img src="/static/img/awd_logo_A5_b.png" width="110" height="70"></div></td>
+							<td class="bar_code brd_b"><div id="code1_1" class="barcode2"></div></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td class="td_j brd_r brd_b"><div class="ml15 ms_l">寄件人</div></td>
+							<td class="td_r brd_b">
+								<span class="ml5 f14 show">气血和 4006002000 气血和 陕西省西安市</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td class="td_j brd_r brd_b"><div class="ml15 ms_l">收件人</div></td>
+							<td class="brd_b td_r">
+								<span class="ml5 f14 adh_wb_sender_receiver1">
+									{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
 				<table class="u_item_opts other_trade_order">
-					<tbody><tr>
-						<td valign="top" colspan="2" class="a5_wb_sender">
-							<ul>
-								<li class="ml5 a5_sender adh_wb_sender_shipperInfo2" style="width:474px;height:44px">
-									<span class="adh_bold f14">寄方 : </span>
-									<span class="f14 ml5 show">四川省成都市成华区白莲村2组103号 爱妻美 4006002000</span>
-									<span class="hidden"></span>
-								</li>
-							</ul>
-						</td>
-					</tr>
+					<tbody>
+						<tr>
+							<td class="brd_r brd_b"><div class="ml15" style="width:16px;line-height:13px;">数量</div></td>
+							<td class="brd_r brd_b"><div class="" style="width:50px; font-size:14px; margin-left:120px;">托寄物</div></td>
+							<td class="td_l brd_b"><div class="" style="width:70px; font-size:14px; margin-left:30px;">备注</div></td>
+						</tr>
+						<tr style="height:40px;">
+							<td class="td_l brd_r"><div class="ml15" style="width:27px;">{{ocount}}</div></td>
+							<td class=" brd_r"><div class="ml5">气血和</div></td>
+							<td class="td_l"></td>
+						</tr>
 				</tbody></table>
 				<table class="u_item_opts other_trade_order">
 					<tbody><tr>
-						<td valign="top" colspan="2" class="a5_wb_reviver brd_t">
-							<ul>
-								<li class="ml5 a5_sender" style="width:474px;height:44px">
-									<span class="adh_bold f14">收方 : </span>
-									<span class="f14 ml5 adh_wb_sender_receiver2" title=""><!--{{ order.shipping_address.province|format_address }}&nbsp;{{ order.shipping_address.city|format_address }}&nbsp;{{ order.shipping_address.district|format_address }}&nbsp;-->{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;******
-                                    <!--{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;{{ order.shipping_address.ship_to }}&nbsp;{{ order.shipping_address.phone }}&nbsp;{{ order.shipping_address.tel|default('',true) }}--></span>
-								</li>
-							</ul>
+						<td class="ddh"><div class="ml15" style="width:70px; margin-top:-15px;">订单号： &nbsp;&nbsp;&nbsp;DF</div></td>
+						<td valign="top" class="total_cost brd_t brd_r">
+							<div id="code2" class="barcode2 code2_s" style="margin-left:-40px;"></div>
 						</td>
-					</tr>
-				</tbody></table>
-				<table class="u_item_opts other_trade_order">
-					<tbody><tr>
-						<td valign="top" class="total_cost brd_t brd_r"><div id="code2" class="barcode2"></td>
-						<td class="brd_t" style="width:340px;height:60px;">
+						<td class="brd_t" style="width:170px;height:60px;">
 							<ul>
-								<li>
-									<span class="f14 adh_bold ml5">费用合计 : </span>
+								<li style="margin-top:-10px;">
+									<span class="f12 adh_bold ml5">费用合计 : </span>
 									<span class="signTotalMoney f12"></span>
 									<span class="orderAmount hidden"></span>
 								</li>
-								<li>
-									<span class="f14 adh_bold ml5">付款方式: <span class="signExpressPayMethod">寄付</span></span>
-									<span></span>
-								</li>
+								<li style="height:10px;"></li>
+								<!--<li style="height:10px; text-align:center;font-size:10px;font-weight:bold;">{% if order.payment_type==1 %} {{ order.item_fee }} {% else %} 0 {% endif %} 元</li>-->
+								<li style="height:10px; text-align:center;font-size:10px;font-weight:bold;"></li>
 							</ul>
 						</td>
 					</tr>

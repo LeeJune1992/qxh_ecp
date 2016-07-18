@@ -82,7 +82,7 @@ class OperatorForm(Form):
     role = QuerySelectField(u'角色',query_factory=lambda :Role.query.all(),get_label='name')
     is_admin = BooleanField(u'设为系统管理员')
     assign_user_type = SelectField(u"指派客户类型", [AnyOf([str(val) for val in OPEARTOR_ASSIGN_USER_TYPES.keys()])],choices=[(str(val), label) for val, label in OPEARTOR_ASSIGN_USER_TYPES.iteritems()])
-
+    store_id = SelectField(u"仓库", [AnyOf([str(val) for val in STORES2.keys()])],choices=[(str(val), label) for val, label in STORES2.items()])
     #SelectField(u"角色", [AnyOf([str(val) for val in USER_ROLE.keys()])],choices=[(str(val), label) for val, label in USER_ROLE.items()])
 
 
@@ -161,9 +161,12 @@ class SkuForm(Form):
     p2 = TextField(SKU_PROPERTIES_NAME['p2'])
     p3 = TextField(SKU_PROPERTIES_NAME['p3'])
     code = TextField(u'商品条码',[Required(u'商品条码不允许为空')])
-    price = FloatField(u'零售价',[validate_gte_0])
-    market_price = FloatField(u'市场价',[validate_gte_0])
-    discount_price = FloatField(u'活动价',[validate_gte_0],default=0)
+    # price = FloatField(u'零售价',[validate_gte_0])
+    # market_price = FloatField(u'市场价',[validate_gte_0])
+    # discount_price = FloatField(u'活动价',[validate_gte_0],default=0)
+    price = FloatField(u'零售价')
+    market_price = FloatField(u'市场价')
+    discount_price = FloatField(u'活动价')
     allowed_gift = BooleanField(u'是否允许为赠品')
     unit = SelectField(u"单位", [AnyOf(SKU_UNITS)],choices=[(u, u) for u in SKU_UNITS])
     threshold = IntegerField(u'阀值',[validate_gte_0],default=200)

@@ -1,0 +1,140 @@
+﻿{% extends "layout.html" %}
+{% from "_macro.html" import assign_log_output %}
+{% set category='user' %}
+{% block title %}查看客户资{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <style type="text/css">
+        .navbar-fixed-top hr{
+            margin: 0;
+        }
+        .accordion-group {
+            margin-top: 15px;
+        }
+
+        .accordion-heading {
+            background-color: #fcf8e3;
+        }
+
+        .accordion-heading a {
+            padding: 0;
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+
+        }
+
+        .accordion-inner {
+            padding-left: 20px;
+            padding-bottom: 5px;
+            padding-top: 15px;
+            background-color: #fcfcfc;
+        }
+
+        .table {
+        }
+
+        .table tr td {
+            font-size: 14px;
+        }
+
+        .accordion-inner table tr td {
+            color: #666;
+            text-align: left;
+        }
+
+        .table-entries td {
+            font-size: 12px;
+            border-width: 0;
+            background-color: transparent;
+            padding: 0;
+            padding-bottom: 4px;
+            padding-top: 4px;
+        }
+
+        .table-entries code {
+            color: #666;
+        }
+
+        .table .title {
+            text-align: right;
+            padding-right: 15px;
+            background-color: #f5f3ef;
+            width: 110px;
+        }
+
+        .table th {
+            background-color: #f7f7f7;
+        }
+
+        .table-history {
+            font-size: 12px;
+        }
+
+        pre {
+            margin: 0;
+            padding: 0;
+            padding-left: 5px;
+            background-color: transparent;
+            border-width: 0;
+            border-left: 4px solid #e0f2be;
+        }
+
+        .say{
+            width: 420px;
+            max-width: 520px;
+        }
+
+    </style>
+
+{%- endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+$(function () {
+
+    var load_entries = function () {
+	{% for user in pagination %}
+        var data = JSON.parse('{{user.entries|default('{}',true)|replace("'","")|safe}}');
+        for (var c in data) {
+            var $sel = $('#' + c+{{user.user_id}});
+            entries = data[c];
+            if (!$.isEmptyObject(entries)) {
+                var _html = '<table class="table-condensed table-entries table-hover" style="width:100%"><tbody>';
+                for (var i in entries) {
+                    var entry = entries[i];
+                    _html += '<tr><td style="width:60px"><code style="color:green">' + entry.c2 + '</code></td><td style="width:60px"><code>' + entry.c3 + '</code></td><td>' + entry.v + '</td></tr>';
+                }
+                _html += '</tbody></table>';
+                $sel.html(_html);
+            }
+            else {
+                $sel.html(null);
+            }
+        }
+	{% endfor %}	
+    };
+
+    load_entries();
+});
+</script>
+{%- endblock %}
+{%- block main -%}
+<table>
+{% for user in pagination %}
+{% if user.mobile_phones and ',' in user.mobile_phones %}
+    {% set p= user.mobile_phones.split(',') %}
+    {% if p %}
+    <tr><td>{{ user.name }}</td>
+    <td>{{ p[0] }}</td><td id="BODY{{user.user_id}}"></td>
+    </tr>
+    {% endif %}
+{% elif user.mobile_phones %}
+    <tr><td>{{ user.name }}</td>
+    <td>{{ user.mobile_phones }}
+    </td><td id="BODY{{user.user_id}}"></td>
+    </tr>
+{% endif %}
+{% endfor %}
+</table>
+{%- endblock %}

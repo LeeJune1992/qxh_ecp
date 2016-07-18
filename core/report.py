@@ -10,7 +10,7 @@ from flask import render_template,Blueprint,request
 from utils.decorator import admin_required
 
 from settings.constants import *
-from .models import Order,Operator,Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf
+from .models import Order,Operator,Fuwu2,Fuwu,Jiexian,Waihu,Weihu,QXHKHDJ,User,QXHDM_Orderyf,User_Assign_Log
 report = Blueprint('report',__name__,url_prefix='/report')
 
 @report.route('/sale')
@@ -43,6 +43,10 @@ def sale_report_by_ddxsmxtj():
     if _end_date:
         _conditions.append('`order`.`created`<="%s"'%_end_date)
 
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)    
+
     if not _start_date and not _end_date:
         period = datetime.now().strftime('%Y-%m-%d')
         _conditions.append('`order`.`created`>="%s 00:00:00"'%period)
@@ -54,6 +58,7 @@ def sale_report_by_ddxsmxtj():
 operator.nickname,
 `order`.username,
 `order`.order_id,
+`user`.origin,
 `order_items`.item_info,
 `order`.item_fee-`order`.discount_fee as `fee`,
 `order`.discount_fee,
@@ -62,18 +67,20 @@ operator.nickname,
 `order`.`created`
  FROM `order`
 JOIN operator ON `order`.created_by=`operator`.id
+JOIN `user` ON `user`.user_id=`order`.user_id
 JOIN (SELECT `order_item`.`order_id` as oid,GROUP_CONCAT(CONCAT(`order_item`.name,'*',`order_item`.quantity) SEPARATOR '\n') as item_info FROM `order_item` GROUP BY `order_item`.`order_id`) AS order_items ON `order`.order_id=`order_items`.oid
 WHERE %s ORDER BY `order`.team,`order`.`created`
     '''%' AND '.join(_conditions)
     _data = db.session.execute(_sql)
     _rows = []
     total_fee = 0
-    for team,op_name,username,order_id,item_info,fee,discount_fee,express_id,express_number,created in _data:
+    for team,op_name,username,order_id,origin,item_info,fee,discount_fee,express_id,express_number,created in _data:
         total_fee += fee
         _rows.append({'depart':DEPARTMENTS[team[0]] if team else '',
                        'team':TEAMS[team] if team and len(team)==2 else '',
                        'op_name':op_name,
                        'username':username,
+                       'origin':origin,
                        'order_id':order_id,
                        'items':item_info,
                        'fee':fee,
@@ -112,13 +119,17 @@ def sale_report_by_arrival_detail():
     if _end_date:
         _conditions.append('`arrival_time`<="%s"'%_end_date)
 
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)  
+
     if not _start_date and not _end_date:
         period = datetime.now().strftime('%Y-%m-%d')
         _conditions.append('`arrival_time`>="%s 00:00:00"'%period)
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    _itm_sql = '''SELECT operator.id,operator.nickname,`order`.team,`order`.username,`order`.order_id,`order_items`.item_info,`order`.item_fee-`order`.discount_fee,`order`.discount_fee,`order`.express_id,`order`.express_number,`arrival_time`,`user`.m1,`user`.m2,`user`.m3 FROM `order` JOIN `operator` ON `order`.created_by=`operator`.id
+    _itm_sql = '''SELECT operator.id,operator.nickname,`order`.team,`order`.username,`order`.order_id,`order_items`.item_info,`order`.item_fee-`order`.discount_fee,`order`.discount_fee,`order`.express_id,`order`.express_number,`arrival_time`,`user`.origin,`user`.m1,`user`.m2,`user`.m3 FROM `order` JOIN `operator` ON `order`.created_by=`operator`.id
  JOIN `user` ON `order`.user_id=`user`.user_id
 JOIN (SELECT `order_item`.`order_id` as oid,GROUP_CONCAT(CONCAT(`order_item`.name,'*',`order_item`.quantity) SEPARATOR '\n') as item_info FROM `order_item` GROUP BY `order_item`.`order_id`) AS order_items ON `order`.order_id=`order_items`.oid
 WHERE %s
@@ -203,6 +214,9 @@ def sale_report_by_return_detail():
     if express_id:
         _conditions.append('`order`.`express_id`=%d'%int(express_id))
 
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin) 
 
 
     is_arrival = request.args.get('is_arrival',0)
@@ -236,10 +250,13 @@ def sale_report_by_return_detail():
     else:
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
-    _itm_sql = '''SELECT operator.id,operator.nickname,`order`.team,`order`.username,`order`.order_id,`order_items`.item_info,`order`.item_fee-`order`.discount_fee,`order`.discount_fee,`order`.express_id,`order`.express_number,`end_time` FROM `order` JOIN `operator` ON `order`.created_by=`operator`.id
-JOIN (SELECT `order_item`.`order_id` as oid,GROUP_CONCAT(CONCAT(`order_item`.name,'*',`order_item`.quantity) SEPARATOR '\n') as item_info FROM `order_item` GROUP BY `order_item`.`order_id`) AS order_items ON `order`.order_id=`order_items`.oid
-WHERE %s
-ORDER BY `end_time`'''%' AND '.join(_conditions)
+    _itm_sql = '''SELECT operator.id,operator.nickname,`order`.team,`order`.username,`user`.origin,`order`.order_id,`order_items`.item_info,`order`.item_fee-`order`.discount_fee,`order`.discount_fee,`order`.express_id,`order`.express_number,`end_time` FROM `order` 
+                JOIN `operator` ON `order`.created_by=`operator`.id
+                JOIN `user` ON `user`.user_id=`order`.user_id
+                JOIN (SELECT `order_item`.`order_id` as oid,GROUP_CONCAT(CONCAT(`order_item`.name,'*',`order_item`.quantity) SEPARATOR '\n') as item_info FROM `order_item` 
+                        GROUP BY `order_item`.`order_id`) AS order_items ON `order`.order_id=`order_items`.oid
+                WHERE %s
+                ORDER BY `end_time`'''%' AND '.join(_conditions)
     rows = db.session.execute(_itm_sql)
 
     _op_sql = '''SELECT id,nickname FROM `operator` WHERE role_id=101'''
@@ -248,7 +265,7 @@ ORDER BY `end_time`'''%' AND '.join(_conditions)
     total_fee = 0
     for data in rows:
         _rows.append(data)
-        total_fee += data[6]
+        total_fee += data[7]
 
     return render_template('report/sale_report_by_return_detail.html',rows=_rows,ops=_ops,total_fee=total_fee,period=period)
 
@@ -356,8 +373,9 @@ def sale_report_by_ygxs():
     for op_id,item_name,price,quantity,fee in op_items:
         _op_items[op_id].append((item_name,price,quantity,fee))
 
-    _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(fee) from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
-
+    # _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(fee) from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
+    _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(price*quantity) as fee from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
+    print '-------'
     rows=[]
     op_counts = db.session.execute(_count_sql)
     total_orders = 0
@@ -413,7 +431,7 @@ def sale_report_by_ygdhtj():
                     item_name,
                     price,
                     SUM(quantity),
-                    SUM(fee)
+                    SUM(price*quantity)
                 FROM
                     `operator_order_items`
                 WHERE
@@ -430,7 +448,8 @@ def sale_report_by_ygdhtj():
     for op_id,team,item_name,price,quantity,fee in op_items:
         _op_items['%s-%s'%(op_id,team)].append((item_name,price,quantity,fee))
 
-    _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(fee) from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
+    # _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(fee) from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
+    _count_sql = '''SELECT order_team,operator_id,nickname,count(DISTINCT order_id),SUM(price*quantity) from operator_order_items WHERE %s GROUP BY order_team,operator_id,nickname ORDER BY order_team'''%' AND '.join(_conditions)
 
     _op_sql = '''SELECT id,nickname FROM `operator` WHERE role_id=101'''
     _ops = db.session.execute(_op_sql)
@@ -519,7 +538,7 @@ GROUP BY `order`.team,operator.id,operator.nickname,dt ORDER BY `order`.team,dt'
     rows2 = sorted(rows2,key=lambda d:d['team'])
     return render_template('report/sale_report_by_staff.html',rows=_rows,rows2=rows2,period=period,total_orders=total_orders,total_fee=total_fee)
 
-@report.route('/sale/team')
+@report.route('/')
 @admin_required
 def sale_report_by_team():
     period = ''
@@ -606,7 +625,13 @@ def sale_report_by_item():
         period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
 
 
-    _sql = '''SELECT `sku_item`.`category_id`,`order_item`.`sku_id`,`order_item`.name,SUM(`order_item`.quantity),SUM(`order_item`.fee)
+    # _sql = '''SELECT `sku_item`.`category_id`,`order_item`.`sku_id`,`order_item`.name,SUM(`order_item`.quantity),SUM(`order_item`.fee)
+    # FROM `order_item`
+    # JOIN (SELECT `order_id` FROM `order` WHERE %s) AS `orders` ON `order_item`.order_id=`orders`.order_id
+    # LEFT JOIN (SELECT `item`.`category_id`,`sku`.id AS `sku_id` FROM `item` JOIN `sku` ON `item`.id=`sku`.item_id) AS `sku_item` ON `sku_item`.sku_id=`order_item`.sku_id
+    # GROUP BY `sku_item`.`category_id`,`order_item`.`sku_id`,`order_item`.name'''%' AND '.join(_conditions)
+
+    _sql = '''SELECT `sku_item`.`category_id`,`order_item`.`sku_id`,`order_item`.name,SUM(`order_item`.quantity),SUM(`order_item`.quantity*`order_item`.price)
     FROM `order_item`
     JOIN (SELECT `order_id` FROM `order` WHERE %s) AS `orders` ON `order_item`.order_id=`orders`.order_id
     LEFT JOIN (SELECT `item`.`category_id`,`sku`.id AS `sku_id` FROM `item` JOIN `sku` ON `item`.id=`sku`.item_id) AS `sku_item` ON `sku_item`.sku_id=`order_item`.sku_id
@@ -698,7 +723,8 @@ def financial_report_by_sale():
 @report.route('/financial/return')
 @admin_required
 def financial_report_by_return():
-    _conditions = ['`order`.status IN (102,104)','`order`.order_type<100']
+    # _conditions = ['`order`.status IN (102,104)','`order`.order_type<100']
+    _conditions = ['`order`.status>100','`order`.status<200','`order`.order_type<100','`order`.delivery_time IS NOT NULL','`order`.arrival_time IS NULL']
 
     op_id = request.args.get('op',0)
     if op_id:
@@ -842,19 +868,25 @@ def financial_report_by_paidan():
     express_id = request.args.get('express_id',0)
     if express_id:
         _conditions.append('`order`.express_id=%s'%express_id)
+        
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)
+        
     #_conditions = ["`order`.created>'2015-03-01'"]
     #_conditions.append("`order`.created<'2015-10-01'")
     #_conditions.append("`order`.user_id in (SELECT user_id from `user_phone` WHERE phone in (82124201))")
     
-    _sql = '''SELECT `order`.order_type,`operator`.nickname,`order`.team,`order`.delivery_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee FROM `order_item`
+    _sql = '''SELECT `order`.order_type,`operator`.nickname,`order`.team,`order`.delivery_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`user`.origin,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee FROM `order_item`
 JOIN `order` ON `order_item`.order_id=`order`.order_id AND `order`.delivery_time IS NOT NULL
 JOIN `address` ON `order`.shipping_address_id=`address`.id
 JOIN `operator` ON `operator`.id=`order`.created_by
+JOIN `user` ON `user`.user_id=`address`.user_id
 WHERE %s
 ORDER BY `order`.delivery_time'''%' AND '.join(_conditions)
     rows = db.session.execute(_sql)
     data = OrderedDict()
-    for order_type,op_name,team,delivery_time,order_id,express_id,express_number,ship_to,province,city,district,street1,fee,item_name,price,quantity,item_fee in rows:
+    for order_type,op_name,team,delivery_time,order_id,express_id,express_number,ship_to,origin,province,city,district,street1,fee,item_name,price,quantity,item_fee in rows:
         if not data.has_key(order_id):
             data[order_id] = {'eid':express_id,
                               'op':op_name,
@@ -868,6 +900,7 @@ ORDER BY `order`.delivery_time'''%' AND '.join(_conditions)
                               'date':delivery_time.strftime("%Y-%m-%d"),
                               'items':[],
                               'ship_to':ship_to,
+                              'origin':origin,
                               'province':province,
                               'city':city,
                               'district':district,
@@ -910,16 +943,22 @@ def financial_report_by_paidan_tuihuo():
     express_id = request.args.get('express_id',0)
     if express_id:
         _conditions.append('`order`.express_id=%s'%express_id)
+    
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)
+    
 
-    _sql = '''SELECT `operator`.nickname,`order`.`team`,`order`.delivery_time,`order`.end_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.in_quantity,`order_item`.fee FROM `order_item`
+    _sql = '''SELECT `operator`.nickname,`order`.`team`,`order`.delivery_time,`order`.end_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`user`.origin,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.in_quantity,`order_item`.fee FROM `order_item`
 JOIN `order` ON `order_item`.order_id=`order`.order_id AND `order`.delivery_time IS NOT NULL AND `order`.arrival_time IS NULL
 JOIN `address` ON `order`.shipping_address_id=`address`.id
 JOIN `operator` ON `operator`.id=`order`.created_by
+JOIN `user` ON `user`.user_id=`address`.user_id
 WHERE %s
 ORDER BY `order`.end_time'''%' AND '.join(_conditions)
     rows = db.session.execute(_sql)
     data = OrderedDict()
-    for op_name,team,delivery_time,end_time,order_id,express_id,express_number,ship_to,province,city,district,street1,fee,item_name,price,quantity,in_quantity,item_fee in rows:
+    for op_name,team,delivery_time,end_time,order_id,express_id,express_number,ship_to,origin,province,city,district,street1,fee,item_name,price,quantity,in_quantity,item_fee in rows:
         if not data.has_key(order_id):
             data[order_id] = {'eid':express_id,
                               'op':op_name,
@@ -933,6 +972,7 @@ ORDER BY `order`.end_time'''%' AND '.join(_conditions)
                               'delivery_time':delivery_time.strftime("%Y-%m-%d"),
                               'items':[],
                               'ship_to':ship_to,
+                              'origin':origin,
                               'province':province,
                               'city':city,
                               'district':district,
@@ -978,18 +1018,23 @@ def financial_report_by_qianshou():
     express_id = request.args.get('express_id',0)
     if express_id:
         _conditions.append('`order`.express_id=%s'%express_id)
+    
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)
+    
 
-    _sql = '''SELECT `operator`.nickname,`order`.delivery_time,`order`.team,`order`.arrival_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee,`user`.m1,`user`.m2,`user`.m3 FROM `order_item`
+    _sql = '''SELECT `operator`.nickname,`order`.delivery_time,`order`.team,`order`.arrival_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`user`.origin,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee,`user`.m1,`user`.m2,`user`.m3 FROM `order_item`
 JOIN `order` ON `order_item`.order_id=`order`.order_id AND `order`.arrival_time IS NOT NULL
  JOIN `user` ON `order`.user_id=`user`.user_id
 JOIN `operator` ON `operator`.id=`order`.created_by
 JOIN `address` ON `order`.shipping_address_id=`address`.id
-WHERE %s
+WHERE %s and `user`.user_id=`address`.user_id
 ORDER BY `order`.arrival_time'''%' AND '.join(_conditions)
     #return _sql
     rows = db.session.execute(_sql)
     data = OrderedDict()
-    for op_name,delivery_time,team,arrival_time,order_id,express_id,express_number,ship_to,province,city,district,street1,fee,item_name,price,quantity,item_fee,m1,m2,m3 in rows:
+    for op_name,delivery_time,team,arrival_time,order_id,express_id,express_number,ship_to,origin,province,city,district,street1,fee,item_name,price,quantity,item_fee,m1,m2,m3 in rows:
         if not data.has_key(order_id):
             data[order_id] = {'eid':express_id,
                               'op':op_name,
@@ -1003,6 +1048,7 @@ ORDER BY `order`.arrival_time'''%' AND '.join(_conditions)
                               'delivery_time':delivery_time.strftime("%Y-%m-%d"),
                               'items':[],
                               'ship_to':ship_to,
+                              'origin':origin,
                               'province':province,
                               'city':city,
                               'district':district,
@@ -1303,18 +1349,23 @@ def financial_report_by_dzbbmx():
     express_id = request.args.get('express_id',0)
     if express_id:
         _conditions.append('`order`.express_id=%s'%express_id)
+        
+    user_origin = request.args.get('user_origin',0)
+    if user_origin:
+        _conditions.append('`user`.origin=%s'%user_origin)
 
-    _sql = '''SELECT `operator`.nickname,`order`.delivery_time,`order`.arrival_time,`order`.team,`order_log`.operate_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee FROM `order_item`
+    _sql = '''SELECT `operator`.nickname,`order`.delivery_time,`order`.arrival_time,`order`.team,`order_log`.operate_time,`order`.order_id,`express_id`,`express_number`,`ship_to`,`user`.origin,`province`,`city`,`district`,`street1`,`order`.item_fee-`order`.discount_fee,`order_item`.name,`order_item`.price,`order_item`.quantity,`order_item`.fee FROM `order_item`
 JOIN `order` ON `order_item`.order_id=`order`.order_id
 JOIN `operator` ON `operator`.id=`order`.operator_id
 JOIN `address` ON `order`.shipping_address_id=`address`.id
 JOIN `order_log` ON `order_log`.to_status=60 and `order_log`.order_id=`order`.order_id
+JOIN `user` ON `user`.user_id=`address`.user_id
 WHERE %s
 ORDER BY `order_log`.operate_time desc'''%' AND '.join(_conditions)
     #return _sql
     rows = db.session.execute(_sql)
     data = OrderedDict()
-    for op_name,delivery_time,arrival_time,team,operate_time,order_id,express_id,express_number,ship_to,province,city,district,street1,fee,item_name,price,quantity,item_fee in rows:
+    for op_name,delivery_time,arrival_time,team,operate_time,order_id,express_id,express_number,ship_to,origin,province,city,district,street1,fee,item_name,price,quantity,item_fee in rows:
         if not data.has_key(order_id):
             data[order_id] = {'eid':express_id,
                               'op':op_name,
@@ -1329,6 +1380,7 @@ ORDER BY `order_log`.operate_time desc'''%' AND '.join(_conditions)
                               'arrival_time':arrival_time,
                               'items':[],
                               'ship_to':ship_to,
+                              'origin':origin,
                               'province':province,
                               'city':city,
                               'district':district,
@@ -2807,6 +2859,7 @@ def sale_scratchjx():
 @admin_required
 def sale_scratchmx():
     _conditions = ['`user`.user_id not in (select user_id from user_servicelz)']#['`user`.status=1']
+   # _conditions.append('`user`.assign_operator_id in (SELECT id from operator where team=\'C3\')')
     _start_date = request.args.get('start_date','')
     if _start_date:
         _conditions.append('`user`.assign_time>="%s"'%_start_date)
@@ -3658,50 +3711,272 @@ def lqweihu_report_cusAges():
     rows = db.session.execute(sql)
     return render_template('report/lqweihu_report_cusAges.html', operators=operators,rows=rows)
 
+
+# @report.route('/lqweihu/user_time')
+# @admin_required
+# def lqweihu_report_user_time():
+#
+#     operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+#     _conditions = [r"""op.team like 'C%'"""]
+#     _conditions.append('`op`.`assign_user_type`>0')
+#     _conditions.append('`op`.`status`<>9')
+#     assign_operator_id = request.args.get('assign_operator_id','')
+#     if assign_operator_id:
+#         _conditions.append('`op`.`id`="%s"'%assign_operator_id)
+#
+#     sql='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
+# 	FROM operator as op
+# 	LEFT JOIN `user` u ON u.assign_operator_id=op.id
+# 	LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+#             WHERE %s GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30),ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360)''' %' AND '.join(_conditions)
+#
+#
+#     rows = db.session.execute(sql)
+#     data = OrderedDict()
+#
+#     for id,nickname,usertime,usertime2,alluser,allfee,allorder in rows:
+#         if not data.has_key(id):
+#             data[id] = {'nickname':nickname,
+#                         'alluser':alluser,
+#                         'allfee':allfee,
+#                         'allorder':allorder,
+#                         'items':[],
+#                         'items2':[],
+#                         'items3':[],
+#             }
+#         else:
+#             data[id]['alluser'] = data[id]['alluser']+alluser
+#             data[id]['allfee'] = data[id]['allfee']+allfee
+#             data[id]['allorder'] = data[id]['allorder']+allorder
+#
+#         if usertime2>1:
+#             data[id]['items2'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+#         else:
+#             if usertime<=1:
+#                 data[id]['items3'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+#             else:
+#                 data[id]['items'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+#     _data = data.values()
+#     _data = sorted(_data,key=lambda d:d['nickname'])
+#     return render_template('report/lqweihu_report_user_time.html', operators=operators, rows=_data)
+
+
 @report.route('/lqweihu/user_time')
 @admin_required
 def lqweihu_report_user_time():
-    
+
     operators = Operator.query.filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'))
+    # operators = Operator.query.join(User,User.user_id==Operator.id).join(Order,Order.user_id==User.user_id).join(User_Assign_Log,User_Assign_Log.user_id==User.user_id).filter(Operator.assign_user_type>0,Operator.status<>9,Operator.team.like('C%'),User_Assign_Log.one_two==1)
     _conditions = [r"""op.team like 'C%'"""]
     _conditions.append('`op`.`assign_user_type`>0')
     _conditions.append('`op`.`status`<>9')
+    _conditions.append('ua.one_two=1')
+    _conditions.append('o.created_by=op.id')
     assign_operator_id = request.args.get('assign_operator_id','')
     if assign_operator_id:
         _conditions.append('`op`.`id`="%s"'%assign_operator_id)
 
-    sql='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
-	FROM operator as op 
-	LEFT JOIN `user` u ON u.assign_operator_id=op.id
-	LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
-            WHERE %s GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/30),ceil((TO_DAYS(now())-TO_DAYS(u.assign_time))/360)''' %' AND '.join(_conditions)
-    
-    
-    rows = db.session.execute(sql)
-    data = OrderedDict()
-    
-    for id,nickname,usertime,usertime2,alluser,allfee,allorder in rows:
-        if not data.has_key(id):
-            data[id] = {'nickname':nickname,
-                        'alluser':alluser,
-                        'allfee':allfee,
-                        'allorder':allorder,
-                        'items':[],
-                        'items2':[],
-                        'items3':[],
-            }
-        else:
-            data[id]['alluser'] = data[id]['alluser']+alluser
-            data[id]['allfee'] = data[id]['allfee']+allfee
-            data[id]['allorder'] = data[id]['allorder']+allorder
-        
+    sql1='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(ua.assign_time))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(ua.assign_time))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
+        FROM operator as op
+        LEFT JOIN `user` u ON u.assign_operator_id=op.id
+        LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+        LEFT JOIN user_assign_log ua ON ua.user_id=u.user_id
+                WHERE %s GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(ua.assign_time))/30),ceil((TO_DAYS(now())-TO_DAYS(ua.assign_time))/360)''' %' AND '.join(_conditions)
+
+    sql2='''SELECT ua.user_id,op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(o.created))/360) as usertime2
+            FROM operator as op
+            LEFT JOIN `user` u ON u.assign_operator_id=op.id
+			LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+			LEFT JOIN user_assign_log ua ON ua.user_id=u.user_id
+			WHERE %s GROUP BY op.nickname,ua.user_id,op.id,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30),ceil((TO_DAYS(now())-TO_DAYS(o.created))/360) ''' % ' AND '.join(_conditions)
+
+    rows1 = db.session.execute(sql1)
+    rows2 = db.session.execute(sql2)
+    data1 = OrderedDict()
+    data2 = OrderedDict()
+    data4 = defaultdict(list)
+
+    for user_id,id,nickname,usertime,usertime2 in rows2:
+        if not data2.has_key(id):
+            data2[id]={'items4':[],
+                       'items5':[],
+                       'items6':[]
+                       }
         if usertime2>1:
-            data[id]['items2'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+            data2[id]['items4'].append(int(user_id))
         else:
             if usertime<=1:
-                data[id]['items3'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+                data2[id]['items5'].append(user_id)
             else:
-                data[id]['items'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
-    _data = data.values()
-    _data = sorted(_data,key=lambda d:d['nickname']) 
-    return render_template('report/lqweihu_report_user_time.html', operators=operators, rows=_data)
+                data2[id]['items6'].append({'usertime': usertime, 'user_id': user_id})
+
+    for i in data2.keys():
+        data3 = defaultdict(list)
+        for m in range(0,len(data2[i]['items6'])):
+            usertime = data2[i]['items6'][m]['usertime']
+            user_id = data2[i]['items6'][m]['user_id']
+            data3[usertime].append(int(user_id))
+        data4[i].append(data3)
+
+    for id,nickname,usertime,usertime2,alluser,allfee,allorder in rows1:
+        for keys in data4.keys():
+            if keys==id:
+                if not data1.has_key(id):
+                    data1[id] = {'nickname':nickname,
+                                'alluser':alluser,
+                                'allfee':allfee,
+                                'allorder':allorder,
+                                'items':[],
+                                'items2':[],
+                                'items3':[],
+                    }
+                if usertime2>1:
+                    if len(data2[keys]['items4'])==1:
+                        sql4_user_in_usertime = '(' + str(tuple(data2[keys]['items4'])[0]) + ')'
+                    else:
+                        sql4_user_in_usertime = str(tuple(data2[keys]['items4']))
+
+                    if len(data2[keys]['items4'])==0:
+                        data1[id]['items2'].append({'alluser':0,'allfee':0,'allorder':0,'usertime':usertime})
+                    else:
+                         sql4='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(o.created))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
+                                    FROM operator as op
+                                    LEFT JOIN `user` u ON u.assign_operator_id=op.id
+                                    LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+                                    LEFT JOIN user_assign_log ua ON ua.user_id=u.user_id
+                                    WHERE o.created_by=op.id and ua.one_two=1 and `op`.`status`<>9 and `op`.`assign_user_type`>0 and op.team like 'C%'
+                                        and ceil((TO_DAYS(now())-TO_DAYS(o.created))/30)=1 and ua.user_id in ''' + sql4_user_in_usertime + '''
+                                    GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30),ceil((TO_DAYS(now())-TO_DAYS(o.created))/360)'''
+                         rows4 = db.session.execute(sql4)
+                         for sql4_id,sql4_nickname,sql4_usertime,sql4_usertime2,sql4_alluser,sql4_allfee,sql4_allorder in rows4:
+                             sql4_newallorder = sql4_allorder
+                             sql4_newallfee = sql4_allfee
+                             sql4_newalluser = sql4_alluser
+                             data1[id]['items2'].append({'alluser':sql4_newalluser,'allfee':sql4_newallfee,'allorder':sql4_newallorder,'usertime':sql4_usertime})
+                             data1[id]['alluser'] = data1[id]['alluser']+sql4_newalluser
+                             data1[id]['allfee'] = data1[id]['allfee']+sql4_newallfee
+                             data1[id]['allorder'] = data1[id]['allorder']+sql4_newallorder
+                else:
+                    if usertime<=1:
+                        data1[id]['items3'].append({'alluser':alluser,'allfee':allfee,'allorder':allorder,'usertime':usertime})
+                    else:
+                        if len(data4[keys][0][usertime])==1:
+                            user_in_usertime = '(' + str(tuple(data4[keys][0][usertime])[0]) + ')'
+                        else:
+                            user_in_usertime = str(tuple(data4[keys][0][usertime]))
+                        # print user_in_usertime
+                        if len(data4[keys][0][usertime])!=0:
+                            sql3='''SELECT op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30) as usertime,ceil((TO_DAYS(now())-TO_DAYS(o.created))/360) as usertime2,count(distinct u.user_id) as alluser,IFNULL(sum(o.item_fee),0) as allfee, count(o.order_id) as allorder
+                                    FROM operator as op
+                                    LEFT JOIN `user` u ON u.assign_operator_id=op.id
+                                    LEFT JOIN `order` o ON  (o.user_id=u.user_id AND `o`.`status` not in (1,103) and `o`.order_type=2)
+                                    LEFT JOIN user_assign_log ua ON ua.user_id=u.user_id
+                                    WHERE o.created_by=op.id and ua.one_two=1 and `op`.`status`<>9 and `op`.`assign_user_type`>0 and op.team like 'C%'
+                                        and ceil((TO_DAYS(now())-TO_DAYS(o.created))/30)=1 and ua.user_id in''' + user_in_usertime + '''
+                                    GROUP BY op.id,op.nickname,ceil((TO_DAYS(now())-TO_DAYS(o.created))/30),ceil((TO_DAYS(now())-TO_DAYS(o.created))/360)'''
+                            rows3 = db.session.execute(sql3)
+                            for  id,nickname,usertimes,usertime2,alluser,allfee,allorder in rows3:
+                                newallorder = allorder
+                                newallfee = allfee
+                                newalluser = alluser
+                            data1[id]['items'].append({'alluser':newalluser,'allfee':newallfee,'allorder':newallorder,'usertime':usertime})
+                            data1[id]['alluser'] = data1[id]['alluser']+newalluser
+                            data1[id]['allfee'] = data1[id]['allfee']+newallfee
+                            data1[id]['allorder'] = data1[id]['allorder']+newallorder
+                        else:
+                            data1[id]['items'].append({'alluser':0,'allfee':0,'allorder':0,'usertime':usertime})
+    _data1 = data1.values()
+    _data1 = sorted(_data1,key=lambda d:d['nickname'])
+    return render_template('report/lqweihu_report_user_time.html', operators=operators, rows1=_data1)
+
+
+@report.route('/sale/waitStaffConfirm')
+@admin_required
+def sale_report_by_wait_staff_confirm():
+    period = ''
+    _conditions = ['`order`.status NOT IN (1,103)','`order`.status<200']#['`order`.status IN (2,3,40,4,5,6,60,100)']
+ 
+    if not current_user.is_admin and current_user.team:
+        _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`order`.`created`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`order`.`created`<="%s"'%_end_date)
+        
+    depart = request.args.get('depart','')
+    if depart:
+        _conditions.append('`order`.`team` LIKE "'+depart+'%"')
+
+    if not _start_date and not _end_date:
+        _conditions.append('`order`.`date`="%s"'%datetime.now().strftime('%y%m%d'))
+        period = datetime.now().strftime('%Y-%m-%d')
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = '''SELECT
+`user`.origin,COUNT(`order`.order_id) AS `order_nums`,SUM(`order`.item_fee-`order`.discount_fee) AS `total_fee`,
+ SUM(CASE WHEN `order`.item_fee<=`order`.discount_fee THEN 1 ELSE 0 END) AS `zero_order_nums` FROM `order` 
+ LEFT JOIN `operator` ON `order`.created_by = `operator`.id
+ JOIN `user` ON `user`.user_id = `order`.user_id
+WHERE %s
+GROUP BY `user`.origin'''%' AND '.join(_conditions)
+    rows = db.session.execute(_sql)
+    total_orders = 0
+    total_fee = 0
+    _rows = []
+    for r in rows:
+        _rows.append(r)
+        total_orders += r[1]
+        total_fee += r[2]
+
+    return render_template('report/sale_report_by_wait_staff_confirm.html',rows=_rows,total_fee=total_fee,total_orders=total_orders)
+
+@report.route('/financial/delivery')
+@admin_required
+def financial_report_by_delivery():
+    period = ''
+    _conditions = []#['`order`.status IN (2,3,40,4,5,6,60,100)']
+
+    if not current_user.is_admin and current_user.team:
+        _conditions.append('`order`.`team` LIKE "'+current_user.team+'%"')
+
+    _start_date = request.args.get('start_date','')
+    if _start_date:
+        _conditions.append('`order`.`delivery_time`>="%s"'%_start_date)
+
+    _end_date = request.args.get('end_date','')
+    if _end_date:
+        _conditions.append('`order`.`delivery_time`<="%s"'%_end_date)
+    
+    depart = request.args.get('depart','')
+    if depart:
+        _conditions.append('`order`.`team` LIKE "'+depart+'%"')
+    
+    
+    if not _start_date and not _end_date:
+        _conditions.append('`order`.`date`="%s"'%datetime.now().strftime('%y%m%d'))
+        period = datetime.now().strftime('%Y-%m-%d')
+    else:
+        period = '%s ~ %s'%(_start_date if _start_date else u'开始',_end_date if _end_date else u'现在')
+
+    _sql = '''SELECT
+`user`.origin,COUNT(`order`.order_id) AS `order_nums`,SUM(`order`.item_fee-`order`.discount_fee) AS `total_fee`,
+ SUM(CASE WHEN `order`.item_fee<=`order`.discount_fee THEN 1 ELSE 0 END) AS `zero_order_nums` FROM `order`
+ LEFT JOIN `operator` ON `order`.created_by = `operator`.id
+ JOIN `user` ON `user`.user_id = `order`.user_id
+WHERE %s
+GROUP BY `user`.origin'''%' AND '.join(_conditions)
+    rows = db.session.execute(_sql)
+    total_orders = 0
+    total_fee = 0
+    _rows = []
+    for r in rows:
+        _rows.append(r)
+        total_orders += r[1]
+        total_fee += r[2]
+
+    return render_template('report/financial_report_by_delivery.html',rows=_rows,total_fee=total_fee,total_orders=total_orders)

@@ -39,20 +39,19 @@ class Order(db.Model):
     username = Column(db.String(50), nullable=False)
     order_type = Column(db.SmallInteger, nullable=False, default=1)#订单类型
     order_mode = Column(db.SmallInteger, nullable=False, default=1)#成交方式
-    payment_type = Column(db.SmallInteger, nullable=False, default=1)#支付方式
+    payment_type = Column(db.SmallInteger, nullable=False, default=1)#支付方式 1:货到付款 2:先款后货
     store_id = Column(db.SmallInteger,nullable=True)#发货库房
     item_fee = Column(db.Float(unsigned=True), nullable=False)
     shipping_fee = Column(db.Float(unsigned=True), nullable=False, default=0)
     shipping_address_id = Column(db.Integer, db.ForeignKey('address.id'))
-    shipping_address = db.relationship('Address', backref=db.backref('orders', lazy='dynamic'))
+    shipping_address = relationship('Address', backref=db.backref('orders', lazy='dynamic'))
 
     order_items = relationship('Order_Item', backref='order', lazy='dynamic')
 
     order_item_sets = relationship('Order_Sets', backref='order', lazy='dynamic')
-
     operate_log = Column(db.String(500))
     operator_id = Column(db.Integer, db.ForeignKey('operator.id'))
-    created_by = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)
+    created_by = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)  #订单创建人
 
     need_invoice = Column(db.Boolean, nullable=False, default=False)#是否需要发票
     invoice_name = Column(db.String(50))#发票抬头
@@ -786,8 +785,10 @@ class User(db.Model):
     user_id = Column(db.Integer, primary_key=True)
     name = Column(db.String(50), nullable=False)
     gender = Column(db.String(10), nullable=False, default=u'保密')#性别
-    phone = Column(db.String(15), nullable=False, unique=True)#手机号
-    phone2 = Column(db.String(15), nullable=False, unique=True)#手机号2
+    # phone = Column(db.String(15), nullable=False, unique=True)#手机号
+    phone = Column(db.String(15))#手机号
+    phone2 = Column(db.String(15))#手机号2
+    # phone2 = Column(db.String(15), nullable=False, unique=True)#手机号2
     tel = Column(db.String(25))#电话号码
     tel2 = Column(db.String(25))#电话号码2
     user_type = Column(db.SmallInteger(unsigned=True),nullable=False,default=1)#客户类型 -> (1:新客户、2:会员客户、4:黑名单)
@@ -811,10 +812,11 @@ class User(db.Model):
     total_fee = Column(db.Integer, nullable=False, default=0)#累计积分
     used_fee = Column(db.Integer, nullable=False, default=0)#已用积分
     grade = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#客户等级
-    intent_level = Column(db.String(2),nullable=False,default='A')#意向等级
+    intent_level = Column(db.String(30),nullable=False)#意向等级
     origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#来源
     tq_origin = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq来源
     tq_type = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq类型
+    tq_user = Column(db.SmallInteger(unsigned=True), nullable=False, default=1)#tq客户
     lz_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#流转是否有效1有效，2无效
 
     email = Column(db.String(50))#邮箱地址
@@ -829,7 +831,8 @@ class User(db.Model):
     is_sms = Column(db.Boolean,nullable=False,default=False)#是否发送短信
     expect_time = Column(db.DateTime,nullable=True)#预约时间
 
-    product_intention=Column(db.SmallInteger(unsigned=True), nullable=True)#产品意向add john 20131120
+    # product_intention=Column(db.SmallInteger(unsigned=True), nullable=True)#产品意向add john 20131120
+    product_intention=Column(db.String(20), nullable=True)   #产品意向
     member_time = Column(db.Date,nullable=True)#成为会员客户的时间add john 20131120
 
     dialog_times = Column(db.SmallInteger,nullable=False,default=0)#沟通次数
@@ -887,6 +890,23 @@ class User(db.Model):
     dlb_valid = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否有效1有效，2无效
     dlb_new = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否新客户1新，2老
     dlb_connect = Column(db.SmallInteger(unsigned=True), nullable=False, default=0)#大礼包是否接通1接通，2不通
+
+    #添加字段
+    qq_number = Column(db.String(40),nullable=True)   #QQ号码
+    qq_number2 = Column(db.String(40),nullable=True)   #QQ号码2
+    weixin_number = Column(db.String(40),nullable=True)  #微信号码
+    weixin_number2 = Column(db.String(40),nullable=True)   #微信号码2
+    new_goods_need = Column(db.String(300),nullable=True)  #新品需求
+    product_intention2 = Column(db.String(20), nullable=True)  #活动意向2
+    product_intention3 = Column(db.String(20), nullable=True)  #活动意向3
+    orgin_new = Column(fields.List(300),nullable=True)#修改以后的身体状态
+    orgin_improve = Column(fields.List(300),nullable=True)#改善的身体状态
+    orgin_case = Column(db.String(300),nullable=True)  #所有症状描述汇总
+    tq_province = Column(db.String(20),nullable=True)  #TQ省
+    tq_city = Column(db.String(20),nullable=True)  #TQ市
+    activity_status = Column(db.SmallInteger(unsigned=True), nullable=True)#活动备注
+    # intent_level_flag = Column(db.SmallInteger(unsigned=True), nullable=False, default=0) #标志位， 0表示不提示强制选取意向等级，1表示提示选取意向等级
+
     @property
     def mobile_phones(self):
         _phones = []
@@ -1022,8 +1042,10 @@ class User(db.Model):
             #print op.assign_user_type,self.user_type
             #if allowed_change_user_type and (not op.assign_user_type&self.user_type) and op.assign_user_type:
             if allowed_change_user_type and (not op.assign_user_type==self.user_type) and op.assign_user_type:
-                print 'ok2'
+                #print 'ok2'
                 self.user_type = op.assign_user_type
+                if self.assign_operator_id != None:
+                    self.intent_level_flag = 1
 
             self.assign_operator_id = op.id
             self.is_assigned = True
@@ -1093,6 +1115,7 @@ class User_Assign_Log(db.Model):
     operator = db.relationship('Operator', primaryjoin="(Operator.id == User_Assign_Log.operator_id)")
     assign_operator = db.relationship('Operator', primaryjoin="(Operator.id == User_Assign_Log.assign_operator_id)")
     ip = Column(db.String(30))#ip
+    one_two = Column(db.SmallInteger(unsigned=True),nullable=True)
 
     @property
     def user_type_name(self):
@@ -1156,15 +1179,24 @@ class User_Dialog(db.Model):
     operator = db.relationship('Operator', backref=db.backref('dialogs', lazy='dynamic'))
     created = Column(db.DateTime, default=datetime.now)
 
+    #增加记录
+    connect_situation = Column(db.SmallInteger(unsigned=True),nullable=True)  #接通情况
+    communication_attr = Column(db.SmallInteger(unsigned=True),nullable=True)  #沟通情况
+    communicate_mode = Column(db.SmallInteger(unsigned=True),nullable=True)  #沟通方式
+    talk_time = Column(db.String(300),nullable=True)   #通话时长
+
     @classmethod
-    def add_dialog(cls,op_id,user_id,solution,type,content,record_number):
+    def add_dialog(cls,op_id,user_id,content,communicate_mode,connect_situation,communication_attr,talk_time,record_number):
         obj = cls()
         obj.user_id = user_id
         obj.operator_id = op_id
-        obj.solution = solution
-        obj.record_number = record_number
-        obj.type = type
         obj.content = content
+        obj.communicate_mode = communicate_mode
+        obj.connect_situation = connect_situation
+        obj.communication_attr = communication_attr
+        obj.talk_time = talk_time
+        obj.record_number = record_number
+
         if record_number:
             User.query.filter(User.user_id==user_id).update({'dialog_times':User.dialog_times+1,'last_dialog_time':datetime.now(),'record_time':datetime.now()})
         else:
@@ -1308,7 +1340,18 @@ class Address(db.Model):
         for s in (self.province, self.city, self.district, self.street1, self.street2):
             if s and s <> u'市辖区' and s <> u'县辖区':
                 _str += s
+                _str += '   '
         return _str
+
+
+    @hybrid_property
+    def _phone(self):
+        return '%s****%s'%(self.phone[:3],self.phone[7:]) if self.phone else ''
+
+    @property
+    def phones(self):
+        return [p for p in (self._phone) if p]
+
 
 
 ############################
@@ -1903,3 +1946,53 @@ class Order_Express(db.Model):
     data = Column(db.String(100), nullable=False)#情况
     status = Column(db.Integer,nullable=False,default=0)#状态
     time = Column(db.DateTime,default=datetime.now)#流转时间
+
+class User_assign_time_log(db.Model):
+    ''' 保存用户从新客户变成会员客户的数据'''
+
+    __tablename__ = 'user_assign_time_log'
+
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#用户ID
+    user_type = Column(db.SmallInteger(unsigned=True),nullable=False,default=1)#客户类型 -> (1:新客户、2:会员客户、4:黑名单)
+    assign_operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#当前分配人员
+    assign_time = Column(db.DateTime,default=datetime.now)#分配时间
+    operator_id = Column(db.Integer, db.ForeignKey('operator.id'), nullable=True)#操作人员
+
+
+class User_Introduce(db.Model):
+    ''' 介绍人与转介绍人关系'''
+
+    __tablename__ = 'user_introduce'
+    id = Column(db.Integer, primary_key=True)
+    user_id = Column(db.Integer)#介绍人ID
+    introduce_user_id = Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)#转介绍人ID
+    created = Column(db.DateTime, default=datetime.now)
+
+    @classmethod
+    def add_introduce(cls,user_id,introduce_user_id):
+        '''
+        :param 介绍人IDuser_id:
+        :param 转介绍人IDintroduce_user_id:
+        :return 返回类的对象:
+        '''
+        userIntroduce = cls()
+        userIntroduce.user_id = user_id
+        userIntroduce.introduce_user_id = introduce_user_id
+        return userIntroduce
+
+    @classmethod
+    def check_introduce(cls,introduce_user_id):
+        '''
+        :param 转介绍人IDintroduce_user_id:
+        :return 查询结果有，则返回False，反之返回 True:
+        '''
+        obj = cls.query.filter(cls.introduce_user_id==introduce_user_id).first()
+        return False if obj else True
+
+class User_Market(db.Model):
+    '''
+    市场数据
+    '''
+    id = Column(db.Integer, primary_key=True)
+    user_id =  Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False) #关联用户ID

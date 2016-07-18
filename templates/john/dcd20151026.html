@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+    <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
+        <thead>
+        <tr>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>省区</th>
+            <th>员工</th>
+            <th>订购时间</th>
+            <th>订购金额</th>
+            <th>订购产品</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+            <tr>
+            <td>{{ d.user.name }}</td>
+            <td>{{ d.user.phone }}</td>
+            <td>{{ d.shipping_address.province }}-{{ d.shipping_address.city }}</td>
+            <td>{{ d.assign_operator.nickname }}</td>
+            <td>{{ d['created'] }}</td>
+            <td>{{ d['item_fee'] }}</td>
+            <td>{% for dd in d.order_items %}{{dd.name}},{% endfor %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

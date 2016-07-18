@@ -1,0 +1,41 @@
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/json2.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<table>
+{% for user in pagination %}
+<tr>
+<td>{{user.member_time}}</td>
+<td>{{user.name}}</td>
+<td>{{ user.ages }}</td>
+<td>{{ user.gender }}</td>
+<td>
+    {% for a in user.addresses %}
+    {{ a.province }}-{{ a.city }}
+    {% endfor %}
+</td>
+<td id="LIFE{{user.user_id}}"></td>
+<td>{{ config['USER_INCOME_CONFIG'][user.income] }}</td>
+<td id="BODY{{user.user_id}}"></td>
+<td>{{user.order_fee}}</td>
+<script>
+        var data = JSON.parse('{{user.entries|default('{}',true)|replace("'","")|safe}}');
+        for (var c in data) {
+            var $sel = $('#' + c+{{user.user_id}});
+            entries = data[c];
+            if (!$.isEmptyObject(entries)) {
+                var _html = '<p>';
+                for (var i in entries) {
+                    var entry = entries[i];
+                    _html += '<code style="color:green">' + entry.c2 + '</code><code>' + entry.c3 + '</code>' + entry.v;
+                }
+                _html += '</p>';
+                $sel.html(_html);
+            }
+            else {
+                $sel.html(null);
+            }
+        }
+</script>
+</tr>
+{% endfor %}
+</table>

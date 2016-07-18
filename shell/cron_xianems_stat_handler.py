@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
         _date = _yesterday.strftime('%Y-%m-%d %H:%M:%S')
         _end_date = _now.strftime('%Y-%m-%d %H:%M:%S')
-        sql = """SELECT `order`.`order_id`,IF(`order`.payment_type=1,'货到付款','先款后货'),`address`.ship_to,`address`.phone,`address`.tel,`order`.item_fee-`order`.discount_fee,`order_items`.item_info,`order`.express_number,`address`.province,`address`.city,`address`.district,`address`.street1,`order`.delivery_time,`order`.user_remark
+        sql = """SELECT `order`.`order_id`,IF(`order`.payment_type=1,'货到付款','先款后货'),`address`.ship_to,`address`.phone,`address`.tel,IF(`order`.payment_type=2,0,`order`.item_fee-`order`.discount_fee),`order_items`.item_info,`order`.express_number,`address`.province,`address`.city,`address`.district,`address`.street1,`order`.delivery_time,`order`.user_remark
                 FROM `order`
                 JOIN `user` ON `order`.user_id=`user`.user_id
                 JOIN `address` ON `order`.shipping_address_id=`address`.id
@@ -30,10 +30,13 @@ if __name__ == '__main__':
                 AND `order`.delivery_time IS NOT NULL
                 AND `order`.order_type <> 14
                 AND `order`.delivery_time>='%s' AND `order`.delivery_time<='%s'
-        INTO OUTFILE '%s'
+        INTO OUTFILE '%s'	
         FIELDS TERMINATED BY ','
-        LINES TERMINATED BY '\r\n'"""%(_date,_end_date,file_path)        
-        conn.execute(sql)
+        LINES TERMINATED BY '\r\n'"""%(_date,_end_date,file_path) 
+		
+		
+        print sql
+        #conn.execute(sql)
         print 'LUHANGYUNDA STAT COMPLETE.'
     except Exception,e:
         print 'CRON_LHYD_STAT_HANDLER happen error:%s'%e

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>打印顺风单</title>
+<style type="text/css">
+      #config{
+          overflow: auto;
+          margin-bottom: 10px;
+      }
+      .config{
+          float: left;
+          width: 200px;
+          height: 250px;
+          border: 1px solid #000;
+          margin-left: 10px;
+      }
+      .config .title{
+          font-weight: bold;
+          text-align: center;
+      }
+      .config .barcode2D,
+      #miscCanvas{
+        display: none;
+      }
+</style>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-barcode.js') }}"></script>
+    <script type="text/javascript">
+        $(function(){
+      function generateBarcode(){
+        var value = '{{ order.express_number }}';
+        var btype = 'code128';
+        var renderer = 'css';
+        
+		var quietZone = false;
+		
+        var settings = {
+          output:renderer,
+          bgColor: '#FFFFFF',
+          color: '#000000',
+          barWidth: 2,
+          barHeight: 40,
+          moduleSize: 5,
+          posX: 10,
+          posY: 20,
+		  fontSize: 12,
+          addQuietZone: 1
+        };
+		$("#code1").html("").show().barcode(value, btype, settings);
+		$("#code2").html("").show().barcode(value, btype, settings);
+      }
+          
+      function showConfig1D(){
+        $('.config .barcode1D').show();
+        $('.config .barcode2D').hide();
+      }
+      
+      function showConfig2D(){
+        $('.config .barcode1D').hide();
+        $('.config .barcode2D').show();
+      }
+      generateBarcode();
+           window.print();			
+        });
+    </script>
+</head>
+<body style="width:480px; margin:0 auto;">
+	<div id="a4_template" class="hidden">
+				<style>
+				html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+				table{border-collapse:collapse;border-spacing:0}
+				fieldset,img{border:0}
+				address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}
+				li{list-style:none}
+				caption,th{text-align:left}
+				q:before,q:after{content:""}
+				input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit}
+				*:focus{outline:none}
+				
+				img{vertical-align:top;}
+				html{height:100%;overflow-y:scroll;}
+				body{font: 12px/1.5 tahoma,arial,宋体;}
+				em,i{font-style:normal;}
+				/* 重置超链接元素 */ 
+				a { text-decoration: none; color:inherit;}
+				a:hover {text-decoration:underline;}
+				h4, .f14{font-size:14px;}
+				.f12{font-size:12px ;}
+				.f16{font-size:16px;}
+				.f18{font-size:18px;}
+				.f24{font-size:24px;}
+				.f13{font-size:13px;}
+				.clear{clear:both;}
+				.b, .bold{font-weight:bold;}
+				.i, .italic{font-style:italic;}
+				.pointer, .hand{cursor:pointer;}
+				.hidden{}
+				.g_bg{background:url(../images/body_bg.png) 105px 0 repeat-x #f1f3f5;}
+				.underline{text-decoration:underline}
+				
+				/***浮动 对齐***/
+				.fl{float:left;}
+				.fr{float:right;}
+				.tl{text-align:left;}
+				.tc{text-align:center;}
+				.tr{text-align:right;}
+				.vt{vertical-align:top;}
+				.vm{vertical-align:middle;}
+				.vb{vertical-align:bottom;}
+				
+				.m_b10{margin-bottom:10px;}
+				.p_t10{padding-top:10px;}
+				.p_b10{padding-bottom:10px;}
+				
+				/*文本行高*/
+				.lh28{line-height:28px;}
+				
+				.h26{height:26px;}
+				.lh26{line-height:26px;}
+				
+				.h52{height:52px;}
+				.lh52{line-height:52px;}
+				
+				.h16{height:16px;}
+				.lh16{line-height:16px;}
+				
+				.h18{height:18px;}
+				.lh18{line-height:18px;}
+				
+				.h19{height:19px;}
+				.lh19{line-height:19px;}
+				
+				.h17{height:17px;}
+				.lh17{height:17px;}
+				.lh40{line-height:40px;}
+				
+				.h70{height:70px;}
+				.h45{height:45px;}
+				.h48{height:48px;}
+				.h40{height:40px;}
+				.h50{height:50px;}
+				.h60{height:60px;}
+				.lh70{line-height:70px;}
+				
+				/*各种宽度 w+number->width:number*/
+				.w90{width:90px;}
+				.w115{width:115px;}
+				.w132{width:132px;}
+				.w175{width:175px;}
+				.w205{width:205px;}
+				/* 各种边距 ml+num->margin-left; pl+num->padding-left*/
+				.mr5{margin-right:5px;}
+				.mr20{margin-right:20px;}
+				.ml5{margin-left:5px;}
+				.ml8{margin-left:8px;}
+				.mb5{margin-bottom:5px;}
+				.mb2{margin-bottom:2px;}
+				.mt3{margin-top:3px;}
+				.mt5{margin-top:5px;}
+				.mt35{margin-top:35px;}
+				.mt10{margin-top:10px;}
+				.mt45{margin-top:45px;}
+				.pl5{padding-left:5px;}
+				.pb5{padding-bottom:5px;}
+				.pb20{padding-bottom:20px;}
+				.pt5{padding-top:5px;}
+				.pt10{padding-top:10px;}
+				
+				/**各种颜色**/
+				.red{color:#dc0000;}
+				.blue,.blue a, .blue a:hover{color:#1360bf;}
+				.gray{color:#999;}
+				
+				#container{min-height:500px;background:#fff;color:#666666;border-top:1px solid #8d8d8d;padding-bottom:20px;background:url(../images/container_bg.png) 0 0 repeat-x #fff;}
+				
+				#g_footer{background:#676767; height:25px; line-height:25px; color:#b6b5b5;}
+				
+				/***可共用样式***/
+				
+				.isInsurance_box, .codFlag_box{height:25px;width:230px;vertical-align:middle;}
+				
+				#new_user_view{position:fixed; _position:absolute; left:0; top :0; width:100%; height:21px; line-height:21px; background:#fff; border: 1px solid #d0d0d0; text-align:center;}
+				.nv_close{float:right; margin:2px 5px 0 0; color:#c00;}
+				
+				.ui-widget-overlay{z-index:1000}
+				.x-mask-loading{position:absolute;z-index:1001;}
+				
+				.i_item_opt{width:116px;}
+				.u_item_opts{width:100%;}
+				
+				
+				/***电子运单***/
+				.brd{border:2px solid #000000;}
+				.brd_r{border-right:2px solid #000000;}
+				.brd_b{border-bottom:2px solid #000000;}
+				.brd_t{border-top:2px solid #000000;}
+				
+				.h26{height:26px;}
+				.h28{height:28px;}
+				.lh26{line-height:26px;}
+				.lh28{line-height:28px;}
+				
+				.brd_l_n{border-left:none;}
+				.brd_r_n{border-right:none;}
+				.brd_b_n{border-bottom:none;}
+				
+				.waybill_cnt{width:656px;margin:0 auto;height:auto;}
+				.a5_waybill_cnt{width:480px;height:auto;}
+				
+				.waybill_logo{height:112px;width:236px;text-align:center;}
+				.a5_waybill_logo{height:62px;width:186px;text-align:center;}
+				
+				.bar_code{width:419px;}
+				.wb_sender,.wb_reviver{width:752px;}
+				.a5_wb_sender,.a5_wb_reviver{width:295px;}
+				
+				.wb_old_post,.wb_target{width:213px;}
+				.wb_reviver,.wb_target{height:100px;}
+				.fact_info_hd{height:28px;width:16.5%;}
+				.a5_fact_info_hd{height:28px;}
+				
+				.fact_info_cnt{height:56px;line-height:56px;}
+				.pay_type{width:329px;height:56px;}
+				.a5_pay_type{width:329px;height:40px;}
+				
+				.sign_name{width:178px;height:56px;}
+				.a5_sign_name{width:116px;height:40px;}
+				
+				.reciver{width:150px;height:56px;}
+				.a5_reciver{width:96px;height:40px;}
+				
+				.append_service{width:328px;height:170px;}
+				.append_info{width:328px;height:170px;}
+				.reciver_sign , .sr_person{height:56px;}
+				.total_cost{width:474px;}
+				.down_cnt{width:758px;margin:0 auto;color:#FF00FF;margin-bottom:20px;}
+				.printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:624px;}
+				.a5_printIndex{border:1px solid #cfcbcc; background-color:#cfcbcc; width:33px;height:30px;text-align:center;font-size:18px;font-weight:bold;position:absolute;top:7px;left:333px;}
+				
+				/*** 背胶运单 ***/
+				.html{height:502px;}
+				.adhesive_logo{width:130px;height:52px;}
+				.adh_bar_code{width:230px;}
+				.adhesive_cnt{width:360px;margin:0 auto;height:auto;margin-top:2px;}
+				.adh_append_service , .adh_append_info{width:328px;}
+				.dash_line{border-top:1px dashed #000000;height:1px;margin:1px 0px;width:358px;}
+				.wb_sender2{width:269px;}
+				.pay_type_ul{height:42px;}
+				.adh_reviver{width:255px;}
+				.adh_target{width:104px;}
+				.adh_info_hd , .adh_info_cnt{height:14px;width:16.5%;}
+				.adh_sign_name{width:178px;}
+				.adh_reciver{width:150px;}
+				.pay_type_li{height:18px;line-height:18px;}
+				.adh_appd_service{width:807px;}
+				.reciver_info_ul{height:40px;}
+				.reciver_info_li{height:20px;}
+				.adh_bold{font-weight:bold;}
+				.target_font{display:inline-block;font-size:34px;font-weight:bold;}
+				.a5_target_font{display:inline-block;font-size:30px;font-weight:bold;}
+				
+				.adh_pay_type{height:38px;width:401px;}
+				.second_hd{width:179px;}
+				.wb_sender_info2{width:268px;}
+				.consign_info{height:40px;}
+				.adh_wb_sender_li,.adh_sender_info{height:36px;}
+				.adh_wb_sender,.adh_wb_sender_li,.consign_info{width:249px;overflow:hidden;}
+				.adh_sender_info{width:222px;overflow:hidden;}
+				.logisticsNo_bar{letter-spacing:3px;padding-left:55px;}
+				.adh_btn{width:570px;text-align:right;}
+				
+				
+				/****************A5**********************/
+				.a5_sender{width:356px;height:40px;overflow:hidden;}
+				.a5_wb_old_post, .a5_wb_target{width:213px;}
+				.transalteClsIE{filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3)}
+				.transalteClsNOTIE{-moz-transform:-90deg;-webkit-transform:-90deg}
+				/****************A5**********************/
+				.a5_body_print{margin-top : -69px;}
+				.a5_body_print_ie{margin-left : -140px;}
+				
+				.line1{width:297px;overflow:hidden;height:21px}
+				.line2{width:297px;overflow:hidden;height:42px}
+				.line3{width:297px;overflow:hidden;height:63px}
+				.line4{width:297px;overflow:hidden;height:84px}
+		</style>
+		<div class="a5_waybill_cnt brd prelative print_mt20">
+				<table>
+					<tbody><tr>
+						<td class="a5_waybill_logo brd_r brd_b">
+							<img src="/static/img/awd_logo_A5.png">
+						</td>
+						<td class="bar_code brd_b"><div id="code1" class="barcode2"></div>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_sender brd_r">
+							<ul>
+								<li class="h24 lh24 ml5 a5_sender adh_wb_sender_shipperInfo1">
+									<span class="adh_bold f14">寄方 : </span>
+									<span class="ml5 f14 show">四川省成都市成华区白莲村2组103号 爱妻美 4006002000</span>
+									<span class="hidden"></span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_old_post">
+							<ul>
+								<li class="f14 ml5"><span class="adh_bold">原寄地 : </span></li>
+								<li class="h26 lh26 tc mb5"><span class="a5_target_font shipperAddressCode1">028</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_reviver brd_r brd_t">
+							<ul>
+								<li class="h24 lh24 ml5 a5_sender">
+									<span class="adh_bold f14">收方 : </span>
+									<span class="ml5 f14 adh_wb_sender_receiver1"><!--{{ order.shipping_address.province|format_address }}&nbsp;{{ order.shipping_address.city|format_address }}&nbsp;{{ order.shipping_address.district|format_address }}&nbsp;-->{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;******
+                                    <!--{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;{{ order.shipping_address.ship_to }}&nbsp;{{ order.shipping_address.phone }}&nbsp;{{ order.shipping_address.tel|default('',true) }}--></span>
+									<!-- 
+									<span class="ml5 f14">{receiverName}</span>
+									<span class="ml5 f14">{receiverPhone}</span>
+									<span class="ml5 f14">{receiverFullAddress}</span>
+									 -->
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_target brd_t">
+							<ul>
+								<li class="f14 ml5"><span class="adh_bold">目的地 : </span></li>
+								<li class="h26 lh26 tc mb5"><span class="a5_target_font receiverAddressCode1">{{order.express_sfdestcode}}</span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="a5_wb_reviver brd_r brd_t">
+							<ul>
+								<li class="ml5 a5_sender">
+									<span class="adh_bold f14">托寄物内容 : </span>
+									<span class="ml5 f14 signGoodsName">保健品</span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_wb_target brd_t">
+							<ul>
+								<li class="h24 lh24 ml5">
+									<span class="adh_bold f14">业务类型 : </span>
+								</li>
+								<li class="h24 lh24 ml5">
+									<span class="ml5 f14 signExpressType">电商特惠</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts">
+					<tbody><tr>
+						<td class="a5_fact_info_hd tc brd brd_l_n f14 adh_bold">件数</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">托寄物数量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">实际重量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">计费重量</td>
+						<td class="a5_fact_info_hd tc brd f14 adh_bold">费用</td>
+						<td class="a5_fact_info_hd tc brd brd_r_n f14 adh_bold">费用合计</td>
+					</tr>
+					<tr>
+						<td class="h28 lh28 tc brd brd_l_n brd_b_n">1</td>
+						<td class="h28 lh28 tc brd brd_b_n">{{ocount}}</td>
+						<td class="h28 lh28 tc brd brd_b_n">&nbsp;</td>
+						<td class="h28 lh28 tc brd brd_b_n signPackWeight"></td>
+						<td class="h28 lh28 tc brd brd_b_n"><span class="orderAmount hidden"></span></td>
+						<td class="h28 lh28 tc brd brd_r_n brd_b_n signTotalMoney">&nbsp;</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td class="a5_pay_type brd_t brd_r">
+							<ul>
+								<li>
+									<span class="f14 adh_bold ml5">付款方式 : <span class="signExpressPayMethod">寄付</span></span>
+									
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">月结卡号 : <span class="">0283439931</span></span>
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">第三方地区 : </span>
+									<span></span>
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_sign_name brd_t brd_r">
+							<ul>
+								<li><span class="f14 adh_bold ml5">寄方签名 : </span></li>
+								<li style="width:108px;overflow:hidden;"><span class="f14 ml5">爱妻美</span>{{ order.order_id }}</li>
+							</ul>
+						</td>
+						<td valign="top" class="a5_reciver brd_t">
+							<ul>
+								<li><span class="f14 adh_bold ml5">收件员 : </span></li>
+								<li><span class="f14 ml5"></span></li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr>
+						<td valign="top" class="append_service brd_t brd_r" style="height:134px;width:302px;">
+							<ul style="width: 302px;">
+								<li class="h16 lh16 ml5">
+									<span class="adh_bold f14">附加服务:</span>
+								</li>
+								<li class="ml5 signOtherService" id="a5_additional_service">
+                                    <div class="f14">月结卡号:&nbsp;<span class="codAmount">0283439931</span></div>
+                                    {%if order.payment_type==1 and order.actual_fee > 0%}
+                                    <div class="f14">代收货款:&nbsp;<span class="codAmount">{{order.actual_fee if order.payment_type==1 else 0 }}</span></div><!-- class="{codAmount_hid}" -->
+                                    {%endif%}
+								</li>
+							</ul>
+						</td>
+						<td valign="top" class="append_info brd_t" style="height:134px;">
+							<table class="u_item_opts">
+								<tbody><tr>
+									<td class="h24 lh24" colspan="2">
+										<span class="f14 adh_bold">&nbsp;&nbsp;寄件日期:{{datat}}</span>
+										<span></span>
+									</td>
+								</tr>
+								<tr>
+									<td valign="top" class="h40 lh40 brd_t brd_r">
+										<ul>
+											<li><span class="f14 adh_bold ml5">收方签名: </span></li>
+											<li><span class="f14 ml5"></span></li>
+										</ul>
+									</td>
+									<td valign="top" class="h40 lh40 brd_t">
+										<ul>
+											<li><span class="f14 adh_bold ml5">派件员: </span></li>
+											<li><span class="f14 ml5"></span></li>
+										</ul>
+									</td>
+								</tr>
+								<tr><td class="h24 lh24 brd_t" colspan="2">
+										<span class="f14 adh_bold">&nbsp;&nbsp;派件日期:&nbsp;</span>
+										<span></span>
+									</td>
+								</tr>
+								<tr><td valign="top" class="h24 lh24 brd_t" colspan="2">
+										<ul>
+											<li class="h24 lh24 ml5" style="overflow:hidden;height:40px;">
+												<span class="f14 adh_bold">备注栏 :</span>
+												<span class="f14">请本人签收!谢谢!</span>
+											</li>
+										</ul>
+									</td>
+								</tr>
+							</tbody></table>
+						</td>
+					</tr>
+				</tbody></table>
+				<table>
+					<tbody><tr><td class="brd_t brd_b"><img  src="/static/img/a5_div_line.png"></td></tr>
+				</tbody></table>
+				
+				<!-- ===============================================其他运单================================================== -->
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" colspan="2" class="a5_wb_sender">
+							<ul>
+								<li class="ml5 a5_sender adh_wb_sender_shipperInfo2" style="width:474px;height:44px">
+									<span class="adh_bold f14">寄方 : </span>
+									<span class="f14 ml5 show">四川省成都市成华区白莲村2组103号 爱妻美 4006002000</span>
+									<span class="hidden"></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" colspan="2" class="a5_wb_reviver brd_t">
+							<ul>
+								<li class="ml5 a5_sender" style="width:474px;height:44px">
+									<span class="adh_bold f14">收方 : </span>
+									<span class="f14 ml5 adh_wb_sender_receiver2" title=""><!--{{ order.shipping_address.province|format_address }}&nbsp;{{ order.shipping_address.city|format_address }}&nbsp;{{ order.shipping_address.district|format_address }}&nbsp;-->{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;******
+                                    <!--{{ order.shipping_address.format_address }}&nbsp;{{ order.shipping_address.postcode|default('',true) }}&nbsp;{{ order.shipping_address.ship_to }}&nbsp;{{ order.shipping_address.phone }}&nbsp;{{ order.shipping_address.tel|default('',true) }}--></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody></table>
+				<table class="u_item_opts other_trade_order">
+					<tbody><tr>
+						<td valign="top" class="total_cost brd_t brd_r"><div id="code2" class="barcode2"></td>
+						<td class="brd_t" style="width:340px;height:60px;">
+							<ul>
+								<li>
+									<span class="f14 adh_bold ml5">费用合计 : </span>
+									<span class="signTotalMoney f12"></span>
+									<span class="orderAmount hidden"></span>
+								</li>
+								<li>
+									<span class="f14 adh_bold ml5">付款方式: <span class="signExpressPayMethod">寄付</span></span>
+									<span></span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+			</tbody>
+		</table>
+		<!-- ===============================================其他运单================================================== -->
+		
+	 </div>
+    </div>
+</body>
+</html>

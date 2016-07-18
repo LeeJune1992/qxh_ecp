@@ -1,0 +1,579 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors,order_status,order_status_link,set_default_value with context %}
+{% set category='user' %}
+{% set allowed_admin='admin' in show_queries %}
+{% block title %}客户管理{% endblock %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/select2/select2.css') }}">
+    <style type="text/css">
+        .table th,.table td{
+            text-align: center;
+        }
+
+        .table td{
+            cursor: pointer;
+        }
+
+        .highlight{
+            background-color: #faf2cc;
+        }
+{#        table td{#}
+{#            padding: 0;#}
+{#            margin: 0;#}
+{#        }#}
+    </style>
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+
+    <script type="text/javascript">
+    $(function(){
+        $('.table').on('click', 'tbody tr td', function(event) {
+            //$(this).addClass('highlight').siblings().removeClass('highlight');
+            var attr = $(this).attr('unallowed-click');
+            if (typeof attr=='undefined'){
+                window.location.href=$(this).parent().data('link-url');
+                return false;
+            }
+        });
+
+        $('.timepicker').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            autoclose: true,
+            todayBtn: true
+        });
+		{% if 'dlb' in show_queries %}
+		$('#dlb_type').select2({
+			placeholder: '大礼包',
+			width: '125px',
+			allowClear:true
+		});
+		{% endif %}
+		{% if 'service' in show_queries %}
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域',
+			allowClear:true
+        });
+        $('#effectiveness').select2({
+            width:'120px',
+            placeholder:'有效性',
+			allowClear:true
+        });
+        $('#isable').select2({
+            width:'120px',
+            placeholder:'是否停用',
+			allowClear:true
+        });
+		{% endif %}
+		{% if 'list_type' in show_queries %}
+        $('#list_type').select2({
+            width:'120px',
+            placeholder:'会员类型'
+        });
+		{% endif %}
+		{% if 'area' in show_queries %}
+        $('#area').select2({
+            width:'120px',
+            placeholder:'区域'
+        });
+		{% endif %}
+
+        {% if 'op' in show_queries %}
+        $('#assign_operator_id').select2({
+            width:'120px',
+            placeholder:'归属员工'
+        });
+        {% endif %}
+
+        $('#per_page').select2({
+            width:'120px',
+            placeholder:'每页条数'
+        });
+        {% if 'user_type' in show_queries %}
+        $('#user_type').select2({
+            width:'100px',
+            placeholder:'客户类型',
+            allowClear:true
+        });
+        {% endif %}
+
+        {% if 'user_origin' in show_queries %}
+            $('#user_origin').select2({
+                width:'100px',
+                placeholder:'客户来源'
+            });
+        {% endif %}
+
+        {% if 'show_assign' in show_queries %}
+            $('#is_assigned').select2({
+                width:'100px',
+                placeholder:'是否分配',
+                allowClear:true
+            });
+        {% endif %}
+
+        {% if 'show_abandon' in show_queries %}
+            $('#is_abandon').select2({
+                width:'110px',
+                placeholder:'是否放弃',
+                allowClear:true
+            });
+        {% endif %}
+
+        $('#intent_level').select2({
+            width:'100px',
+            placeholder:'意向等级',
+            allowClear:true
+        });
+        $('#product_intention').select2({
+            width:'100px',
+            placeholder:'产品意向',
+            allowClear:true
+        });
+
+        {% if show_label %}
+        $('#label_id').select2({
+            width:'100px',
+            placeholder:'客户标签',
+            allowClear:true
+        });
+        {% endif %}
+
+        {% if allowed_admin %}
+        $('#to_user_type').select2({
+            width:'150px',
+            placeholder:'变更客户类型',
+            allowClear:true
+        });
+        $('#to_operator_id').select2({
+            width:'150px',
+            placeholder:'变更归属员工',
+            allowClear:true
+        });
+        {% endif %}
+
+        $('#sort_name').select2({
+            width:'120px',
+            placeholder:'排序规则'
+        });
+
+        $('#sort_sc').select2({
+            width:'80px',
+            placeholder:'顺序'
+        });
+
+        {% if allowed_admin %}
+        var toggle_admin_panel = function(){
+            if ($('input[name="sel_ids"]').filter(':checked').length>0){
+                $('#admin-panel').show();
+            }
+            else{
+                $('#admin-panel').hide();
+            }
+        };
+
+        $('input[name="sel_ids"]').click(function(){
+            toggle_admin_panel();
+        });
+
+        $('#chk_all').click(function(){
+            $('input[name="sel_ids"]').prop('checked',$('#chk_all').is(':checked'));
+            toggle_admin_panel();
+        });
+
+        var selected_ids = function(){
+            var _ids = [];
+            $('input[name="sel_ids"]').filter(':checked').each(function() {
+                _ids.push($(this).val());
+            });
+            return _ids;
+        };
+
+        $('#to_operator_id').on('change',function(){
+            var to_operator_id = parseInt($('#to_operator_id').val());
+            if (to_operator_id == 0|| isNaN(to_operator_id)){
+                return;
+            }
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要变更归属的客户');
+                return;
+            }
+            var confirm_text = '是否确认将选中的<font color="blue"> 客户归属 </font>变更为员工 <font color="red">'+$('#to_operator_id option:selected').text()+'</font>？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            bootbox.confirm(confirm_text, function(result) {
+                if (result!=true){
+                    $('#to_operator_id').select2('val','');
+                    return;
+                }
+
+                var req = $.ajax({
+                    url: '{{ url_for('admin.change_user_op') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    traditional: true,
+                    data:{ids:JSON.stringify(sel_ids),op_id:to_operator_id}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                req.always(function(){
+                    $('#to_operator_id').select2('val','');
+                });
+            });
+            return false;
+        });
+
+        $('#to_user_type').on('change',function(){
+            var to_user_type = parseInt($('#to_user_type').val());
+            if (to_user_type == 0|| isNaN(to_user_type)){
+                return;
+            }
+            var sel_ids = selected_ids();
+            if ($.isEmptyObject(sel_ids)){
+                bootbox.alert('请勾选要变更类型的客户');
+                return;
+            }
+            var confirm_text = '是否确认将选中的<font color="blue"> 客户类型 </font>变更为 <font color="red">'+$('#to_user_type option:selected').text()+'</font>？（合计：<strong>'+sel_ids.length+'</strong> 位）';
+            bootbox.confirm(confirm_text, function(result) {
+                if (result!=true){
+                    $('#to_user_type').select2('val','');
+                    return;
+                }
+
+                var req = $.ajax({
+                    url: '{{ url_for('admin.change_user_type') }}',
+                    dataType: "json",
+                    type: 'POST',
+                    traditional: true,
+                    data:{ids:JSON.stringify(sel_ids),user_type:to_user_type}
+                });
+                req.done(function (data) {
+                    if (data.result == true) {
+                        window.location.reload(true);
+                    }
+                    else {
+                        bootbox.alert("操作失败：" + data.error);
+                    }
+                });
+                req.fail(function (request, status, error) {
+                    bootbox.alert('发生错误:' + error);
+                });
+                req.always(function(){
+                    $('#to_user_type').select2('val','');
+                });
+            });
+            return false;
+        });
+        {% endif %}
+
+    });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <form action="" method="get" class="form-search inline well well-small">
+        {% if 'list_type' in show_queries %}
+        <select id="list_type" name="list_type" class="select2">
+        	<option value="3"></option>
+            <option value="3">客户类型</option>
+            <option value="1" {% if list_type==1 %}selected="selected"{% endif %}>活跃客户</option>
+        	<option value="0" {% if list_type==0 %}selected="selected"{% endif %}>沉默客户</option>
+        </select>
+        {% endif %}
+        {% if 'op' in show_queries %}
+        <select id="assign_operator_id" name="assign_operator_id">
+            <option></option>
+            <option value="">所有员工</option>
+            {% set assign_operator_id = request.args.get('assign_operator_id',0)|int %}
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if op.id==assign_operator_id %}selected="selected"{% endif %}>{{ op.nickname }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+        {% if 'user_type' in show_queries %}
+        <select id="user_type" name="user_type" class="select2" style="width: 120px">
+            <option></option>
+            <option value="">所有客户</option>
+            {% set user_type = request.args.get('user_type',0)|int %}
+            {%- for k,v in config['USER_TYPES'].iteritems() -%}
+                <option value="{{ k }}" {% if k==user_type %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+        {% if show_label %}
+            <select id="label_id" name="label_id" class="select2" style="width: 120px">
+                <option></option>
+                {% set label_id = request.args.get('label_id',0)|int %}
+                {%- for k,v in config['USER_LABEL_IDS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==label_id %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+        {% endif %}
+        {% if 'show_assign' in show_queries %}
+        <select id="is_assigned" name="is_assigned" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_assigned = request.args.get('is_assigned',0)|int %}
+            {%- for k,v in [(1,'未分配'),(2,'已分配'),] -%}
+                <option value="{{ k }}" {% if k==is_assigned %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+
+        {% if 'user_origin' in show_queries %}
+            <select id="user_origin" name="user_origin" class="select2" style="width: 120px">
+                <option></option>
+                <option value="">所有来源</option>
+                {% set user_type = request.args.get('user_origin',0)|int %}
+                {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==user_type %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+            </select>
+        {% endif %}
+        {% if 'dlb' in show_queries %}
+        {% set dlb_type = request.args.get('dlb_type',0)|int %}
+        <select id="dlb_type" name="dlb_type" class="select2">
+                <option></option>
+                <option value="9" {% if 9==dlb_type %}selected="selected"{% endif %}>大礼包</option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==dlb_type %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+        </select>
+        {% endif %}
+        {% if 'service' in show_queries %}
+        <select id="area" name="area" class="select2">
+                <option></option>
+                <option value="">所有区域</option>
+                {% set area = request.args.get('area') %}
+                {%- for k,v in config['AREA'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==area %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+        </select>
+        <select id="effectiveness" name="effectiveness">
+            <option></option>
+            <option value="">所有</option>
+            {% set effectiveness = request.args.get('effectiveness') %}
+            <option value="1" {% if effectiveness=='1' %}selected="selected"{% endif %}>有效</option>
+        	<option value="2" {% if effectiveness=='2' %}selected="selected"{% endif %}>无效</option>
+        	<option value="3" {% if effectiveness=='3' %}selected="selected"{% endif %}>无法确认</option>
+        </select>
+        <select id="isable" name="isable">
+            <option></option>
+            <option value="">所有</option>
+            {% set isable = request.args.get('isable') %}
+            <option value="1" {% if isable=='1' %}selected="selected"{% endif %}>是</option>
+        	<option value="0" {% if isable=='0' %}selected="selected"{% endif %}>否</option>
+        </select>
+        {% endif %}
+        <select id="product_intention" name="product_intention" class="select2">
+            <option></option>
+                {% set product_intention = request.args.get('product_intention') %}
+                {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
+                {% set k = '%d'%k %}
+                    <option value="{{ k }}" {% if k==product_intention %}selected="selected"{% endif %}>{{ v }}</option>
+                {%- endfor -%}
+        </select>
+        <select id="intent_level" name="intent_level" class="select2">
+            <option></option>
+            {% set intent_level = request.args.get('intent_level','') %}
+            {%- for k in config['USER_INTENT_LEVELS'] -%}
+                <option value="{{ k }}" {% if k==intent_level %}selected="selected"{% endif %}>{{ k }}</option>
+            {%- endfor -%}
+        </select>
+        {% if 'username' in show_queries %}
+        <input type="text" class="input-small" name="name" placeholder="客户名称" {{ set_default_value('name') }}>
+        {% endif %}
+        {% if 'phone' in show_queries %}
+        <input type="text" class="input-small" name="phone" placeholder="电话号码" {{ set_default_value('phone') }}>
+        {% endif %}
+
+
+        <select id="per_page" name="per_page" class="select2">
+            <option></option>
+            {% set per_page = request.args.get('per_page',0)|int %}
+            {%- for k in (10,20,50,100,500) -%}
+                <option value="{{ k }}" {% if k==per_page %}selected="selected"{% endif %}>每页{{ k }}条</option>
+            {%- endfor -%}
+        </select>
+        <select id="sort_name" name="sort_name" class="select2" style="width: 120px">
+            <option></option>
+            {% set sort_name = request.args.get('sort_name','') %}
+            {%- for k,v in config['USER_SORT_NAMES'] -%}
+                <option value="{{ k }}" {% if k==sort_name %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        <select id="sort_sc" name="sort_sc" class="select2" style="width: 120px">
+            <option></option>
+            {% set sort_sc = request.args.get('sort_sc',0)|int %}
+            {%- for k,v in config['SORT_SCS'] -%}
+                <option value="{{ k }}" {% if k==sort_sc %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+
+        <hr/>
+        <input type="text" class="input-small" name="batch_id" placeholder="批次编号" {{ set_default_value('batch_id') }}>
+        <input id="assign_start" class="timepicker" style="width: 120px" name="assign_start" type="text" value="{{ request.args['assign_start'] }}" placeholder="分配开始时间" />
+        <input id="assign_end" class="timepicker" style="width: 120px" name="assign_end" type="text" value="{{ request.args['assign_end'] }}" placeholder="分配结束时间" />
+        {% if 'show_abandon' in show_queries %}
+        <select id="is_abandon" name="is_abandon" class="select2" style="width: 90px">
+            <option></option>
+            {% set is_abandon = request.args.get('is_abandon',0)|int %}
+            {%- for k,v in [(1,'已放弃'),(2,'未放弃'),] -%}
+                <option value="{{ k }}" {% if k==is_abandon %}selected="selected"{% endif %}>{{ v }}</option>
+            {%- endfor -%}
+        </select>
+        {% endif %}
+        <input type="text" class="input-small" name="user_remark" placeholder="客户备注" {{ set_default_value('user_remark') }}>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+
+
+    </form>
+    {% if allowed_admin %}
+        <div class="alert" id="admin-panel" style="display:none;margin-bottom: -3px;min-height: 30px">
+            {% if current_user.action('change_user_op') %}
+            <select id="to_operator_id" name="to_operator_id">
+                <option></option>
+                {% for op in operators %}
+                    <option value="{{ op.id }}">{{ op.nickname }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            {% if current_user.action('change_user_type') %}
+            <select id="to_user_type" name="to_user_type" class="select2">
+                <option></option>
+                {% set user_type = request.args.get('user_type',0)|int %}
+                {%- for k,v in config['USER_TYPES'].iteritems() -%}
+                    <option value="{{ k }}">{{ v }}</option>
+                {%- endfor -%}
+            </select>
+            {% endif %}
+        </div>
+    {% endif %}
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr class="table-condensed">
+        {% if allowed_admin %}
+            <th><input type="checkbox" id="chk_all" value="0"></th>
+        {% endif %}
+            <th>编号</th>
+            <th>客户姓名</th>
+            {% if show_label %}
+            <th>标签</th>
+            {% endif %}
+            <th>手机号</th>
+            <th>座机</th>
+            <th>意向</th>
+            <th>创建日期</th>
+            <th>来源</th>
+            {% if 'member' in show_queries %}
+            <th>会员类型</th>
+        	{% endif %}
+            {% if 'service' in show_queries %}
+            <th>客户类型</th>
+            <th>区域</th>
+            <th>有效性</th>
+            <th>是否停用</th>
+        	{% endif %}
+            <th>归属</th>
+            <th>分配时间</th>
+            <th>剩余时长</th>
+            <th>联系次数</th>
+            <th>省市</th>
+            <th>最后联系时间</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in pagination.items %}
+            {% set link_url = url_for('admin.user',user_id=user.user_id,token=user.user_id|user_token) %}
+            <tr data-link-url="{{ link_url }}">
+            {% if allowed_admin %}
+                <td style="text-align: center" unallowed-click="false"><input type="checkbox" id="sel_ids" name="sel_ids" value="{{ user.user_id }}"> </td>
+             {% endif %}
+                <td><a href="{{ link_url }}" {% if current_user.team[0] == 'A' and user.operator_id!=user.assign_operator_id %}style="color:#FF0000; font-weight:bold;"{% endif %}>{{ user.user_id }}</a>
+                </td>
+                <td>
+                
+                    {% if user.is_abandon %}
+                    <strike>{{ user.name }}</strike>
+                    {% else %}
+                    {{ user.name }}
+                    {% endif %}
+                    {% if user.remark %}
+                        <code>{{ user.remark }}</code>
+                    {% endif %}
+                </td>
+                {% if show_label %}
+                <td>{% if user.label %}<code>{{ user.label }}</code>{% endif %}</td>
+                {% endif %}
+                <td>{{ user.phones|join('<br/>')|safe }}</td>
+                <td>{{ user.tels|join('<br/>')|safe }}</td>
+                <td>{{ user.intent_level }}</td>
+                <td>{{ user.join_time |format_date}}</td>
+                <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
+            	{% if 'member' in show_queries %}
+                <td>{% if user.user_label==1 %}
+                <code style="color:darkcyan">常规</code>
+                {% elif user.user_label==2 %}
+                <code style="color:000000">会员</code>
+                {% elif user.user_label==3 %}
+                <code style="color:000000">激活</code>
+                {% endif %}
+                </td>
+                {% endif %}
+                
+            	{% if 'service' in show_queries %}
+                <td><code {% if user.user_type==2 %}style="color:darkcyan"{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code></td>
+                <td>{{ user.area }}</td>
+                <td>{% if user.is_valid==1 %}
+                <code style="color:darkcyan">有效</code>
+                {% elif user.is_valid==2 %}
+                <code style="color:000000">无效</code>
+                {% elif user.is_valid==3 %}
+                <code style="color:000000">无法确认</code>
+                {% endif %}
+                </td>
+                <td>{% if user.is_isable==1 %}<code style="color:darkcyan">是</code>{% else %}否{% endif %}</td>
+                {% endif %}
+                <td>
+                    {{ user.nickname if user.assign_operator_id else '' }}
+                </td>
+                <td>{{ user.assign_time }}</td>
+                <td>{{ user.assign_remain_info }}</td>
+
+                <td>{{ user.dialog_times }}</td>
+                <td>
+                {% for a in user.addresses %}
+                {{ a.province }}-{{ a.city }}
+                {% endfor %}
+                </td>
+                <td>
+                    {{ user.last_dialog_time|default('',true) }}
+                    {% if user.expect_time %}<br/>
+                        <code style="color: blue">{{ user.expect_time|format_date('%m-%d %H:%M') }}</code>
+                    {% endif %}
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="alert pull-left">客户数：{{ pagination.total }}</div>
+
+    {{ render_pagination(pagination) }}
+{% endblock %}

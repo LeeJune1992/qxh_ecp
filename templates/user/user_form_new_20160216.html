@@ -1,0 +1,899 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import place_auto_complete_js %}
+{% set category='user' %}
+{% set title = '新增客户' %}
+{% block title %}{{ title }}{% endblock %}
+{%- block css -%}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datetimepicker.css') }}" />
+
+<style type="text/css">
+    .form-horizontal .control-label {
+        float: left;
+        width: 95px;
+        background-color: #f5f3ef;
+        font-weight: bold;
+        border: 1px dashed #ccc;
+        padding-top: 4px;
+        padding-right: 10px;
+        padding-bottom: 4px;
+        text-align: right;
+        color: #777;
+        height: 20px;
+    }
+
+    .form-horizontal .controls {
+        margin-left: 120px;
+    }
+
+    .form-horizontal .control-group {
+        margin-bottom: 12px;
+    }
+
+    .accordion-group {
+        margin-top: 10px;
+    }
+
+    .space {
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+
+    .accordion-heading {
+        background-color: #fcf8e3;
+    }
+
+    .accordion-heading a {
+        padding: 0;
+        font-weight: bold;
+        color: #666;
+
+    }
+
+    .accordion-inner {
+        padding-left: 20px;
+        padding-bottom: 5px;
+        padding-top: 15px;
+        background-color: #fcfcfc;
+    }
+
+    .entry-group {
+        display: block;
+        padding: 0px;
+    }
+
+    .entry-group-title {
+        width: 60px;
+        float: left;
+        text-align: right;
+        padding-right: 5px;
+
+    }
+
+    form hr{
+        margin-top: 0px;
+        margin-bottom: 15px;
+    }
+
+    .accordion-inner table tr td {
+        color: #666;
+        text-align: left;
+    }
+
+    .table-entries{
+        font-size: 12px;
+    }
+
+    .delete {
+        font-weight: bold;
+        font-size: 18px;
+        color: #000000;
+    }
+
+    .say{
+        width: 420px;
+        max-width: 520px;
+    }
+
+    .menubar{
+        text-align: right;
+        /*background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0044cc));*/
+        height: 45px;
+        margin-bottom: 165px;
+    }
+
+</style>
+    <style type="text/css">
+        .form-horizontal .control-label {
+            float: left;
+            width: 100px;
+            background-color: #f9f9f9;
+            padding-top: 5px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            text-align: right;
+            border-bottom: 1px solid #eeeeee;
+            border-right: 1px solid #eeeeee;
+        }
+
+        .form-horizontal .controls {
+            margin-left: 130px;
+        }
+
+        .controls ul li{
+            margin-right: 20px;
+        }
+
+        .perm-title{
+            border: 1px solid #ddd;
+            background-color: #f0ede7;
+            padding-left: 25px;
+            padding-top: 5px;
+            height: 25px;
+        }
+        .perm-title label{
+            font-weight: bold;
+        }
+
+    </style>
+
+{%- endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/address.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/media.js') }}"></script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-inputmask.min.js') }}"></script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-datetimepicker.min.js') }}" charset="UTF-8"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/locales/bootstrap-datetimepicker.zh-CN.js') }}" charset="UTF-8"></script>
+
+<script type="text/javascript">
+    $(function () {
+        new MMMS('m1','m2','m3');
+
+		{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+		$('#dlb_type').select2({
+			placeholder: '类型',
+			width: '125px'
+		});
+		$('#dlb_valid').select2({
+			placeholder: '是否有效',
+			width: '135px'
+		});
+		$('#dlb_new').select2({
+			placeholder: '是否新客户',
+			width: '125px'
+		});
+		$('#dlb_connect').select2({
+			placeholder: '是否接通',
+			width: '135px'
+		});
+		{%endif %}
+	
+
+        $('#medias select').select2({
+            width:'200px'
+        });
+
+        $('#gender').select2({
+            placeholder: '性别',
+            width: '135px'
+        });
+
+        $('#expect_time').datetimepicker({
+            language: 'zh-CN',
+            format: 'yyyy-mm-dd hh:ii',
+            minuteStep: 5,
+            startDate:new Date(),
+            todayBtn: true
+        }).on('changeDate', function(ev){
+                });
+
+        $('#origin').select2({
+            placeholder: '客户来源',
+            width: '125px'
+        });
+		$('#product_intention').select2({
+			placeholder: '产品意向',
+			width: '125px'
+		});
+
+        $('#assign_operator').select2({
+            width:'130px',
+            placeholder:'归属员工'
+        });
+        $('#assign_operator').select2("disable");
+
+        $('#profession').select2({
+            placeholder: '职业分类',
+            width: '300px'
+        });
+
+//        $('#ages').select2({
+//            placeholder: '客户年龄段',
+//            width: '300px'
+//        });
+
+        $('#address select').select2({
+            width:'155px'
+        });
+
+        $('#income').select2({
+            placeholder: '客户收入范围',
+            width: '300px'
+        });
+
+        $('#dialog_type').select2({
+            width:'220px'
+        });
+
+        $('.entry-select').select2({
+            width: '80px'
+        });
+
+        $('#intent_level').select2({
+            width: '80px'
+        });
+
+        //$('#birthday').datepicker({
+        //    format: 'yyyy-mm-dd',
+        //    language: 'zh-CN'});
+
+        $('#birthday').inputmask({
+            mask:'9999-99-99'
+        });
+
+        function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html(err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        };
+
+
+        var selected_concerns = function(){
+            var _ids = [];
+            $('input[name="concern"]').filter(':checked').each(function() {
+                _ids.push($(this).val());
+            });
+            return _ids;
+        };
+		var selected_weixin = function () {
+			var _ids = [];
+			$('input[name="weixins"]').filter(':checked').each(function () {
+				_ids.push($(this).val());
+			});
+			return _ids;
+		};
+
+        /*   提交表单   */
+        $('form').submit(function () {
+            var add_btn = $('button[type="submit"]');
+
+            //验证客户姓名
+            var username = $('#name').val();
+            if (username==null || username==''){
+                show_err('客户姓名不允许为空');
+                $('#name').focus();
+                return false;
+            }
+
+            //验证客户来源
+            var user_origin = $('#origin').val();
+            if(user_origin==''||user_origin==null){
+                show_err('请选择客户来源');
+                $('#origin').focus();
+                return false;
+            }
+            //验证产品意向
+            var product_intention = $('#product_intention').val();
+            if(product_intention==''||product_intention==null){
+                show_err('请选择产品意向');
+                $('#product_intention').focus();
+                return false;
+            }
+            //验证性别
+            var gender = $('#gender').val();
+            if (gender==null || gender==''){
+                show_err('性别不允许为空');
+                $('#gender').focus();
+                return false;
+            }
+            //验证客户年龄
+            var ages = $('#ages').val();
+            if (ages==null || ages=='NaN'){
+                show_err('客户年龄不允许为空');
+                $('#ages').focus();
+                return false;
+            }else{
+				ages = parseInt(ages);
+				if(parseInt(ages)!=ages){
+					show_err('客户年龄填写不正确');
+					$('#ages').focus();
+					return false;
+				}else if(ages>99 || ages<10){
+					 show_err('客户年龄填写不正确');
+					$('#ages').focus();
+					return false;
+				}
+			}
+            //验证省
+            var province = $('#province').val();
+            var city = $('#city').val();
+            var district = $('#district').val();
+            if (province!='' || city!='' || district!=''){
+                if(province!='' && city!='' && district!=''){}else{
+					show_err('客户地址不允许为空');
+					return false;
+				}
+            }
+
+            //验证电话号码
+            var phone = $('#phone').val();
+            if(!validate_phone(phone)){
+                show_err('电话号码输入不正确。本地号码无需+区号028，手机号码首位不允许为0。');
+                $('#phone').focus();
+                return false;
+            }
+
+            var other_phones = ['#phone2','#tel','#tel2'];
+            for (var i in other_phones ){
+                var _phone = other_phones[i];
+                var v = $(_phone).val();
+                if (v!='' && !validate_phone(v)){
+                    show_err('电话号码输入不正确。本地号码无需+区号028，手机号码首位不允许为0。');
+                    $(_phone).focus();
+                    return false;
+                }
+            }
+            //验证媒体
+            var m1 = $('#m1').val();
+            if(m1==''||m1==null){
+                show_err('请选择媒体来源');
+                $('#m1').focus();
+                return false;
+            }
+
+            add_btn.attr('disabled', true);
+            //validate form
+            var values = $('form').serializeArray();
+            //values.push({name: 'entries', value: JSON.stringify(Entry.data())});
+            values.push({name: 'concerns', value: JSON.stringify(selected_concerns())});
+        	values.push({name: 'weixin', value: JSON.stringify(selected_weixin())});
+			
+            var perms = [];
+            $('li input[type="checkbox"]:checked').each(function(){
+                perms.push($(this).attr('id'));
+            });
+			values.push({name: 'orgin', value: JSON.stringify(perms)});
+			//alert(JSON.stringify(perms));return;
+            var req = $.ajax({
+                url: "{{ request.path }}",
+                dataType: 'json',
+                type: 'POST',
+                data: $.param(values)});
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    var data=data.error;
+                    window.location.href = "/user/detail/"+data.user_id+'/'+data.token;
+                }
+                else {
+                    show_err(data.error);
+                }
+            });
+            req.fail(function (request, status, err) {
+                show_err('发生未知错误，请与管理员联系!');
+            });
+            req.always(function () {
+                add_btn.attr('disabled', false);
+            });
+            return false;
+        });
+
+
+        $('#user_id').val(0);
+
+        $('input.say').keypress(function(e) {
+            if (e.which == 13){
+                var new_txt = $(this).val();
+                if (new_txt == ''){
+                    if ($(this).attr('name')=='yg'){
+                        $('input[name=kh]').focus();
+                    }
+                    else{
+                        $('input[name=yg]').focus();
+                    }
+                    return false;
+                }
+
+                var person = $(this).data('person');
+
+                var _area = $('textarea[name=dialog_content]');
+                var text = _area.val();
+                if (text != ''){text += '\n';}
+                text += person+'说：'+new_txt;
+                _area.val(text);
+                _area.scrollTop(_area[0].scrollHeight - _area.height());
+                $(this).val(null);
+                if ($(this).attr('name')=='yg'){
+                    $('input[name=kh]').focus();
+                }
+                else{
+                    $('input[name=yg]').focus();
+                }
+                return false;
+            }
+        });
+        /*   地址查询   */
+        new PCAS("province", "city", "district");
+    $('#address select').change(function () {
+        var _name = $(this).attr('name');
+        if (_name == 'province') {
+            $('#city').select2('val', '').change();
+        }
+        else if (_name == 'city') {
+            $('#district').select2('val', '').change();
+        }
+		else{
+			var _address = "";
+			$.each(['#province', '#city', '#district'], function (index, name) {
+				var d = $(name).val();
+				if (d != "请选择" && d != "市辖县" && d != "市辖区") {
+					_address += $(name).val();
+				}
+			});
+			$('#address .add-on').empty().text(_address);
+		}
+    });
+    });
+</script>
+{{ place_auto_complete_js() }}
+{%- endblock %}
+
+{%- block main -%}
+    <ul class="breadcrumb">
+{#        <li><a href="#">客户管理</a> <span class="divider">/</span></li>#}
+        <li class="active">{{ title }}</li>
+
+    </ul>
+    <form id="add-order" class="form-horizontal" method="post" action="{{ request.path }}">
+    <fieldset>
+    <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p></p>
+    </div>
+
+    <div style="display: none">
+        <input type="hidden" name="user_id" />
+    </div>
+
+    <div class="accordion" id="accordion2" style="margin-bottom: 140px">
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+                <i class="icon-chevron-down"></i> 基本资料
+
+            </a>
+
+
+        </div>
+        <div id="collapseOne" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid" style="padding-bottom: 0">
+                    <div class="span6">
+                        <div class="control-group">
+                            <label class="control-label">客户</label>
+
+                            <div class="controls">
+                                <input id="name" name="name" placeholder="姓名" type="text"
+                                       style="width: 55px">
+                                <input id="remark" name="remark" placeholder="备注" type="text"
+                                       style="width: 125px;color: red">
+                                <select id="origin" name="origin" class="space">
+                                    <option></option>
+                                            {%- for k in config['USED_USER_ORIGINS'] -%}
+                                                <option value="{{ k }}">{{ config['USER_ORIGINS'][k] }}</option>
+                                    {%- endfor -%}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="control-group">
+                            <label class="control-label">手机号码</label>
+
+                            <div class="controls">
+                                <input id="phone" name="phone" style="width: 140px" type="text"
+                                       placeholder="手机号码1" value="{{ request.args.get('phone','') }}">
+                                <input id="phone2" name="phone2" style="width: 140px" type="text"
+                                       placeholder="手机号码2">
+
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">座机电话</label>
+
+                            <div class="controls">
+                                <input id="tel" name="tel" style="width: 140px" type="text"
+                                       placeholder="座机号码1">
+                                <input id="tel2" name="tel2" style="width: 140px" type="text"
+                                       placeholder="座机号码2">
+                            </div>
+                        </div>
+
+
+
+                        <div class="control-group">
+                            <label class="control-label">意向等级</label>
+
+                            <div class="controls">
+                                <select id="intent_level" name="intent_level" class="space">
+                                    {% for lv in config['USER_INTENT_LEVELS'] %}
+                                        <option value="{{ lv }}">{{ lv }}</option>
+                                    {% endfor %}
+                                </select>
+                                <select id="product_intention" name="product_intention" class="space">
+                                    <option></option>
+                                    {%- for k,v in config['PRODUCT_INTENTION'].iteritems() -%}
+                                        <option value="{{ k }}">{{ v }}</option>
+                                    {%- endfor -%}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">归属员工</label>
+
+                            <div class="controls">
+                                <select name="assign_operator" id="assign_operator">
+                                    <option value="{{ current_user.id }}">{{ current_user.nickname }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span6">
+                        <div class="control-group">
+                            <label class="control-label">出生</label>
+
+                            <div class="controls">
+                                <select id="gender" name="gender">
+                                    <option></option>
+                                    <option value="保密">保密</option>
+                                    <option value="男">男</option>
+                                    <option value="女">女</option>
+                                </select>
+                                <input id="birthday" name="birthday" style="width: 145px" type="text"
+                                       placeholder="1900-00-00">
+
+
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">客户年龄</label>
+
+                            <div class="controls">
+                                <input id="ages" name="ages" class="input-large" type="text" />岁
+                                <!--<select id="ages" name="ages" class="space">
+                                    <option></option>
+
+                                    {% for k,v in config['USER_AGES'].iteritems() %}
+                                        <option value="{{ k }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>-->
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">从事行业</label>
+
+                            <div class="controls">
+                                <select id="profession" name="profession" class="space">
+                                    <option></option>
+
+                                    {% for name in config['USER_PROFESSION_CONFIG'].values() %}
+                                        <option value="{{ name }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">收入范围</label>
+
+                            <div class="controls">
+                                <select id="income" name="income" class="space">
+                                    <option></option>
+                                    {% for income_id,name in config['USER_INCOME_CONFIG'].iteritems() %}
+                                        <option value="{{ income_id }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label" style="background-color: #bce8f1">预约时间</label>
+
+                            <div class="controls">
+                                <input id="expect_time" name="expect_time" class="input-large" type="text" />
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+                </div>
+                <div class="row-fluid">
+
+                    <div class="span12">
+                        <hr/>
+                        {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+                        <div class="control-group">
+                            <label class="control-label">TQ进线选择</label>
+
+                            <div class="controls">
+                                来源:{% for k,v in config['TQ_ORIGIN'].iteritems() %}
+                                    <label class="inline radio"><input type="radio" name="tq_origin" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}<input type="radio" style="display:none;" name="tq_origin" checked="checked" value="0" />
+                                &nbsp;&nbsp;&nbsp;&nbsp;类型:{% for k,v in config['TQ_TYPE'].iteritems() %}
+                                    <label class="inline radio"><input type="radio" name="tq_type" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}<input type="radio" style="display:none;" name="tq_type" checked="checked" value="0" />
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="control-group">
+                            <label class="control-label">微信情况</label>
+
+                            <div class="controls">
+                                {% for k,v in config['WEIXINS'].iteritems() %}
+                                    <label class="inline checkbox"><input type="checkbox" name="weixins" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" style="background-color: #fdf59a">媒体来源</label>
+
+                            <div class="controls" id="medias">
+                                <select id="m1" name="m1" style="width: 200px"></select>
+                                <select id="m2" name="m2" style="width: 200px"></select>
+                                <select id="m3" name="m3" style="width: 200px"></select>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">关心问题</label>
+
+                            <div class="controls">
+                                {% for k,v in config['CONCERNS'].iteritems() %}
+                                    <label class="inline checkbox"><input type="checkbox" name="concern" value="{{ k }}"/>{{ v }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">新老客户</label>
+
+                            <div class="controls">
+                                <label style="float:left; padding-right:15px;"><input name="is_new" value="0" type="radio">老客户</label><label><input name="is_new" value="1" type="radio" checked="checked">新客户</label><br />
+                                <label>复购次数:<input id="fugou" name="fugou" class="input-large" type="text" />新客户为0，可不填写</label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">病症</label>
+
+                            <div class="controls">
+                                <textarea name="disease" style="width:600px; height:80px;" class="input"></textarea>
+                            </div>
+                        </div>
+                        <hr/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
+                <i class="icon-chevron-down"></i> 大礼包
+            </a>
+        </div>
+        <div id="collapsedlb" class="control-group collapse in">
+            <div class="controls" style="padding:40px;">
+                <label style="float:left; padding-right:15px;">类型
+                <select name="dlb_type" id="dlb_type">
+                <option></option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}">{{ v }}</option>
+                {%- endfor -%}
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否有效
+                <select name="dlb_valid" id="dlb_valid">
+                <option></option>
+                <option value="1">有效</option>
+                <option value="2">无效</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">新老客户
+                <select name="dlb_new" id="dlb_new">
+                <option></option>
+                <option value="1">新客户</option>
+                <option value="2">老客户</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否接通
+                <select name="dlb_connect" id="dlb_connect">
+                <option></option>
+                <option value="1">接通</option>
+                <option value="2">不通</option>
+                </select></label>
+            	
+            </div>
+        </div>
+    </div>
+	{% endif %}
+
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#addressModule">
+                <i class="icon-chevron-down"></i> 客户地址
+            </a>
+        </div>
+        <div id="addressModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row-fluid">
+                    <div class="span12">
+                        <hr/>
+                        <div class="control-group">
+                            <label class="control-label">客户地址</label>
+
+                            <div class="controls" id="address">
+                                <select id="province" name="province" style="width: 135px"></select>
+                                <select id="city" name="city" style="width: 150px"></select>
+                                <select id="district" name="district" style="width: 150px"></select>
+
+                                <input type="text" id="street1" name="street1" class="input input-large"
+                                       style="width: 340px" placeholder="详细地址"/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">邮政编码</label>
+
+                            <div class="controls">
+                                <input type="text" id="postcode" name="postcode" class="input"
+                                       placeholder="邮政编码"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo2">
+                <i class="icon-chevron-down"></i> 身体状态
+            </a>
+        </div>
+        <div id="collapseTwo2" class="control-group collapse in">
+            <div class="controls">
+                {% for module_id,endpoints in perms.iteritems() %}
+                <div class="checkbox inline">
+                 <p style="float:left">{{ config['USER_ORGIN'][module_id] }}：</p>
+                
+                    <ul class="checkbox inline" style="margin-bottom: 10px; float:left;">
+                        {% for endpoint,name in endpoints %}
+                        <li><input id="{{ endpoint }}" name="{{ module_id }}" class="orgincss" type="checkbox"><label for="{{ endpoint }}">{{ name }}</label></li>
+                        
+                        {% endfor %}
+                    </ul><p><input name="orgin{{module_id|lower}}" type="text" style="width:800px;" class="input" placeholder="{{ config['USER_ORGIN'][module_id] }}" /></p>
+                </div>
+                <div class="clear"></div>
+                {% endfor %}
+				<p>病史：<input id="history" name="history" type="text" style="width:800px;" class="input" placeholder="病史" /></p>
+            </div>
+        </div>
+    </div>
+    
+{#    <div class="accordion-group">#}
+{#        <div class="accordion-heading">#}
+{#            <a class="accordion-toggle" data-toggle="collapse" href="#collapseFour">#}
+{#                <i class="icon-chevron-down"></i> 家庭状况#}
+{#            </a>#}
+{#        </div>#}
+{#        <div id="collapseFour" class="accordion-body collapse">#}
+{#            <div class="accordion-inner">#}
+{#                <div class="row-fluid">#}
+{#                    <div class="span6">#}
+{#                        <div class="control-group">#}
+{#                            <label class="control-label">家庭成员</label>#}
+{##}
+{#                            <div class="controls">#}
+{#                                <label class="checkbox inline"><input type="checkbox" name="family_members" value="1">父亲</label>#}
+{#                                <label class="checkbox inline"><input type="checkbox" name="family_members" value="2">母亲</label>#}
+{#                                <label class="checkbox inline"><input type="checkbox" name="family_members" value="4">儿子</label>#}
+{#                                <label class="checkbox inline"><input type="checkbox" name="family_members" value="8">女儿</label>#}
+{#                                <label class="checkbox inline"><input type="checkbox" name="family_members" value="16">配偶</label>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                    </div>#}
+{#                    <div class="span6">#}
+{#                        <div class="control-group">#}
+{#                            <label class="control-label">家庭成员说明</label>#}
+{##}
+{#                            <div class="controls">#}
+{#                                <textarea style="width: 340px"></textarea>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                        <div class="control-group">#}
+{#                            <label class="control-label">健康状况</label>#}
+{##}
+{#                            <div class="controls">#}
+{#                                <textarea style="width: 340px"></textarea>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+
+    <div class="accordion-group navbar navbar-fixed-bottom">
+        <div class="accordion-heading" style="background-color:#e0f2be">
+            <a class="accordion-toggle" data-toggle="collapse" href="#dialogModule">
+                <i class="icon-chevron-down"></i> 沟通记录
+            </a>
+        </div>
+        <div id="dialogModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row">
+                    <div class="span3" style="text-align: right">
+                        <select id="dialog_type" name="dialog_type">
+                            {% for dialog_type,name in config['DIALOG_TYPES'].iteritems() %}
+                                <option value="{{ dialog_type }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <br/>
+                        <textarea name="dialog_solution" id="dialog_solution"
+                                  style="width: 210px;height: 50px;margin-top: 10px" placeholder="解决方案"></textarea>
+
+                    </div>
+                    <div class="span3" style="text-align: center">
+                        <textarea name="dialog_content" id="dialog_content"
+                                  style="width:265px;height:90px;background-color:#f5f3ef;overflow-y: auto"
+                                  placeholder="沟通内容"></textarea>
+                    </div>
+                    <div class="span6">
+                        <div class="input-prepend" style="margin-bottom: 10px">
+                            <span class="add-on">员工说：</span>
+                            <input name="yg" type="text" data-person="员工" class="say">
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">客户说：</span>
+                            <input name="kh" type="text" data-person="客户" class="say">
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">录音编号：</span>
+                            <input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存客户</button>
+
+                    </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    </fieldset>
+    </form>
+{%- endblock -%}

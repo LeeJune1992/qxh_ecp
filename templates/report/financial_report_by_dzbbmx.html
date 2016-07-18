@@ -8,17 +8,31 @@
                 placeholder:'快递公司',
                 allowClear:true
             })
+            $('#user_origin').select2({
+                width:'150px',
+                placeholder:'客户来源',
+                allowClear:true
+            })
+            
         });
     </script>
 {% endblock %}
 {% block report %}
     <form action="" method="get" class="form-search inline">
         <select id="express_id" name="express_id">
-            <option></option>
+            <option value="">所有快递公司</option>
             {% set express_id = request.args.get('express_id',0)|int %}
             {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
                 <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
             {%- endfor -%}
+        </select>
+        <select id="user_origin" name="user_origin">
+            {% set user_origin = request.args.get('user_origin',0)|int %}
+            <option value="">所有来源</option>
+               {% set user_origin = request.args.get('user_origin',0)|int %}
+               {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                   <option value="{{ k }}" {% if k==user_origin %}selected="selected"{% endif %}>{{ v }}</option>
+               {%- endfor -%}                       
         </select>
         <input id="s_start_date" class="timepicker input input-medium" name="s_start_date" type="text" value="{{ request.args['s_start_date'] }}" placeholder="销售开始时间" />
         <input id="s_end_date" class="timepicker input input-medium" name="s_end_date" type="text" value="{{ request.args['s_end_date'] }}" placeholder="销售结束时间" />
@@ -34,7 +48,7 @@
     <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-hover table-condensed" id="report">
         <thead>
         <tr>
-            <th>发货日期</th>
+            <th>到货日期</th>
             <th>到货日期</th>
             <th>对账日期</th>
             <th>订单号</th>
@@ -44,6 +58,7 @@
             <th>物流公司</th>
             <th>快递单号</th>
             <th>客户姓名</th>
+            <th>客户来源</th>
             <th>省</th>
             <th>市</th>
             <th>县/地区</th>
@@ -69,6 +84,7 @@
                 <td rowspan="{{ num + 1 }}">{{ d['ename'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['enum'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['ship_to'] }}</td>
+                 <td rowspan="{{ num + 1 }}">{{ config['USER_ORIGINS'][d['origin']] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['province'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['city'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['district'] }}</td>

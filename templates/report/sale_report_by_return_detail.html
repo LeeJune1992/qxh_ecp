@@ -22,6 +22,13 @@
                 placeholder:'是否到货',
                 allowClear:true
             });
+            
+            $('#user_origin').select2({
+               width:'150px',
+               placeholder:'客户来源',
+               allowClear:true
+           });
+            
 
         });
     </script>
@@ -56,7 +63,16 @@
                 <option value="{{ k }}" {% if k==is_arrival %}selected="selected"{% endif %}>{{ v }}</option>
             {%- endfor -%}
         </select>
-
+        
+        <select id="user_origin" name="user_origin">
+           {% set user_origin = request.args.get('user_origin',0)|int %}
+           <option value=""></option>
+              {% set user_origin = request.args.get('user_origin',0)|int %}
+              {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                  <option value="{{ k }}" {% if k==user_origin %}selected="selected"{% endif %}>{{ v }}</option>
+              {%- endfor -%}                       
+        </select>
+        
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
                 class="icon-search icon-white"></i>
             查询
@@ -74,6 +90,7 @@
             <th>组名</th>
             <th>员工</th>
             <th>客户姓名</th>
+            <th>客户来源</th>
             <th>订单号</th>
             <th>产品明细</th>
             <th>订单金额</th>
@@ -84,12 +101,13 @@
         </tr>
         </thead>
         <tbody>
-        {% for op_id,op_name,team,username,order_id,item_info,fee,discount_fee,express_id,express_number,arrival_time in rows %}
+        {% for op_id,op_name,team,username,origin,order_id,item_info,fee,discount_fee,express_id,express_number,arrival_time in rows %}
             <tr>
                 <td>{{ config['DEPARTMENTS'][team[0]] }}</td>
                 <td>{{ config['TEAMS'][team] }}</td>
                 <td>{{ op_name }}</td>
                 <td>{{ username }}</td>
+                <td>{{ config['USER_ORIGINS'][origin] }}</td>
                 <td><a href="{{ url_for('admin.order_detail',order_id=order_id) }}">{{ order_id }}</a></td>
                 <td><pre>{{ item_info }}</pre></td>
                 <td>{{ fee }}</td>

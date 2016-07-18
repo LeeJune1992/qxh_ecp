@@ -18,7 +18,7 @@ from global_settings import DMURL,DMD_ID
 
 from extensions import db
 from .forms import KnowledgeForm,CategoryForm, LoginForm, UserForm, NewsForm, OperatorForm, ItemForm, SkuForm, StockInForm,StockOutForm,LossForm, PasswordForm
-from .models import User_Servicelz,Scratch,SCRATCHDJ,User_Integration,Integration,User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News#Permission,Role,
+from .models import User_Servicelz,Scratch,SCRATCHDJ,User_Integration,Integration,User_tjfg,User_Isable,QXHKHDJ,Security_Codekh,QXHDM_Orderyf,Order_Operator,Outbound,Knowledge,Knowledge_Category,User_Voucher,User_Statistics,Order_LHYD_Postal,Security_Code,Security_Code_Log,User_Giveup,User_Assign_Log,SMS,Operator, Role, Item, Sku,Sku_Stock,Stock_Out, Stock_In, Sku_Set,Loss, Stock, IO_Log, Order, Order_Sets, Order_Log, User, User_Dialog, User_Phone, Address, Order_Item, News, User_Introduce #Permission,Role,
 from settings.constants import *
 from utils.memcached import cache
 from utils.decorator import admin_required,cached,view_cached
@@ -71,7 +71,8 @@ def staff_reminder():
     if current_user.role_id==ORDER_ROLE_ID:
         users = db.session.query(func.count(User.user_id)).filter(db.and_(User.assign_operator_id == current_user.id,
                                                                               User.expect_time!= None,
-                                                                              User.expect_time<='%s 23:59:59'%(datetime.now().strftime('%Y-%m-%d')))).scalar()
+                                                                              User.expect_time<='%s 23:59:59'%(datetime.now().strftime('%Y-%m-%d')),
+                                                                              User.expect_time>'%s 00:00:00'%(datetime.now().strftime('%Y-%m-%d')))).scalar()
     else:
         users = 0
     return jsonify(orders=orders,users=users)
@@ -1500,7 +1501,7 @@ def order_approval():
 
 
 
-@admin.route('/order/list')
+@admin.route('/compare_bitwise')
 @admin_required
 def orders():
     _conditions = order_conditions()
@@ -1613,7 +1614,6 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
 
         order.store_id = store_id
         order.express_id = int(express_id)
-
     elif order.status == 40 and to_status == 4:
         if sf_id=='':
             express_num = request.form.get('express_num', 0)
@@ -1628,8 +1628,6 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
         order.express_number = ''
         order.express_sfdestcode = ''
         order.express_sfok = 0
-
-
     #库存处理
     if flag == 1:#--->出库
         _item_amounts = Order_Item.order_item_amount(order.order_id)
@@ -1651,7 +1649,7 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
             _sku_stock.order_quantity = Sku_Stock.order_quantity - amount
             _sku_stock.quantity = Sku_Stock.quantity - amount
             Stock_Out.sale(order,sku_id,amount,order.store_id)#出库
-
+        
     elif flag == 2:#--->入库
         return_items = json.loads(request.form['return-items'])
         _return_items = {}
@@ -1686,7 +1684,6 @@ def _manage_order(order,to_status,remark='',sf_id='',express_sfdestcode=0,expres
 
         order.express_number = None
         order.express_id = None
-
 
     order_log = Order_Log()
     order_log.operator_id = current_user.id
@@ -1770,10 +1767,12 @@ def manage_order(order_id):
     result,desc = _manage_order(order,to_status,remark)
     return jsonify(result=result,error=desc)
 
+
 @admin.route('/order/sf/', methods=['POST'])
 @admin_required
 def sf_order():
     order_id = int(request.form['order_id'])
+    current_app.logger.info(order_id)
     try:
         order = Order.query.get(order_id)
     except:
@@ -1781,25 +1780,26 @@ def sf_order():
 
     if not ORDER_OPROVRAL_CONFIG.has_key(order.status):
         return jsonify(result=False, error=u'非法操作')
-
     #检测是否授权
     if not order.is_authorize(current_user):
         return jsonify(result=False, error=u'权限不足，无法执行该操作')
+    current_app.logger.info(SF_Url)
     client = suds.client.Client(SF_Url)
     client.set_options(headers={"Content-Type":"text/xml; charset=utf-8"})
     print 'ok'
     print order.payment_type
+    current_app.logger.info('3')
     sfcity = ' d_province=\''+order.shipping_address.province+'\' d_city=\''+order.shipping_address.city+'\''
-    
+
     sfgod = ''
     if order.payment_type == 1 and order.actual_fee > 0:
-        sfgod = '<AddedService name=\'COD\' value=\''+str(order.actual_fee)+'\' value1=\'0283439931\' value2=\'\' value3=\'\' value4=\'\' /> '
-    SF_Order = 'orderid=\''+str(order_id)+'\' express_type=\'3\' '
+        sfgod = '<AddedService name=\'COD\' value=\''+str(order.actual_fee)+'\' value1=\'0293064669\' /> '
+    SF_Order = 'orderid=\''+str(order_id)+'\' express_type=\'1\' '
     custid = 'custid=\''+SF_Custid+'\''
     strxml = '''<Request service='OrderService' lang='zh-CN'>
-        <Head>'''+SF_Custid+''','''+SF_Key+'''</Head><Body>
-         <Order 
-                  '''+SF_Order+SF_D+sfcity+'''                  
+        <Head>'''+SF_Custid+'''</Head><Body>
+         <Order
+                  '''+SF_Order+SF_D+sfcity+'''
 d_company=''
                   d_contact='
 '''+order.shipping_address.ship_to+'''
@@ -1811,22 +1811,18 @@ d_company=''
 '''+order.shipping_address.format_address+'''
 '
                   parcel_quantity='1'
-                  pay_method='1'>
-<OrderOption '''+custid+''' >'''+sfgod+'''
-                    </OrderOption>   
+                  pay_method='1'
+                  custid='0293064669'>
+                  '''+sfgod+'''
                    </Order></Body>
-         </Request> 
+         </Request>
         '''
-    results = client.service.sfexpressService(strxml)
+    results = md5_base64_encode(client,strxml)
     doc = minidom.parseString(results)
     root = doc.documentElement
-    #print 'ok'+results
-    #print strxml
-    #current_app.logger.error(u'strxml:%s' % (strxml))
     current_app.logger.error(u'results:%s,%s' % (str(order_id),results))
     OrderResponse = root.getElementsByTagName("OrderResponse")
     if len(OrderResponse) > 0:
-        #print 'ok2'
         sf_id = OrderResponse[0].getAttribute('mailno')
         if order.shipping_address.province == '北京市':
             express_sfdestcode = '010'
@@ -1840,24 +1836,9 @@ d_company=''
             express_sfdestcode = '991'
         else:
             express_sfdestcode = OrderResponse[0].getAttribute('destcode')
-        
+
         #生成条形码
         #发货确认
-        confirmxml = '''<Request service='OrderConfirmService' lang='zh-CN'>
-<Head>%s,%s</Head>
-         <Body>
-         <OrderConfirm  mailno='%s' orderid='%s'>
-           </OrderConfirm>
-           </Body>
-        </Request>
-'''%(SF_Custid,SF_Key,sf_id,str(order_id))
-        #print confirmxml
-        results = client.service.sfexpressService(confirmxml)
-        #print results
-        current_app.logger.error(u'qrresults:%s,%s' % (str(order_id),results))
-        doc = minidom.parseString(results)
-        root = doc.documentElement
-        OrderConfirmResponse = root.getElementsByTagName("OrderConfirmResponse")
         if len(OrderResponse) > 0:
             result,desc = _manage_order(order,4,u'顺风拣货',sf_id,express_sfdestcode,1)
             return jsonify(result=result,error=desc)
@@ -1866,6 +1847,16 @@ d_company=''
             return jsonify(result=False,error='顺风发货确认失败')
     else:
         return jsonify(result=False,error=u'顺风接口错误')
+
+
+def md5_base64_encode(client,strxml):
+    import hashlib
+    import base64
+    m = hashlib.md5(strxml+SF_Key).digest()
+    verifyCode = base64.b64encode(m)
+    #print strxml+verifyCode
+    results = client.service.sfexpressService(strxml,verifyCode)
+    return results
 
 @admin.route('/order/sfquxiao/', methods=['POST'])
 @admin_required
@@ -2178,7 +2169,7 @@ def print_order_invoices(order_id):
     if order.is_xlj:
         return render_template('order/print_invoices_xlj.html', orders=[order], date=date)
     else:
-        return render_template('order/print_invoices.html', orders=[order], date=date)
+        return render_template('order/print_invoices_new.html', orders=[order], date=date)
     
 
 
@@ -2333,12 +2324,15 @@ def my_users():
         ,User.is_isable,User.assign_time,User.assign_retain_time,User.dialog_times,User.last_dialog_time
         ,User.expect_time
         ).outerjoin(Operator,User.assign_operator_id==Operator.id).filter(db.and_(*_conditions)).order_by(order_by).paginate(page, per_page=user_per_page())
+
+    times = datetime.now().strftime('%Y-%m-%d')
     return render_template('user/users.html',
                            pagination=pagination,
                            list_type=list_type,
                            show_label = True,
                            operators=Operator.query.filter(Operator.assign_user_type==1),
-                           show_queries=show_queries)
+                           show_queries=show_queries,
+                           times=times)
 
 
 def public_users(user_type):
@@ -2539,6 +2533,30 @@ def change_user_type():
         current_app.logger.error('CHANGE USER TYPE ERROR.%s'%e)
         return jsonify(result=False,error=e.message)
 
+def get_change_orgin(orgin_user):
+    perms_orgin = defaultdict(list)
+    perms = defaultdict(list)
+
+    orgin_user1 = [ a[:1] for a in orgin_user]
+    orgin_user2 = [ a[:2] for a in orgin_user]
+    orgin_user3 = [ a for a in orgin_user]
+    orgin1 =  list(set(orgin_user1))
+    orgin2 =  list(set(orgin_user2))
+    orgin3 =  list(set(orgin_user3))
+
+    for b in orgin2:
+        for c in orgin3:
+            if b==c[:2]:
+                perms_orgin[b].append(c)
+    for m in orgin1:
+        li = defaultdict(list)
+        for n in perms_orgin.keys():
+            if m==n[:1]:
+                li[n].append(perms_orgin[n])
+        perms[m].append(li)
+    return perms
+
+
 
 @admin.route('/user/detail/<int:user_id>/<token>')
 @admin_required
@@ -2562,17 +2580,64 @@ def user(user_id,token):
 
     logs = User_Assign_Log.query.outerjoin(Operator,User_Assign_Log.assign_operator_id==Operator.id).filter(User_Assign_Log.user_id==user_id).order_by(User_Assign_Log.assign_time)
     
-    perms = defaultdict(list)
-    for k in USER_ORGIN_SUB:
-        perms[k[:1]].append((k,USER_ORGIN_SUB[k]))
+    perms_au = get_user_orgin()
+
+    orgin_user = user.orgin_new + user.orgin_improve
+    perms_unau = get_change_orgin(orgin_user)
+
+    sql1 = '''SELECT count(`order`.order_id),sum(`order`.item_fee-`order`.discount_fee) FROM `order`
+                JOIN `user` ON `user`.user_id=`order`.user_id
+                JOIN operator ON `order`.created_by=operator.id
+                where `user`.user_id=%s and operator.assign_user_type=2 and `order`.status NOT IN (1,103,104) and `order`.status<200'''% user_id
+
+    row1 = db.session.execute(sql1)
+    row1 = list(row1)
 
     is_service = False
     if current_user.assign_user_type == 5:
         is_service = True
     
     is_lz = User_Servicelz.query.filter(User_Servicelz.user_id==user_id).count()
-    
-    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,is_lz = is_lz,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms=perms,is_service=is_service)
+    #介绍人归属
+    # User_Introduce.filter(User_Introduce.user_id==user_id).all()
+    sql2='''
+            select u.join_time,ui.user_id,u.name from `user_introduce` ui
+            join `user` u on u.user_id=ui.user_id
+            where ui.introduce_user_id=%s
+        ''' % (user_id)
+
+    sql3 = '''
+            select count(introduce_user_id) from `user_introduce` ui
+            where ui.user_id=%s
+        '''% (user_id)
+
+    sql4 = '''
+            select sum(o.item_fee-o.discount_fee) from `user_introduce` ui
+            join `user` u on u.user_id=ui.introduce_user_id
+            join `order` o on o.user_id=u.user_id
+            where ui.user_id=%s and o.status NOT IN (1,103,104) and o.status<200
+        '''% (user_id)
+
+    sql5='''
+            select join_time,user_id,name,sum(fee),sum(count_order),`status` from
+            (select  o.order_id,u.join_time,u.user_id,u.name,if(o.status in(1,103,104),0,sum(o.item_fee-o.discount_fee)) as fee,if(o.status in(1,103,104),0,count(o.order_id)) as count_order,o.`status` from `user` u
+            LEFT JOIN `order` o ON o.user_id=u.user_id
+            where u.user_id in (select introduce_user_id from user_introduce where user_id=%s) and o.item_fee != 0
+            GROUP BY u.user_id,o.`status`,o.order_id) as r
+            GROUP BY user_id
+        '''% (user_id)
+
+
+    row2 = db.session.execute(sql2)
+    row2 = list(row2)
+    row3 = db.session.execute(sql3)
+    row3 = list(row3)
+    row4 = db.session.execute(sql4)
+    row4 = list(row4)
+    row5 = db.session.execute(sql5)
+    row5 = list(row5)
+
+    return render_template('user/user_authorized.html' if user.is_authorize else 'user/user_unauthorized.html',user=user,is_lz = is_lz,assign_logs = logs,ordercount=ordercount,orderyfcount=orderyfcount,khsldjcount=khsldjcount,perms_au=perms_au,perms_unau=perms_unau,is_service=is_service,items=allowed_order_items(),row1=row1,row2=row2,row3=row3,row4=row4,row5=row5)
 
 
 @admin.route('/user/drop/<int:user_id>',methods=['POST'])
@@ -2721,9 +2786,9 @@ def user_dialogs(user_id):
     page = int(request.args.get('page', 1))
     dialogs = User_Dialog.query.join(Operator,Operator.id==User_Dialog.operator_id).filter(User_Dialog.user_id==user_id).order_by(desc(User_Dialog.created)).paginate(page, per_page=5)
     _datas = []
-    print dir(dialogs)
-    print dialogs.pages
-    print dir(dialogs.iter_pages)
+    # print dir(dialogs)
+    # print dialogs.pages
+    # print dir(dialogs.iter_pages)
     pages='<div class="pagination pull-right">'
     pages+='<ul>'
     for page in dialogs.iter_pages():
@@ -2737,7 +2802,11 @@ def user_dialogs(user_id):
     pages+='</ul></div>'
     for dialog in dialogs.items:
         _datas.append({'dialog_id':dialog.id,
-                       'solution':dialog.solution,
+                       # 'solution':dialog.connect_situation,
+                       'communicate_mode':dialog.communicate_mode,
+                       'connect_situation':dialog.connect_situation,
+                       'communication_attr':dialog.communication_attr,
+                       'talk_time':dialog.talk_time,
                        'type_name':DIALOG_TYPES[dialog.type],
                        'content':dialog.content,
                        'record_number':dialog.record_number,
@@ -2753,11 +2822,14 @@ def add_dialog(user_id):
     if request.method == 'POST':
         try:
             content = request.form['content']
-            solution = request.form['solution']
-            dialog_type = request.form['type']
+            communicate_mode = request.form['communicate_mode']
+            connect_situation = request.form['connect_situation']
+            communication_attr = request.form['communication_attr']
             record_number = request.form['record_number']
-            if not dialog_type:dialog_type=99
-            obj = User_Dialog.add_dialog(current_user.id,user_id,solution,int(dialog_type),content,record_number)
+            talk_time = request.form['talk_time']
+
+            # if not dialog_type:dialog_type=99
+            obj = User_Dialog.add_dialog(current_user.id,user_id,content,communicate_mode,connect_situation,communication_attr,talk_time,record_number)
             db.session.add(obj)
             db.session.commit()
             return jsonify(result=True)
@@ -2766,7 +2838,6 @@ def add_dialog(user_id):
             current_app.logger.error('ADD USER DIALOG ERROR,%s'%e)
             return jsonify(result=False,error=e.message)
 
-user_dialogs
 def format_phone(phone):
     '''格式化电话号码'''
     if not phone:return ''
@@ -2787,8 +2858,9 @@ def _edit_user(user):
         #客户号码校验
         _phones = []
         _user_phones = []
-        is_modified_phone = False
-        for name in ('user_phone','user_phone2','user_tel','user_tel2'):
+        # is_modified_phone = False
+        is_modified_phone = True
+        for name in ('user_phone','user_phone2','user_tel','user_tel2','user_qq_number','user_qq_number2','user_weixin_number','user_weixin_number2'):
             _new_phone = format_phone(request.form[name])
             name = name[5:]
             _old_phone = getattr(user,name)
@@ -2800,15 +2872,18 @@ def _edit_user(user):
 
         if is_modified_phone:
             if len(_phones)==0:
-                return False,u'客户号码不允许为空！'
-
-            for name,new_phone in _user_phones:
-                setattr(user,name,new_phone)
+                return False,u'电话,座机,QQ,微信不允许为空！'
+            if _user_phones:
+                for name,new_phone in _user_phones:
+                    obj = User_Phone.query.filter(User_Phone.phone==new_phone).filter(User_Phone.user_id!=user.user_id).first()
+                    if obj:
+                        return False,u'客户资料库已存在号码：%s'%new_phone
+                    if not new_phone:new_phone = ''
+                    setattr(user,name,new_phone)
 
             User_Phone.query.filter(User_Phone.user_id==user.user_id).delete()
             for _phone in _phones:
                 db.session.add(User_Phone.add_phone(user.user_id,_phone))
-
 
         gender = request.form['gender']
         if not gender:gender = u'保密'
@@ -2817,15 +2892,39 @@ def _edit_user(user):
         if not birthday:birthday = None
         profession = request.form['profession']
 
-        income = request.form['income']
-        if not income:income = 0
-        income = int(income)
+        # income = request.form['income']
+        # if not income:income = 0
+        # income = int(income)
 
         ages = request.form['ages']
         if not ages:ages = 0
         ages = int(ages)
+        new_goods_need = request.form['new_goods_need']
+        connect_situation = request.form['connect_situation']
+        communication_attr = request.form['communication_attr']
+        talk_time = request.form['talk_time']
+        orgin_new = request.form['symptoms']
+        orgin_improve = request.form['improve_symptoms']
+        orgin_case = request.form['orgin_case']
+        if orgin_case:
+            orgin_case = str(orgin_case).replace('\r\n','<br/>')
+        activity_status = request.form.get('activity','')
 
-        intent_level = request.form['intent_level']
+        if user.assign_operator.team=='B2' or user.assign_operator.is_admin==1:
+            tq_province = request.form['tq_province']
+            tq_city = request.form['tq_city']
+            user.tq_province = tq_province
+            user.tq_city = tq_city
+
+        user.new_goods_need = new_goods_need
+        user.connect_situation = connect_situation
+        user.communication_attr = communication_attr
+        user.talk_time = talk_time
+        user.orgin_new = orgin_new
+        user.orgin_improve = orgin_improve
+        user.orgin_case = orgin_case
+        user.activity_status = activity_status
+
 
         user.tq_origin = int(request.form.get('tq_origin','0'))
         user.tq_type = int(request.form.get('tq_type','0'))
@@ -2837,23 +2936,23 @@ def _edit_user(user):
         user.birthday = birthday
         user.ages = ages
         user.profession = profession
-        user.income = income
+        # user.income = income
         user.remark = request.form.get('remark','')
         user.concerns = json.loads(request.form['concerns'])
+        if user.assign_operator.team in ('C1','C2','C') or user.assign_operator.is_admin==1:
+            user.weixin = json.loads(request.form['weixin'])
 
-        user.weixin = json.loads(request.form['weixin'])
-
-        user.orgin = json.loads(request.form['orgin'])
-        user.orgina = request.form['orgina']
-        user.orginb = request.form['orginb']
-        user.orginc = request.form['orginc']
-        user.orgind = request.form['orgind']
-        user.orgine = request.form['orgine']
-        user.history = request.form['history']
-
-        user.m1 = request.form['m1']
-        user.m2 = request.form['m2']
-        user.m3 = request.form['m3']
+        # user.orgin = json.loads(request.form['orgin'])
+        # user.orgina = request.form['orgina']
+        # user.orginb = request.form['orginb']
+        # user.orginc = request.form['orginc']
+        # user.orgind = request.form['orgind']
+        # user.orgine = request.form['orgine']
+        # user.history = request.form['history']
+        if user.assign_operator.team=='A2' or user.assign_operator.is_admin==1:
+            user.m1 = request.form['m1']
+            user.m2 = request.form['m2']
+            user.m3 = request.form['m3']
         
         area = request.form.get('area')
         if area:
@@ -2864,18 +2963,19 @@ def _edit_user(user):
 
         
         expect_time = request.form['expect_time']
-        
-        is_new = request.form['is_new']
-        if not is_new:is_new = 0
-        is_new = int(is_new)        
-        user.is_new = is_new
-        if is_new:
-            user.fugou = 0
-        else:
-            fugou = request.form['fugou']
-            if not fugou:fugou = 0
-            user.fugou = fugou
-        user.disease = request.form['disease']
+        if user.assign_operator.team=='C3' or user.assign_operator.is_admin==1:
+            is_new = request.form['is_new']
+            # if not is_new:is_new = 0
+            # is_new = int(is_new)
+            user.is_new = is_new
+            # if is_new:
+            #     user.fugou = 0
+            # else:
+            #     fugou = request.form['fugou']
+            #     if not fugou:fugou = 0
+            #     user.fugou = fugou
+            user.disease = request.form['disease']
+
         #print expect_time
         if expect_time:
             #print datetime.strptime(expect_time,'%Y-%m-%d %H:%M')
@@ -2883,11 +2983,18 @@ def _edit_user(user):
         else:
             user.expect_time = None
 
-        user.intent_level = intent_level
+        intent_level = request.form.get('intent_level','')
+        if len(intent_level)>1:
+            user.intent_level_flag=0
+            user.intent_level = intent_level
+
 
         #user.entries = entries
         #user.habits_customs = request.form['habits_customs']
-        user.product_intention = request.form['product_intention']
+        user.product_intention3 = request.form['product_intention3']
+        product_intention2 = request.form['product_intention2']
+        if product_intention2:
+            user.product_intention2 = request.form['product_intention2']
         user.origin = origin
         user.operator_id = current_user.id
 
@@ -3017,65 +3124,87 @@ def complete_user_expect(user_id):
         db.session.rollback()
         return jsonify(result=False,error=e.message)
 
-def _add_user():
+def _add_user(op_id):
     try:
         username = request.form['name']
         origin = int(request.form['origin'])
         tq_origin = int(request.form.get('tq_origin','0'))
         tq_type = int(request.form.get('tq_type','0'))
+        tq_user = int(request.form.get('tq_user','0'))
         #客户号码校验
         phones = []
         phone = format_phone(request.form['phone'])
         phone2 = format_phone(request.form['phone2'])
         tel = format_phone(request.form['tel'])
         tel2 = format_phone(request.form['tel2'])
+        qq_number = request.form['qq_number']
+        qq_number2 = request.form['qq_number2']
+        weixin_number = request.form['weixin_number']
+        weixin_number2 = request.form['weixin_number2']
         if phone:phones.append(phone)
         if phone2:phones.append(phone2)
         if tel:phones.append(tel)
         if tel2:phones.append(tel2)
+        if qq_number:phones.append(qq_number)
+        if qq_number2:phones.append(qq_number2)
+        if weixin_number:phones.append(weixin_number)
+        if weixin_number2:phones.append(weixin_number2)
         phones = list(set(phones))
-        if len(phones)==0:return False,u'客户电话号码不允许为空'
+        if len(phones)==0:return False,u'电话,座机,QQ,微信不允许为空'
         for _phone in phones:
             if User_Phone.user_id_by_phone(_phone):
                 return False,u'客户资料库已存在号码：%s'%_phone
-
         gender = request.form['gender']
         if not gender:gender = u'保密'
-
         birthday = request.form['birthday']
         if not birthday:birthday = None
-
         ages = request.form['ages']
         if not ages:ages = 0
         ages = int(ages)
-
         profession = request.form['profession']
-
-        income = request.form['income']
-        if not income:income = 0
-        income = int(income)
-
+        # income = request.form['income']
+        # if not income:income = 0
+        # income = int(income)
         intent_level = request.form['intent_level']
-
         #entries = request.form['entries']
+        #获取当前操作人员的信息
+        operator = Operator.query.get_or_404(op_id)
+        #拨打记录
+        communicate_mode = request.form['communicate_mode']
+        connect_situation = request.form['connect_situation']
+        communication_attr = request.form['communication_attr']
+        talk_time = request.form['talk_time']
+        #TQ进线情况
+        if operator.team=='B2' or operator.is_admin==1:
+            tq_province = request.form['tq_province']
+            tq_city = request.form['tq_city']
+
+        #       user.connect_situation = connect_situation
+        # user.communication_attr = communication_attr
+        # user.talk_time = talk_time
+
+
 
         #通话记录
         dialog_content = request.form['dialog_content']
         record_number = request.form['record_number']
-        if dialog_content:
-            dialog_solution = request.form['dialog_solution']
-            dialog_type = request.form['dialog_type']
-            if not dialog_type:
-                dialog_type = 99
-            dialog_type = int(dialog_type)
+        # if dialog_content:
+        #     dialog_solution = request.form['dialog_solution']
+        #     dialog_type = request.form['dialog_type']
+        #     if not dialog_type:
+        #         dialog_type = 99
+        #     dialog_type = int(dialog_type)
+        #活动备注
+        activity_status = request.form.get('activity','')
 
         user = User()
         user.tq_origin = tq_origin
         user.tq_type = tq_type
+        user.tq_user = tq_user
         user.name = username
         user.gender = gender
-        user.phone = phone
-        user.phone2 = phone2
+        if phone:user.phone = phone
+        if phone2:user.phone2 = phone2
         user.tel = tel
         user.ages = ages
         user.intent_level = intent_level
@@ -3083,53 +3212,78 @@ def _add_user():
         user.user_type = 1
         user.birthday = birthday
         user.profession = profession
-        user.income = income
+        user.activity_status = activity_status
+        if operator.team=='B2' or operator.is_admin==1:
+            user.tq_province = tq_province
+            user.tq_city = tq_city
+        # user.income = income
+        if qq_number:
+            user.qq_number = qq_number
+        if qq_number2:
+            user.qq_number2 = qq_number2
+        if weixin_number:
+            user.weixin_number = weixin_number
+        if weixin_number2:
+            user.weixin_number2 = weixin_number2
 
+        new_goods_need = request.form.get('new_goods_need','')
+        if new_goods_need:
+            user.new_goods_need = new_goods_need
+        # if connect_situation:
+        #     user.connect_situation = connect_situation
+        # if communication_attr:
+        #     user.communication_attr = communication_attr
+        # if talk_time:
+        #     user.talk_time = talk_time
+        orgin_new = request.form['symptoms']
+        if orgin_new:
+            user.orgin_new = orgin_new
         user.remark = request.form.get('remark','')
-
         expect_time = request.form['expect_time']
         if expect_time:
             user.expect_time = datetime.strptime(expect_time[:16],'%Y-%m-%d %H:%M')
-
         user.concerns = json.loads(request.form['concerns'])
-        user.weixin = json.loads(request.form['weixin'])
-        
-        user.orgin = json.loads(request.form['orgin'])
-        user.orgina = request.form['orgina']
-        user.orginb = request.form['orginb']
-        user.orginc = request.form['orginc']
-        user.orgind = request.form['orgind']
-        user.orgine = request.form['orgine']
-        user.history = request.form['history']
-        
-        user.m1 = request.form['m1']
-        user.m2 = request.form['m2']
-        user.m3 = request.form['m3']
+        if operator.team in ('C1','C2','C') or operator.is_admin==1:
+            user.weixin = json.loads(request.form['weixin'])
 
-        is_new = request.form['is_new']
-        if not is_new:is_new = 0
-        is_new = int(is_new)        
-        user.is_new = is_new
-        if is_new:
-            user.fugou = 0
-        else:
-            fugou = request.form['fugou']
-            if not fugou:fugou = 0
-            user.fugou = fugou
-        user.disease = request.form['disease']
+        # user.orgin = json.loads(request.form['orgin'])
+        # user.orgina = request.form['orgina']
+        # user.orginb = request.form['orginb']
+        # user.orginc = request.form['orginc']
+        # user.orgind = request.form['orgind']
+        # user.orgine = request.form['orgine']
+        # user.history = request.form['history']
+        if operator.team=='A2' or operator.is_admin==1:
+            user.m1 = request.form['m1']
+            user.m2 = request.form['m2']
+            user.m3 = request.form['m3']
 
+        if operator.team=='C3' or operator.is_admin==1:
+            is_new = request.form['is_new']
+            # if not is_new:is_new = 0
+            # is_new = int(is_new)
+            user.is_new = is_new
+            # if is_new:
+            #     user.fugou = 0
+            # else:
+            #     fugou = request.form['fugou']
+            #     if not fugou:fugou = 0
+            #     user.fugou = fugou
+            user.disease = request.form['disease']
         if dialog_content:
             user.dialog_times = 1
             user.last_dialog_time = datetime.now()
             if record_number:
                 user.record_time = datetime.now()
-
         #user.entries = entries
         #user.habits_customs = request.form['habits_customs']
-        user.product_intention = request.form['product_intention']
+        user.product_intention3 = request.form['product_intention3']
+        product_intention2 = request.form['product_intention2']
+        if product_intention2:
+            user.product_intention2 = request.form['product_intention2']
         user.origin = origin
         user.operator_id = current_user.id
-        
+
         #大礼包
         dlb_type = request.form.get('dlb_type',None)
         if dlb_type:
@@ -3155,11 +3309,9 @@ def _add_user():
 
 
             user.dlb_time = datetime.now()
-    
         db.session.add(user)
         db.session.flush()
         user.assign_op(current_user,current_user.id)
-
         for _phone in phones:
             db.session.add(User_Phone.add_phone(user.user_id,_phone))
 
@@ -3179,9 +3331,9 @@ def _add_user():
             address.email = request.form.get('email', '')
             db.session.add(address)
             db.session.flush()
-
         if dialog_content:
-            db.session.add(User_Dialog.add_dialog(current_user.id,user.user_id,dialog_solution,dialog_type,dialog_content,record_number))
+            # db.session.add(User_Dialog.add_dialog(current_user.id,user.user_id,dialog_solution,dialog_type,dialog_content,record_number))
+            db.session.add(User_Dialog.add_dialog(current_user.id,user.user_id,dialog_content,communicate_mode,connect_situation,communication_attr,talk_time,record_number))
         db.session.commit()
         return True,{'user_id':user.user_id,'token':des.user_token(user.user_id)}
     except Exception,e:
@@ -3190,17 +3342,35 @@ def _add_user():
         return False,e.message
 
 
+def get_user_orgin():
+    perms = defaultdict(list)
+    perms_body = defaultdict(list)
+
+    for u in USER_ORGIN_TYPE:
+        for k in USER_ORGIN_TYPE_DETAIL:
+            if k[:2] == u:
+                perms_body[u].append(k)
+
+    for p in USER_ORGIN:
+        li = defaultdict(list)
+        for u in perms_body.keys():
+            if u[:1] == p:
+                li[u].append(perms_body[u])
+        perms[p].append(li)
+
+    return perms
+
 @admin.route('/user/add', methods=['GET', 'POST'])
 @admin_required
 def add_user():
     if request.method=='POST':
-        result,desc = _add_user()
+        op_id = request.values.get('assign_operator_hidden')
+        result,desc = _add_user(op_id)
         return jsonify(result=result,error=desc)
-    
-    perms = defaultdict(list)
-    for k in USER_ORGIN_SUB:
-        perms[k[:1]].append((k,USER_ORGIN_SUB[k]))
-    return render_template('user/user_form_new.html',perms=perms)
+
+    perms = get_user_orgin()
+
+    return render_template('user/user_form_new.html',perms=perms,items=allowed_order_items())
 
 
 @admin.route('/help')
@@ -4915,3 +5085,55 @@ def securitycode_scratch():
     else:
         orders = Order.query.filter('1=2').all()
         return render_template('securitycode/scratch.html',orders=orders)
+
+
+@admin.route('/user/introduce_edit')
+@login_required
+def introduce_edit():
+    return render_template('user/introduce_user.html')
+
+
+@admin.route('/user/introduce_add',methods=['POST'])
+@login_required
+def introduce_add():
+    '''
+    links one user and another user relations
+    '''
+    if request.method == 'POST':
+        userID1 = request.form['userID1']
+        userID2 = request.form['userID2']
+
+        user = User.query.filter(User.user_id==userID1).first()
+        user2 = User.query.filter(User.user_id==userID2).first()
+        if user:
+            if user2:
+                result = User_Introduce.check_introduce(userID2)
+                if result:
+                    if userID1 and userID2:
+                        db.session.add(User_Introduce.add_introduce(userID1,userID2))
+                        db.session.commit()
+                        return jsonify(result=True,suc=u'数据保存成功')
+                    else:
+                        return jsonify(result=False,error=u'请介绍人或转介绍人信息填完整')
+                else:
+                     return jsonify(result=False,error=u'该转介绍人已有归属')
+            else:
+                return jsonify(result=False,error=u'该转介绍人ID无效,请重新输入介绍人ID')
+        else:
+            return jsonify(result=False,error=u'该介绍人ID无效,请重新输入介绍人ID')
+       
+
+# @admin.route('/operator/role/lists')
+# @admin_required
+# def change_role_source():
+#     roles = Role.query.all()
+#     _roles = []
+#     for role in roles:
+#         _endpoints = {}
+#         for _endpoint,name,_module in ENDPOINTS:
+#             if _endpoint in role.endpoints:
+#                 if not _endpoints.has_key(_module):
+#                     _endpoints[_module] = {'module_name':MODULES[_module],'endpoints':[]}
+#                 _endpoints[_module]['endpoints'].append(name)
+#         _roles.append((role.id,role.name,_endpoints))
+#     return render_template('admin/roles.html',roles=_roles)

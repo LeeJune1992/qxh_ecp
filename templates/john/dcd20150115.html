@@ -1,0 +1,20 @@
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/json2.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<table>
+{% for user in pagination %}
+<tr>
+<td>{{user.member_time}}</td>
+<td>{{user.name}}</td>
+<td>{{ user.gender }}</td>
+<td>{{ user.phone }}</td>
+<td>{{ user.phone2 }}</td>
+<td>
+    {% for a in user.addresses %}
+    {{ a.province }}-{{ a.city }}
+    {% endfor %}
+</td>
+<td>{{user.intent_level}}</td>
+</tr>
+{% endfor %}
+</table>

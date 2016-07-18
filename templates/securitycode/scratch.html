@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import render_pagination,horizontal_field,form_errors  with context %}
+{% set category='securitycode' %}
+{% block title %}帐号管理{% endblock %}
+{% block css %}
+{{ super() }}
+<style type="text/css">
+.phone{
+    color: orangered;
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 20px;
+    letter-spacing: 2px;
+}
+</style>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(function(){
+    function show_err(err) {
+        $('#error').show();
+        $('#error p').empty().html(err);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+	$('#orderid').submit(function(){
+		var orders = $('#orders').val().replace(/ /g,'').replace(/\n/g,',');
+		if(orders == ''){
+			alert('刮刮卡编码不允许为空！');
+			$('#orders').focus();
+			return false;
+		}
+//		var req = $.ajax({
+//			url: '{{ url_for('admin.hasarrived') }}',
+//			dataType: "json",
+//			type: 'POST',
+//			data: {orders:orders}
+//		});
+//		req.done(function (data) {
+//			if (data.result == true) {
+//				//window.location.reload(true);
+//			}
+//			else {
+//				bootbox.alert("操作失败：" + data.error);
+//			}
+//		});
+//		req.fail(function (request, status, error) {
+//			bootbox.alert('发生错误:' + error);
+//		});
+//		return false;
+	});
+});
+</script>
+{% endblock %}
+{% block main %}
+    {% if msg %}
+    <div class="alert alert-block alert-error fade in" id="error">
+        <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+        <p>{{ msg }}</p>
+    </div>
+    {% endif %}
+    <div class="span3">
+    <form method="POST" id="orderid" class="form-search inline well well-small">
+        <input type="hidden" name="op" value="0" />
+        <textarea class="span12" style="height:290px" id="orders" name="orders" {% if orders and orders.items %} readonly="readonly"{% endif %} placeholder="刮刮卡编码，多刮刮卡编码请换行,不要有空格等其它字符">{{ orderids }}</textarea>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px"><i class="icon-search icon-white"></i> 查询</button>
+    </form>
+    </div>
+
+        <div class="span6 alert alert-info">
+        <b>查询系统里有的编码是：</b>
+    	{% for o in orders %}
+        <p class="phone">{{ o.code }},{% if o.scratchdj_id %}已登记{% else %}未登记{% endif %}</p>
+        {% endfor %}
+        </div>
+{% endblock %}

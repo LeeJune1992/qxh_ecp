@@ -28,6 +28,13 @@
 
 {% macro search_date_form() -%}
     <form action="" method="get" class="form-search inline">
+        <select id="depart" name="depart">
+                {% set depart = request.args.get('depart','') %}
+                <option value="" {% if not depart %}selected{% endif %}>所有部门</option>
+                {%- for k,d in config['DEPARTMENTS'].iteritems() -%}
+                    <option value="{{ k }}" {% if k==depart %}selected{% endif %}>{{ d }}</option>
+                {%- endfor -%}
+        </select>
         <input id="start_date" class="timepicker" name="start_date" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" class="timepicker" name="end_date" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
         <button type="submit" class="btn btn-success" style="margin-left: 10px"><i
@@ -109,6 +116,7 @@
             {{ nav_link('admin.integration_list','积分管理') }}
             {{ nav_link('admin.search_knowledge','知识查询') }}
             {{ nav_link('admin.voucheradd','添加代金卷') }}
+            {{ nav_link('admin.introduce_edit','介绍人管理') }}
         </ul>
     {% elif category=='item' %}
         <ul class="nav nav-list bs-docs-sidenav">

@@ -86,6 +86,16 @@
         }
 
     </style>
+    <script type="text/css">
+        .style_table tr td{
+            border:2px solid #ffffff;
+        }
+        <!--.jieshao{-->
+            <!--font-weight:bold;-->
+            <!--font-size:20px;-->
+            <!--wight:200px;-->
+        <!--}-->
+    </script>
 
 {%- endblock %}
 {% block js -%}
@@ -152,10 +162,17 @@ function showdialog(page){
 	req.done(function (data) {
 		var dialogs = data.result;
 		if (!$.isEmptyObject(dialogs)) {
-			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通方式</th><th>沟通情况</th><th>沟通属性</th><th>通话时长</th><th>沟通内容</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
 			for (var i in dialogs) {
 				dialog = dialogs[i];
-				html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
+				if(dialog.connect_situation==1){ var con = '沟通'}else{var con = '未沟通'};
+				if(dialog.communication_attr==1){ var com = '有效沟通'}else{var com = '无效沟通'};
+				if(dialog.communicate_mode==1){ var mode = '电话'}
+				else if(dialog.communicate_mode==2){var mode = 'TQ'}
+				else if(dialog.communicate_mode==3){var mode = '微信'}
+				else if(dialog.communicate_mode==4){var mode = 'QQ'}
+				else{ var mode = '无'}
+				html += '<tr><td>' + dialog.created + '</td><td>' + mode + '</td><td>' + con + '</td><td><pre>' + com + '</pre></td><td><pre>' + dialog.talk_time + '</pre></td><td>' + dialog.content + '</td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
 			}
 			html += '</tbody></table>';
 			html += data.pages;
@@ -242,10 +259,10 @@ $(function () {
             req.done(function (data) {
                 var dialogs = data.result;
                 if (!$.isEmptyObject(dialogs)) {
-                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通情况</th><th>沟通属性</th><th>通话时长</th><th>沟通内容</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
                     for (var i in dialogs) {
                         dialog = dialogs[i];
-                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
+                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.connect_situation + '</td><td><pre>' + dialog.communication_attr + '</pre></td><td><pre>' + dialog.talk_time + '</pre></td><td>' + dialog.content + '</td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
                     }
                     html += '</tbody></table>';
 					html += data.pages;
@@ -259,32 +276,48 @@ $(function () {
             });
         },
         add: function () {
-            var solution = escape_html($('#dialog_solution').val());
-            var content = escape_html($('#dialog_content').val());
-            var record_number = escape_html($('#record_number').val());
-            var type = $('#dialog_type').val();
-
+            var connect_situation = $('#connect_situation').val();
+            var communicate_mode = $('#communicate_mode').val();
+            var communication_attr =$('#communication_attr').val();
+            var talk_time = $('#talk_time').val();
+            var record_number = $('#record_number').val();
+            var content = $('#dialog_content').val();
             if (content == '') {
                 bootbox.alert('沟通内容不能为空！');
                 return false;
             }
-
-            if (type == '') {
-                bootbox.alert('请选择沟通的类型！');
+            if (communicate_mode == '') {
+                bootbox.alert('请选择沟通方式！');
                 return false;
             }
+            if (connect_situation == '') {
+                bootbox.alert('请选择接通情况！');
+                return false;
+            }
+            if (communication_attr == '') {
+                bootbox.alert('请选择沟通属性！');
+                return false;
+            }
+            // if (talk_time == '') {
+            //     bootbox.alert('请填写通话时长！');
+            //     return false;
+            // }
 
             var req = $.ajax({
                 url: '{{ url_for('admin.add_dialog',user_id=user.user_id) }}',
                 dataType: "json",
                 type: 'POST',
-                data: {solution: solution, content: content,record_number: record_number, type: type}
+                data: {communicate_mode:communicate_mode,connect_situation:connect_situation,communication_attr:communication_attr,content:content,record_number: record_number,talk_time:talk_time}
             });
 
             req.done(function (data) {
                 if (data.result == true) {
                     showdialog(1);
-                    $('#dialog_solution').val(null);
+                    $('#communicate_mode').val(null);
+                    $('#connect_situation').val(null);
+                    $('#communication_attr').val(null);
+                    $('#record_number').val(null);
+                    $('#talk_time').val(null);
                     $('#dialog_content').val(null);
                 }
                 else {
@@ -325,6 +358,12 @@ $(function () {
 	//show_shipping_address();
 });
 </script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap-inputmask.min.js') }}"></script>
+<script type="text/javascript">
+    $('#talk_time').inputmask({
+            mask:'99:99:99'
+        });
+</script>
 {%- endblock %}
 
 
@@ -348,46 +387,6 @@ $(function () {
                             <td class="title">客户编码</td>
                             <td style="width: 360px">{{ user.user_id }}{% if user.remark %} <code>{{ user.remark }}</code> {% endif %}{% if user.user_type==1 %}
                                 <code style="color:orangered">{{ user.label }}</code>{% endif %}</td>
-                            <td class="title">手机号码</td>
-                            <td>
-                                {{ user.phones|join('<br/>')|safe }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="title">客户姓名</td>
-                            <td>{{ user.name }}</td>
-                            <td class="title">座机号码</td>
-                            <td>
-                                {{ user.tels|join('<br/>')|safe }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="title">来源</td>
-                            <td>{{ config['USER_ORIGINS'][user.origin] }}
-                            <span style="color: #a0a0a0;margin-left:20px">
-                                {% for m in (user.m1,user.m2,user.m3,) %}
-                                    {% if m %} {% if not loop.first %}<i class="icon-arrow-right"></i>{% endif %} {{ m }}{% endif %}
-                                {% endfor %}
-                            </span>
-                            </td>
-                            <td class="title">性别</td>
-                            <td>{{ user.gender }}</td>
-                        </tr>
-                        <tr>
-                            <td class="title">客户类型</td>
-                            <td><code {% if user.user_type==2 %}style="color:darkcyan"
-                                      {% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code>
-                            </td>
-                            <td class="title">出生日期</td>
-                            <td>{{ user.birthday|default('-',true) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="title">意向等级</td>
-                            <td><strong>{{ user.intent_level }}</strong>产品意向：{{ config['PRODUCT_INTENTION'][user.product_intention] }}</td>
-                            <td class="title">客户年龄</td>
-                            <td>{{ user.ages }}岁,{{ config['USER_AGES'][user.ages] }}</td>
-                        </tr>
-                        <tr>
                             <td class="title">归属员工</td>
                             <td>{% if user.assign_operator_id %}
                                 <span style="color:darkblue">{{ user.assign_operator.nickname }}</span>
@@ -396,112 +395,47 @@ $(function () {
                                 -
                             {% endif %}
                             </td>
-                            <td class="title">收入情况</td>
-                            <td>{{ config['USER_INCOME_CONFIG'][user.income] }}</td>
+
                         </tr>
                         <tr>
-                            <td class="title">新老客户</td>
-                            <td>
-                                {% if user.is_new == 0 %}新客户
-								{%else%}老客户,复购次数{{ user.fugou }}
-								{%endif%}
-                            </td>
-                            <td class="title">病症</td>
-                            <td>{{ user.disease }}</td>
+                            <td class="title">客户姓名</td>
+                            <td >{{ user.name }}</td>
+                            <td class="title">性别</td>
+                            <td>{{ user.gender }}</td>
                         </tr>
-                        {% if user.qxhdm_user_id > 0 %}
-						<tr>
-                            <td class="title">购买情况</td>
-                            <td colspan="3">{{ user.purchases }}</td>
-                        </tr>
-						{%endif%}
                         <tr>
-                            <td class="title">关心问题</td>
-                            <td>
-                                {% for k in user.concerns %}
-                                    <code style="color: #a47e3c">{{ config['CONCERNS'][k] }}</code>
-                                {% endfor %}
+                            <td class="title">座机号码</td>
+                            <td >
+                                {{ user.tels|join('<br/>')|safe }}
                             </td>
-                            <td class="title">从事行业</td>
+                            <td class="title">职业</td>
                             <td>{{ user.profession|default('-',true) }}</td>
                         </tr>
                         <tr>
-                            <td class="title">身体状态</td>
-                            <td colspan="3">
-                                {% for k in user.orgin %}
-                                    <code style="color: #a47e3c">{{ config['USER_ORGIN_SUB'][k] }}</code>
-                                {% endfor %}
-                                {% if user.orgina %}
-                                <p>{{user.orgina}}</p>
-                                {%endif%}
-                                {% if user.orginb %}
-                                <p>{{user.orginb}}</p>
-                                {%endif%}
-                                {% if user.orginc %}
-                                <p>{{user.orginc}}</p>
-                                {%endif%}
-                                {% if user.orgind %}
-                                <p>{{user.orgind}}</p>
-                                {%endif%}
-                                {% if user.orgine %}
-                                <p>{{user.orgine}}</p>
-                                {%endif%}
-                                {% if user.history %}
-                                <p>{{user.history}}</p>
-                                {%endif%}
+                            <td class="title">手机号码</td>
+                            <td>
+                                {{ user.phones|join('<br/>')|safe }}
                             </td>
+                            <td class="title">年龄</td>
+                            <td >{{ user.ages }}岁{{ config['USER_AGES'][user.ages] }}</td>
                         </tr>
                         <tr>
-                            <td class="title">TQ进线情况</td>
-                            <td colspan="3">
-                                {{ config['TQ_ORIGIN'][user.tq_origin] }},{{ config['TQ_TYPE'][user.tq_type] }}
-                            </td>
+                            <td class="title">QQ</td>
+                            <td>{% if user.qq_number %}{{ user.qq_number }}{% endif %} {% if user.qq_number2 %}{{ user.qq_number2 }}{% endif %}</td>
+                            <td class="title">生日</td>
+                            <td>{{ user.birthday|default('-',true) }}</td>
                         </tr>
-                        {% if is_lz > 0 %}
                         <tr>
-                            <td class="title">流转数据是否有效</td>
-                            <td colspan="3">
-                                {% if user.lz_valid == 1 %}有效
-								{%elif user.lz_valid == 2 %}无效
-								{%endif%}
-                            </td>
+                            <td class="title">微信</td>
+                            <td>{% if user.weixin_number %} {{ user.weixin_number }} {% endif %}{% if user.weixin_number2 %}{{ user.weixin_number2 }}{% endif %}</td>
+                            <td class="title">预约时间</td>
+                            <td>{% if user.expect_time %}{{ user.expect_time }}{% endif %}</td>
                         </tr>
-                        {%endif%}
-                        <tr>
-                            <td class="title">微信情况</td>
-                            <td colspan="3">
-                                {% for k in user.weixin %}
-                                    <code style="color: #a47e3c">{{ config['WEIXINS'][k] }}</code>
-                                {% endfor %}
-                            </td>
-                        </tr>
-						{% if current_user.is_admin or current_user.role_id in config['DLB_ROLESS']  %}
-                        <tr>
-                            <td class="title">大礼包</td>
-                            <td colspan="3">
-                                {% if user.dlb_type %}
-                                	{{ config['DLB_TYPES'][user.dlb_type] }}
-                                    {% if user.dlb_valid==1 %}
-                                    有效
-                                    {%elif user.dlb_valid==2 %}无效
-                                    {%endif%}
-                                    {% if user.dlb_new==1 %}
-                                    新客户
-                                    {%elif user.dlb_new==2 %}老客户
-                                    {%endif%}
-                                    {% if user.dlb_connect==1 %}
-                                    接通
-                                    {%elif user.dlb_connect==2 %}不通
-                                    {%endif%}
-                                {%endif%}
-                            </td>
-                        </tr>
-                        {% endif %}
                     </table>
                 </div>
             </div>
         </div>
-    {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+<!--     {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
     <div class="accordion-group">
         <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
@@ -540,13 +474,236 @@ $(function () {
             </div>
         </div>
     </div>
-	{% endif %}
+	{% endif %} -->
 
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo2">
+                    <i class="icon-chevron-down"></i> 数据资料
+                </a>
+            </div>
+            <div id="collapseTwo2" class="control-group collapse in">
+                <div class="controls">
+                    <table class="table table-bordered user_info style_table">
+                        <tr>
+                            <td class="title">客户类型</td>
+                            <td style="width:360px;">{{ config['USER_TYPES'][user.user_type] }}</td>
+                            <td class="title">复购次数</td>
+                            <td>{{ row1[0][0] }}次</td>
+                        </tr>
+                        <tr>
+                            <td class="title">客户来源</td>
+                            <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
+                            <td class="title">复购金额</td>
+                            <td>{{ row1[0][1] }}元</td>
+                        </tr>
+                        <tr>
+                            <td class="title">产品活动意向</td>
+                            <td>{% for item in items %}
+                                    {% if user.product_intention3 %}
+                                        {% if item.id==user.product_intention3 %}
+                                            {{ item.name }}
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if user.product_intention2 %}
+                                        {% if item.id==user.product_intention2 %}
+                                            {{ item.name }}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td class="title">意向等级</td>
+                            <!--<td>{{ config['NEW_USER_INTENT_LEVELS'][user.intent_level] }}</td>-->
+                            <td>{{ user.intent_level[:1] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">新品需求</td>
+                            <td>{% if user.new_goods_need %}{{user.new_goods_need}}{% else %}{% endif %}</td>
+                            <td class="title">活动备注</td>
+                            <td>{% if user.activity_status %}{{ config['ACTIVITY_STATUS'][user.activity_status]}}{% else %}{% endif %}</td>
+                        </tr>
+                        {% if current_user.team=='B2' or current_user.is_admin==1 %}
+                        <tr>
+                            <td class="title">TQ进线情况</td>
+                            <td colspan="3">
+                                {{ config['TQ_ORIGIN'][user.tq_origin] }}&nbsp;&nbsp;&nbsp;&nbsp;{{ config['TQ_TYPE'][user.tq_type] }}&nbsp;&nbsp;&nbsp;&nbsp;{{ config['TQ_USER'][user.tq_user] }}
+                                {% if user.tq_province %}<span style="font-weight:bold;">省市：</span>{{ user.tq_province}}&nbsp;&nbsp;{{ user.tq_city }}{% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if current_user.team=='A2' or current_user.is_admin==1 %}
+                        <tr>
+                            <td class="title">媒体来源</td>
+                            <td colspan="3">{{ user.m1|default('',true) }}&nbsp;&nbsp;&nbsp;&nbsp;
+                                            {{ user.m2|default('',true) }}&nbsp;&nbsp;&nbsp;&nbsp;
+                                            {{ user.m3|default('',true) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if current_user.team in ('C1','C2','C') or current_user.is_admin==1 %}
+                        <tr>
+                            <td class="title">微信情况</td>
+                            <td colspan="3">
+                                {% for k in user.weixin %}
+                                    <code style="color: #a47e3c">{{ config['WEIXINS'][k] }}</code>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if current_user.team =='C3' or current_user.is_admin==1 %}
+                        <tr>
+                            <td class="title">新老客户</td>
+                            <td>
+                                {% if user.is_new == 1 %}新客户
+								{%else%}老客户,复购次数{{ user.fugou }}
+								{%endif%}
+                            </td>
+                            <td class="title">病症</td>
+                            <td>{% if user.disease %}{{ user.disease }}{% endif %}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#bodyimformation">
+                    <i class="icon-chevron-down"></i>身体资料
+                </a>
+            </div>
+             <div id="bodyimformation" class="control-group collapse in">
+                <div class="controls">
+                    <table class="table table-bordered user_info">
+                        <tr style="height:120px;">
+                            <td style="width:150px;">症状数据</td>
+                            <td>
+                                {% for keys in perms_unau %}
+                                    <p><span style="font-weight:bold;font-size:18px;">{{ config['USER_ORGIN'][keys] }}:</span>
+                                        {% for key_types in perms_unau[keys] %}
+                                            {% for types in key_types  %}
+                                                <span style="font-size:15px; font-weight:bold;">{{ config['USER_ORGIN_TYPE'][types] }}:</span>
+                                                {% for type_detail in  key_types[types] %}
+                                                    {% for detail in  type_detail %}
+                                                        <span style="font-size:15px;">{{ config['USER_ORGIN_TYPE_DETAIL'][detail] }}</span>
+                                                        {% for o in user.orgin_improve %}
+                                                            {% if detail==o %}
+                                                            （已改善）
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr style="height:100px;">
+                            <td>症状明细</td>
+                            <td>{% if user.orgin_case %}
+                                    {{ user.orgin_case|safe }}
+                                {% else %}
+                                    {% if (user.orgina or user.orginb or user.orginc or user.orgind or user.orgine or user.history) %}
+                                        {{ user.orgina }}{{ user.orginb }}{{ user.orginc }}{{ user.orgind }}{{ user.orgine }}{{ user.history}}
+                                    {% endif %}
+                                {% endif %}</td>
+                        </tr>
+                    </table>
+                </div>
+        </div>
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#introducer">
+                    <i class="icon-chevron-down"></i> 转介绍登记
+                </a>
+            </div>
+            <div id="introducer" class="accordion-body collapse in">
+                <div class="accordion-inner">
+                    <div class="row-fluid" style="padding-bottom: 0" id="" >
+                        <!--<p style="font-size:18px;font-weight:bold;">转介绍</p>-->
+                    </div>
+                </div>
+                <div class="control-group span3">
+                    <label class="control-group">介绍人归属：</label>
+                    <table class="table table-bordered">
+                        <thead>
+                            <th >日期</th>
+                            <th>ID</th>
+                            <th>姓名</th>
+                        </thead>
+                        <tbody>
+                            {% if row2 %}
+                                {% for  row in row2 %}
+                                    <tr>
+                                        <td>{{ row[0] }}</td>
+                                        <td>{{ row[1] }}</td>
+                                        <td>{{ row[2] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="control-group span3">
+                    <label class="control-group">转介绍人总计：</label>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td style="width:40px;">人数:</td>
+                            <td>{% if row3 %} {{row3[0][0]}} {% endif %}</td>
+                            <td style="width:40px;">金额:</td>
+                            <td>{% if row4 %} {% if row4[0][0] %}{{ row4[0][0] }}{% endif %} {% endif %}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="control-group span6">
+                    <label class="control-group">明细：</label>
+                    <table class="table table-bordered">
+                        <thead>
+                            <th >日期</th>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>累计订购金额</th>
+                            <th>累计订单数</th>
+                        </thead>
+                        <tbody>
+                            {% if row5 %}
+                                {% for row in row5 %}
+                                    {% if row[3] == 0 %}
+                                         <tr>
+                                            <td>{{row[0]}}</td>
+                                            <td>{{row[1]}}</td>
+                                            <td>{{row[2]}}</td>
+                                            <td></td>
+                                            <td></td>
+                                         </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td>{{row[0]}}</td>
+                                            <td>{{row[1]}}</td>
+                                            <td>{{row[2]}}</td>
+                                            {% if row[3]==None %}
+                                                <td></td>
+                                                <td></td>
+                                            {%  else %}
+                                                <td>{{row[3]}}</td>
+                                                <td>{{row[4]}}</td>
+                                            {% endif%}
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <div class="accordion-group">
             <div class="accordion-heading">
                 <a class="accordion-toggle" data-toggle="collapse" href="#dialogModule">
-                    <i class="icon-chevron-down"></i> 沟通记录 (<span id="dialog_nums"></span>)
+                    <i class="icon-chevron-down"></i> 沟通记录
                 </a>
             </div>
             <div id="dialogModule" class="accordion-body collapse in">
@@ -559,9 +716,14 @@ $(function () {
             </div>
         </div>
 
-
-
         <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#orderInformation">
+                    <i class="icon-chevron-down"></i>订单信息
+                </a>
+            </div>
+            <div id="orderInformation" class="accordion-body collapse" style="margin-left:50px;">
+                <div class="accordion-group">
             <div class="accordion-heading">
                 <a class="accordion-toggle" data-toggle="collapse" href="#addressModule" onclick="show('shdz');">
                     <i class="icon-chevron-down"></i> 收货地址
@@ -576,121 +738,131 @@ $(function () {
 
             </div>
         </div>
-        
-        <div class="accordion-group">
-            <div class="accordion-heading">
-                <a class="accordion-toggle" data-toggle="collapse" href="#integrationModule" onclick="show('integration');">
-                    <i class="icon-chevron-down"></i> 用户积分 (<span style="color:red">{{user.integration}}</span>)
-                </a>
-            </div>
-            <div id="integrationModule" class="accordion-body collapse">
-                <div class="accordion-inner">
-                    <div class="row-fluid">
-                        <div class="span10" id="integration_history">
-                            <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#integrationModule" onclick="show('integration');">
+                            <i class="icon-chevron-down"></i> 用户积分 (<span style="color:red">{{user.integration}}</span>)
+                        </a>
+                    </div>
+                    <div id="integrationModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div class="row-fluid">
+                                <div class="span10" id="integration_history">
+                                    <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#orderModule" onclick="show('lsgmjl');">
+                            <i class="icon-chevron-down"></i> 历史购买记录 (<span id="order_nums" style="color:red">{{ordercount}}</span>)
+                        </a>
+                    </div>
+                    <div id="orderModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div class="row-fluid">
+                                <div class="span7" id="order_history"><img
+                                        src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                                </div>
+                                <div class="span5" id="order_item_history"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#voucherModule" onclick="show('voucher');">
+                            <i class="icon-chevron-down"></i> 代金券　(<span id="voucher_nums"></span>)
+                        </a>
+                    </div>
+                    <div id="voucherModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="voucher_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
 
-
         <div class="accordion-group">
             <div class="accordion-heading">
-                <a class="accordion-toggle" data-toggle="collapse" href="#orderModule" onclick="show('lsgmjl');">
-                    <i class="icon-chevron-down"></i> 历史购买记录 (<span id="order_nums" style="color:red">{{ordercount}}</span>)
+                <a class="accordion-toggle" data-toggle="collapse" href="#serviceDate">
+                    <i class="icon-chevron-down"></i>服务组数据
                 </a>
             </div>
-            <div id="orderModule" class="accordion-body collapse">
-                <div class="accordion-inner">
-                    <div class="row-fluid">
-                        <div class="span7" id="order_history"><img
-                                src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+            <div id="serviceDate" class="accordion-body collapse" style="margin-left:50px;">
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule" onclick="show('orderyf');">
+                            <i class="icon-chevron-down"></i> 药房复购预判　(<span id="orderyf_nums" style="color:red">{{orderyfcount}}</span>)
+                        </a>
+                    </div>
+                    <div id="orderyfModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="orderyf_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
                         </div>
-                        <div class="span5" id="order_item_history"></div>
+
                     </div>
                 </div>
-            </div>
-        </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule" onclick="show('khsldj');">
+                            <i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums" style="color:red">{{khsldjcount}}</span>)
+                        </a>
+                    </div>
+                    <div id="khsldjModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
 
-		<div class="accordion-group">
-			<div class="accordion-heading">
-				<a class="accordion-toggle" data-toggle="collapse" href="#voucherModule" onclick="show('voucher');">
-					<i class="icon-chevron-down"></i> 代金券　(<span id="voucher_nums"></span>)
-				</a>
-			</div>
-			<div id="voucherModule" class="accordion-body collapse">
-				<div class="accordion-inner">
-					<div id="voucher_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
-											   border="0"/>正在费力加载中...
-					</div>
-				</div>
-	
-			</div>
-		</div>
-	
-		<div class="accordion-group">
-			<div class="accordion-heading">
-				<a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule" onclick="show('orderyf');">
-					<i class="icon-chevron-down"></i> 药房复购预判　(<span id="orderyf_nums" style="color:red">{{orderyfcount}}</span>)
-				</a>
-			</div>
-			<div id="orderyfModule" class="accordion-body collapse">
-				<div class="accordion-inner">
-					<div id="orderyf_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
-											   border="0"/>正在费力加载中...
-					</div>
-				</div>
-	
-			</div>
-		</div>
-		<div class="accordion-group">
-			<div class="accordion-heading">
-				<a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule" onclick="show('khsldj');">
-					<i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums" style="color:red">{{khsldjcount}}</span>)
-				</a>
-			</div>
-			<div id="khsldjModule" class="accordion-body collapse">
-				<div class="accordion-inner">
-					<div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
-											   border="0"/>正在费力加载中...
-					</div>
-				</div>
-	
-			</div>
-		</div>
-		<div class="accordion-group">
-			<div class="accordion-heading">
-				<a class="accordion-toggle" data-toggle="collapse" href="#fwtjfgModule" onclick="show('fwtjfg');">
-					<i class="icon-chevron-down"></i> 推荐复购　(<span id="fwtjfg_nums"></span>)
-				</a>
-			</div>
-			<div id="fwtjfgModule" class="accordion-body collapse">
-				<div class="accordion-inner">
-					<div id="fwtjfg_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
-											   border="0"/>正在费力加载中...
-					</div>
-				</div>
-	
-			</div>
-		</div>
-	
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#scratchdjModule" onclick="show('scratchdj');">
-                <i class="icon-chevron-down"></i> 刮刮卡登记　(<span id="scratchdj_nums" style="color:red">{{scratchdjcount}}</span>)
-            </a>
-        </div>
-        <div id="scratchdjModule" class="accordion-body collapse">
-            <div class="accordion-inner">
-                <div id="scratchdj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
-                                           border="0"/>正在费力加载中...
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#fwtjfgModule" onclick="show('fwtjfg');">
+                            <i class="icon-chevron-down"></i> 推荐复购　(<span id="fwtjfg_nums"></span>)
+                        </a>
+                    </div>
+                    <div id="fwtjfgModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="fwtjfg_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" href="#scratchdjModule" onclick="show('scratchdj');">
+                        <i class="icon-chevron-down"></i> 刮刮卡登记　(<span id="scratchdj_nums" style="color:red">{{scratchdjcount}}</span>)
+                    </a>
+                </div>
+                <div id="scratchdjModule" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                        <div id="scratchdj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
+            </div>
         </div>
-    </div>
-        
     </div>
 {%- endblock -%}
 
@@ -713,46 +885,100 @@ $(function () {
         </div>
         <div id="addDialogModule" class="accordion-body collapse in">
             <div class="accordion-inner">
-                <div class="row">
-                    <div class="span3">
-                        <select id="dialog_type" name="dialog_type">
-                            {% for dialog_type,name in config['DIALOG_TYPES'].iteritems() %}
-                                <option value="{{ dialog_type }}">{{ name }}</option>
-                            {% endfor %}
-                        </select>
-                        <br/>
-                        <textarea name="dialog_solution" id="dialog_solution"
-                                  style="width: 210px;height: 50px;margin-top: 10px" placeholder="解决方案"></textarea>
-
+                <div class="row-fluid">
+                     <div class="span3" style="text-align: left;font-size:20px;">
+                        <p>拨打记录:</p>
                     </div>
-                    <div class="span4">
+                    <div class="span3" style="text-align: left;font-size:20px;">
+                        <p></p>
+                    </div>
+                    <div class="span6" style="text-align: left; font-size:20px;">
+                        <p>沟通记录:</p>
+                    </div>
+                </div>
+                <div class="row-fluid">
+                    <div class="span3" style="text-align: left">
+                        <div class="input-prepend space" style="margin-bottom:6px;">
+                            <span class="add-on">沟通方式：</span>
+                            <select id="communicate_mode" name="communicate_mode" class="space">
+                                <option value=""></option>
+                                {% for va,vl in config['COMMUNICATE_MODE'].iteritems() %}
+                                    <option value="{{ va }}">{{ vl }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-prepend space" style="margin-bottom:6px;">
+                            <span class="add-on">沟通情况：</span>
+                            <select id="connect_situation" name="connect_situation" class="space">
+                                <option value=""></option>
+                                <option value="1">沟通</option>
+                                <option value="2">未沟通</option>
+                            </select>
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">沟通属性：</span>
+                             <select id="communication_attr" name="communication_attr" class="space">
+                                 <option value=""></option>
+                                <option value="1">有效沟通</option>
+                                <option value="2">无效沟通</option>
+                             </select>
+                        </div>
+                    </div>
+                    <div class="span3" style="text-align: left">
+                         <div class="input-prepend space" style="margin-bottom:6px;">
+                            <span class="add-on">通话时长：</span>
+                            <input name="talk_time" id="talk_time" type="text" data-person="通话时长" style="width:200px;" placeholder="00:00:00" value="">
+                         </div>
+                         <div class="input-prepend space">
+                            <span class="add-on">录音编号：</span>
+                            <input name="record_number" id="record_number" type="text" data-person="录音编号" style="width:200px;">
+                         </div>
+                    </div>
+                    <div class="span6" style="text-align: ;left">
                         <textarea name="dialog_content" id="dialog_content"
                                   style="width:265px;height:90px;background-color:#f5f3ef;overflow-y: auto"
                                   placeholder="沟通内容"></textarea>
-                    </div>
-                    <div class="span5">
-                        <div class="input-prepend">
-                            <span class="add-on">员工说：</span>
-                            <input name="yg" type="text" data-person="员工" class="say"
-                                   style="background-color: #fff">
-                        </div>
-                        <div class="input-prepend">
-                            <span class="add-on">客户说：</span>
-                            <input name="kh" type="text" data-person="客户" class="say"
-                                   style="background-color: #fff">
-                        </div>
-                        <div class="input-prepend space">
-                            <span class="add-on">录音编号：</span>
-                            <input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">
-                        </div>
                         <a href="#" class="btn btn-success btn-mini" id="add_dialog">添加沟通记录</a>
+                        <!--<button type="submit" class="btn btn-primary">保存客户</button>-->
                     </div>
-
                 </div>
+                   <!--<div class="span3">-->
+                        <!--<select id="dialog_type" name="dialog_type">-->
+                            <!--{% for dialog_type,name in config['DIALOG_TYPES'].iteritems() %}-->
+                                <!--<option value="{{ dialog_type }}">{{ name }}</option>-->
+                            <!--{% endfor %}-->
+                        <!--</select>-->
+                        <!--<br/>-->
+                        <!--<textarea name="dialog_solution" id="dialog_solution"-->
+                                  <!--style="width: 210px;height: 50px;margin-top: 10px" placeholder="解决方案"></textarea>-->
+
+                    <!--</div>-->
+                    <!--<div class="span4">-->
+                        <!--<textarea name="dialog_content" id="dialog_content"-->
+                                  <!--style="width:265px;height:90px;background-color:#f5f3ef;overflow-y: auto"-->
+                                  <!--placeholder="沟通内容"></textarea>-->
+                    <!--</div>-->
+                    <!--<div class="span5">-->
+                        <!--<div class="input-prepend">-->
+                            <!--<span class="add-on">员工说：</span>-->
+                            <!--<input name="yg" type="text" data-person="员工" class="say"-->
+                                   <!--style="background-color: #fff">-->
+                        <!--</div>-->
+                        <!--<div class="input-prepend">-->
+                            <!--<span class="add-on">客户说：</span>-->
+                            <!--<input name="kh" type="text" data-person="客户" class="say"-->
+                                   <!--style="background-color: #fff">-->
+                        <!--</div>-->
+                        <!--<div class="input-prepend space">-->
+                            <!--<span class="add-on">录音编号：</span>-->
+                            <!--<input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">-->
+                        <!--</div>-->
+                        <!--<a href="#" class="btn btn-success btn-mini" id="add_dialog">添加沟通记录</a>-->
+                    <!--</div>-->
             </div>
         </div>
     </div>
-<script>
+<script type="text/javascript">
 
     var show_shipping_address = function () {
         var req = $.ajax({
@@ -1198,4 +1424,4 @@ function show(id) {
 	}
 }
 </script>
-{% endblock %}
+{% endblock -%}

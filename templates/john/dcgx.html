@@ -1,0 +1,20 @@
+
+<table>
+{% for user in pagination %}
+<tr>
+<td>{{user.name}}</td>
+<td>{{ user.phones|join('<br/>')|safe }}</td>
+<td>
+    {% for a in user.addresses %}
+    {{ a.province }}-{{ a.city }}
+    {% endfor %}
+</td>
+<td>{{user.remark}}</td>
+<td>
+    {% for a in user.dialogs %}
+    {{ a.content|safe }}
+    {% endfor %}
+</td>
+</tr>
+{% endfor %}
+</table>

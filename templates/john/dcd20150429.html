@@ -1,0 +1,11 @@
+
+<table>
+{% for user in pagination %}
+<tr>
+<td>{{user.name}}</td>
+<td>{{ user.phones|join('<br/>')|safe }}<br/>{{ user.tels|join('<br/>')|safe }}</td>
+<td>{{ user.operator.nickname }}</td>
+<td>{{ config['USER_ORIGINS'][user.origin] }}</td>
+</tr>
+{% endfor %}
+</table>

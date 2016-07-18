@@ -1,0 +1,1236 @@
+{% extends "layout.html" %}
+{% from "_macro.html" import assign_log_output %}
+{% set category='user' %}
+{% block title %}查看客户资料 - {{ user.name }}{% endblock %}
+{%- block css -%}
+    {{ super() }}
+    <style type="text/css">
+        .navbar-fixed-top hr{
+            margin: 0;
+        }
+        .accordion-group {
+            margin-top: 15px;
+        }
+
+        .accordion-heading {
+            background-color: #fcf8e3;
+        }
+
+        .accordion-heading a {
+            padding: 0;
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+
+        }
+
+        .accordion-inner {
+            padding-left: 20px;
+            padding-bottom: 5px;
+            padding-top: 15px;
+            background-color: #fcfcfc;
+        }
+
+        .table {
+        }
+
+        .table tr td {
+            font-size: 14px;
+        }
+
+        .accordion-inner table tr td {
+            color: #666;
+            text-align: left;
+        }
+
+        .table-entries td {
+            font-size: 12px;
+            border-width: 0;
+            background-color: transparent;
+            padding: 0;
+            padding-bottom: 4px;
+            padding-top: 4px;
+        }
+
+        .table-entries code {
+            color: #666;
+        }
+
+        .table .title {
+            text-align: right;
+            padding-right: 15px;
+            background-color: #f5f3ef;
+            width: 110px;
+        }
+
+        .table th {
+            background-color: #f7f7f7;
+        }
+
+        .table-history {
+            font-size: 12px;
+        }
+
+        pre {
+            margin: 0;
+            padding: 0;
+            padding-left: 5px;
+            background-color: transparent;
+            border-width: 0;
+            border-left: 4px solid #e0f2be;
+        }
+
+        .say{
+            width: 420px;
+            max-width: 520px;
+        }
+
+    </style>
+
+{%- endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+
+    /*   提交表单   */
+    function save() {
+        var add_btn = $('.btn-primary');
+
+
+        add_btn.attr('disabled', true);
+        //validate form
+        var values = [];
+        //values.push({name: 'entries', value: JSON.stringify(Entry.data())});
+        values.push({name: 'dlb_type', value: $('#dlb_type').val()});
+        values.push({name: 'dlb_valid', value: $('#dlb_valid').val()});
+        values.push({name: 'dlb_new', value: $('#dlb_new').val()});
+        values.push({name: 'dlb_connect', value: $('#dlb_connect').val()});
+		
+		var perms = [];
+            $('li input[type="checkbox"]:checked').each(function(){
+			perms.push($(this).attr('id'));
+		});
+		values.push({name: 'orgin', value: JSON.stringify(perms)});
+			
+        var req = $.ajax({
+            url: "{{ url_for('admin.savedlb_user',user_id=user.user_id) }}",
+            dataType: 'json',
+            type: 'POST',
+            data: $.param(values)});
+
+        req.done(function (data) {
+            if (data.result == true) {
+                alert('保存资料成功');
+				add_btn.attr('disabled', true);
+				//show_success('保存资料成功！');
+                //update_order_link();
+            }
+            else {
+                alert('保存资料失败');
+				add_btn.attr('disabled', true);
+                //show_err(data.error);
+            }
+        });
+        req.fail(function (request, status, err) {
+			alert('发生未知错误，请与管理员联系!');
+			add_btn.attr('disabled', true);
+            //show_err('发生未知错误，请与管理员联系!');
+        });
+        req.always(function () {
+            add_btn.attr('disabled', false);
+        });
+        return false;
+    }
+function showdialog(page){
+	
+	var req = $.ajax({
+		url: '{{ url_for('admin.user_dialogs',user_id=user.user_id) }}?page='+page,
+		dataType: "json",
+		cache: false,
+		type: 'GET'
+	});
+	req.done(function (data) {
+		var dialogs = data.result;
+		if (!$.isEmptyObject(dialogs)) {
+			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+			for (var i in dialogs) {
+				dialog = dialogs[i];
+				html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
+			}
+			html += '</tbody></table>';
+			html += data.pages;
+			$('#dialog_history').html(html);
+			$('#dialog_nums').html(dialogs.length);
+		}
+		else {
+			$('#dialog_history').html('无沟通记录');
+			$('#dialog_nums').html(0);
+		}
+	});
+}
+$(function () {
+
+	
+    $('#dialog_type').select2({
+        width: '220px'
+    });
+
+	{% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    $('#dlb_type').select2({
+        placeholder: '类型',
+        width: '125px'
+    });
+    $('#dlb_valid').select2({
+        placeholder: '是否有效',
+        width: '135px'
+    });
+    $('#dlb_new').select2({
+        placeholder: '是否新客户',
+        width: '125px'
+    });
+    $('#dlb_connect').select2({
+        placeholder: '是否接通',
+        width: '135px'
+    });
+	$('#dlb_type').val('{{user.dlb_type}}').change();
+	$('#dlb_valid').val('{{user.dlb_valid}}').change();
+	$('#dlb_new').val('{{user.dlb_new}}').change();
+	$('#dlb_connect').val('{{user.dlb_connect}}').change();
+	{%endif %}
+	
+    $('input.say').keypress(function (e) {
+        if (e.which == 13) {
+            var new_txt = $(this).val();
+            if (new_txt == '') {
+                if ($(this).attr('name') == 'yg') {
+                    $('input[name=kh]').focus();
+                }
+                else {
+                    $('input[name=yg]').focus();
+                }
+                return false;
+            }
+            var person = $(this).data('person');
+            var _area = $('textarea[name=dialog_content]');
+            var text = _area.val();
+            if (text != '') {
+                text += '\n';
+            }
+            text += person + '说：' + new_txt;
+            _area.val(text);
+            _area.scrollTop(_area[0].scrollHeight - _area.height());
+            $(this).val(null);
+            if ($(this).attr('name') == 'yg') {
+                $('input[name=kh]').focus();
+            }
+            else {
+                $('input[name=yg]').focus();
+            }
+            return false;
+        }
+    });
+
+	
+    var Dialog = {
+        update: function () {
+            var req = $.ajax({
+                url: '{{ url_for('admin.user_dialogs',user_id=user.user_id) }}',
+                dataType: "json",
+                cache: false,
+                type: 'GET'
+            });
+            req.done(function (data) {
+                var dialogs = data.result;
+                if (!$.isEmptyObject(dialogs)) {
+                    var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th style="width:110px">时间</th><th style="width:60px">沟通类型</th><th>沟通内容</th><th>解决方案</th><th>录音编号</th><th style="width:60px">操作员</th></tr></thead><tbody>';
+                    for (var i in dialogs) {
+                        dialog = dialogs[i];
+                        html += '<tr><td>' + dialog.created + '</td><td>' + dialog.type_name + '</td><td><pre>' + dialog.content + '</pre></td><td><pre>' + dialog.solution + '</pre></td><td>' + dialog.record_number + '</td><td>' + dialog.op_name + '</td></tr>';
+                    }
+                    html += '</tbody></table>';
+					html += data.pages;
+                    $('#dialog_history').html(html);
+                    $('#dialog_nums').html(dialogs.length);
+                }
+                else {
+                    $('#dialog_history').html('无沟通记录');
+                    $('#dialog_nums').html(0);
+                }
+            });
+        },
+        add: function () {
+            var solution = escape_html($('#dialog_solution').val());
+            var content = escape_html($('#dialog_content').val());
+            var record_number = escape_html($('#record_number').val());
+            var type = $('#dialog_type').val();
+
+            if (content == '') {
+                bootbox.alert('沟通内容不能为空！');
+                return false;
+            }
+
+            if (type == '') {
+                bootbox.alert('请选择沟通的类型！');
+                return false;
+            }
+
+            var req = $.ajax({
+                url: '{{ url_for('admin.add_dialog',user_id=user.user_id) }}',
+                dataType: "json",
+                type: 'POST',
+                data: {solution: solution, content: content,record_number: record_number, type: type}
+            });
+
+            req.done(function (data) {
+                if (data.result == true) {
+                    showdialog(1);
+                    $('#dialog_solution').val(null);
+                    $('#dialog_content').val(null);
+                }
+                else {
+                    bootbox.alert('添加沟通记录失败：' + data.error);
+                }
+            });
+            req.fail(function (request, status, error) {
+                bootbox.alert(error);
+            });
+            return false;
+        }
+    };
+
+    showdialog(1);
+
+    $('a#add_dialog').click(Dialog.add);
+
+    $('#expect_over').click(function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.complete_user_expect',user_id=user.user_id) }}',
+            dataType: "json",
+            type: 'POST'
+        });
+
+        req.done(function (data) {
+            if (data.result == true) {
+                $('#user_expect').hide();
+            }
+            else {
+                bootbox.alert('发生错误：' + data.error);
+            }
+        });
+        req.fail(function (request, status, error) {
+            bootbox.alert(error);
+        });
+        return false;
+    });
+	//show_shipping_address();
+});
+</script>
+{%- endblock %}
+
+
+{%- block main -%}
+    <div class="accordion" id="accordion2" style="margin-bottom: 140px">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+                    <i class="icon-chevron-down"></i> 客户信息
+                </a>
+            </div>
+            <div id="collapseOne" class="accordion-body collapse in">
+                <div class="accordion-inner">
+                    {% if user.expect_time %}
+                        <div class="alert alert-info" id="user_expect">
+                            预约时间：<span style="font-weight:bolder;"> {{ user.expect_time }}</span>
+                        </div>
+                    {% endif %}
+                    <table class="table table-bordered user_info">
+                        <tr>
+                            <td class="title">客户编码</td>
+                            <td style="width: 360px">{{ user.user_id }}{% if user.remark %} <code>{{ user.remark }}</code> {% endif %}{% if user.user_type==1 %}
+                                <code style="color:orangered">{{ user.label }}</code>{% endif %}</td>
+                            <td class="title">归属员工</td>
+                            <td>{% if user.assign_operator_id %}
+                                <span style="color:darkblue">{{ user.assign_operator.nickname }}</span>
+                                <span style="color: #a0a0a0;margin-left:20px">{{ user.assign_remain_info }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="title">客户姓名</td>
+                            <td>{{ user.name }}</td>
+                            <td class="title">性别</td>
+                            <td>{{ user.gender }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">座机号码</td>
+                            <td>
+                                {{ user.tels|join('<br/>')|safe }}
+                            </td>
+                            <!--<td class="title">来源</td>-->
+                            <!--<td>{{ config['USER_ORIGINS'][user.origin] }}-->
+                            <!--<span style="color: #a0a0a0;margin-left:20px">-->
+                                <!--{% for m in (user.m1,user.m2,user.m3,) %}-->
+                                    <!--{% if m %} {% if not loop.first %}<i class="icon-arrow-right"></i>{% endif %} {{ m }}{% endif %}-->
+                                <!--{% endfor %}-->
+                            <!--</span>-->
+                            <!--</td>-->
+                            <td class="title">职业</td>
+                            <td>{{ user.profession|default('-',true) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">手机号码</td>
+                            <td>
+                                {{ user.phones|join('<br/>')|safe }}
+                            </td>
+                            <!--<td class="title">客户类型</td>-->
+                            <!--<td><code {% if user.user_type==2 %}style="color:darkcyan"-->
+                                      <!--{% elif user.user_type==4 %}style="color:#000000"{% endif %}>{{ user.type_name }}</code>-->
+                            <!--</td>-->
+                            <td class="title">年龄</td>
+                            <td>{{ user.ages }}岁,{{ config['USER_AGES'][user.ages] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">QQ</td>
+                            <td></td>
+                            <!--<td class="title">意向等级</td>-->
+                            <!--<td><strong>{{ user.intent_level }}</strong>产品意向：{{ config['PRODUCT_INTENTION'][user.product_intention] }}</td>-->
+                            <td class="title">生日</td>
+                            <td>{{ user.birthday|default('-',true) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">微信</td>
+                            <td></td>
+                            <!--<td class="title">出生日期</td>-->
+                            <!--<td>{{ user.birthday|default('-',true) }}</td>-->
+                            <!--<td class="title">收入情况</td>-->
+                            <!--<td>{{ config['USER_INCOME_CONFIG'][user.income] }}</td>-->
+                        </tr>
+                        <tr>
+                            <td class="title">新老客户</td>
+                            <td>
+                                {% if user.is_new == 0 %}新客户
+								{%else%}老客户,复购次数{{ user.fugou }}
+								{%endif%}
+                            </td>
+                            <td class="title">病症</td>
+                            <td>{{ user.disease }}</td>
+                        </tr>
+                        {% if user.qxhdm_user_id > 0 %}
+						<tr>
+                            <td class="title">购买情况</td>
+                            <td colspan="3">{{ user.purchases }}</td>
+                        </tr>
+						{%endif%}
+                        <tr>
+                            <td class="title">关心问题</td>
+                            <td>
+                                {% for k in user.concerns %}
+                                    <code style="color: #a47e3c">{{ config['CONCERNS'][k] }}</code>
+                                {% endfor %}
+                            </td>
+                            <td class="title">从事行业</td>
+                            <td>{{ user.profession|default('-',true) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="title">身体状态</td>
+                            <td colspan="3">
+                                {% for k in user.orgin %}
+                                    <code style="color: #a47e3c">{{ config['USER_ORGIN_SUB'][k] }}</code>
+                                {% endfor %}
+                                {% if user.orgina %}
+                                <p>{{user.orgina}}</p>
+                                {%endif%}
+                                {% if user.orginb %}
+                                <p>{{user.orginb}}</p>
+                                {%endif%}
+                                {% if user.orginc %}
+                                <p>{{user.orginc}}</p>
+                                {%endif%}
+                                {% if user.orgind %}
+                                <p>{{user.orgind}}</p>
+                                {%endif%}
+                                {% if user.orgine %}
+                                <p>{{user.orgine}}</p>
+                                {%endif%}
+                                {% if user.history %}
+                                <p>{{user.history}}</p>
+                                {%endif%}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="title">TQ进线情况</td>
+                            <td colspan="3">
+                                {{ config['TQ_ORIGIN'][user.tq_origin] }},{{ config['TQ_TYPE'][user.tq_type] }}
+                            </td>
+                        </tr>
+                        {% if is_lz > 0 %}
+                        <tr>
+                            <td class="title">流转数据是否有效</td>
+                            <td colspan="3">
+                                {% if user.lz_valid == 1 %}有效
+								{%elif user.lz_valid == 2 %}无效
+								{%endif%}
+                            </td>
+                        </tr>
+                        {%endif%}
+                        <tr>
+                            <td class="title">微信情况</td>
+                            <td colspan="3">
+                                {% for k in user.weixin %}
+                                    <code style="color: #a47e3c">{{ config['WEIXINS'][k] }}</code>
+                                {% endfor %}
+                            </td>
+                        </tr>
+						{% if current_user.is_admin or current_user.role_id in config['DLB_ROLESS']  %}
+                        <tr>
+                            <td class="title">大礼包</td>
+                            <td colspan="3">
+                                {% if user.dlb_type %}
+                                	{{ config['DLB_TYPES'][user.dlb_type] }}
+                                    {% if user.dlb_valid==1 %}
+                                    有效
+                                    {%elif user.dlb_valid==2 %}无效
+                                    {%endif%}
+                                    {% if user.dlb_new==1 %}
+                                    新客户
+                                    {%elif user.dlb_new==2 %}老客户
+                                    {%endif%}
+                                    {% if user.dlb_connect==1 %}
+                                    接通
+                                    {%elif user.dlb_connect==2 %}不通
+                                    {%endif%}
+                                {%endif%}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% if current_user.team in ('A','A1','A2','B','B1','B2')  %}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#collapsedlb">
+                <i class="icon-chevron-down"></i> 大礼包
+            </a>
+        </div>
+        <div id="collapsedlb" class="control-group collapse in">
+            <div class="controls" style="padding:40px;">
+                <label style="float:left; padding-right:15px;">类型
+                <select name="dlb_type" id="dlb_type">
+                <option></option>
+                <option value="0">无</option>
+                {%- for k,v in config['DLB_TYPES'].iteritems() -%}
+                    <option value="{{ k }}">{{ v }}</option>
+                {%- endfor -%}
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否有效
+                <select name="dlb_valid" id="dlb_valid">
+                <option></option>
+                <option value="1">有效</option>
+                <option value="2">无效</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">新老客户
+                <select name="dlb_new" id="dlb_new">
+                <option></option>
+                <option value="1">新客户</option>
+                <option value="2">老客户</option>
+                </select></label>
+                <label style="float:left; padding-right:15px;">是否接通
+                <select name="dlb_connect" id="dlb_connect">
+                <option></option>
+                <option value="1">接通</option>
+                <option value="2">不通</option>
+                </select></label>
+            	<button type="submit" class="btn btn-primary" onclick="return save();">保存客户</button>
+            </div>
+        </div>
+    </div>
+	{% endif %}
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo2">
+                    <i class="icon-chevron-down"></i> 身体资料
+                </a>
+            </div>
+            <div id="collapseTwo2" class="control-group collapse in">
+                <div class="controls"></div>
+            </div>
+        </div>
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#dialogModule">
+                    <i class="icon-chevron-down"></i> 沟通记录 (<span id="dialog_nums"></span>)
+                </a>
+            </div>
+            <div id="dialogModule" class="accordion-body collapse in">
+                <div class="accordion-inner">
+                    <div class="row-fluid" style="padding-bottom: 0" id="dialog_history">
+                        <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/> 正在费力加载中...
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#orderInformation">
+                    <i class="icon-chevron-down"></i>订单信息
+                </a>
+            </div>
+            <div id="orderInformation" class="accordion-body collapse" style="margin-left:50px;">
+                <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#addressModule" onclick="show('shdz');">
+                    <i class="icon-chevron-down"></i> 收货地址
+                </a>
+            </div>
+            <div id="addressModule" class="accordion-body collapse">
+                <div class="accordion-inner">
+                    <div id="shipping_address"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                    border="0"/>正在费力加载中...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#integrationModule" onclick="show('integration');">
+                            <i class="icon-chevron-down"></i> 用户积分 (<span style="color:red">{{user.integration}}</span>)
+                        </a>
+                    </div>
+                    <div id="integrationModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div class="row-fluid">
+                                <div class="span10" id="integration_history">
+                                    <img src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#orderModule" onclick="show('lsgmjl');">
+                            <i class="icon-chevron-down"></i> 历史购买记录 (<span id="order_nums" style="color:red">{{ordercount}}</span>)
+                        </a>
+                    </div>
+                    <div id="orderModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div class="row-fluid">
+                                <div class="span7" id="order_history"><img
+                                        src="{{ url_for('static',filename="img/ajax-loader.gif") }}" border="0"/>正在费力加载中...
+                                </div>
+                                <div class="span5" id="order_item_history"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#voucherModule" onclick="show('voucher');">
+                            <i class="icon-chevron-down"></i> 代金券　(<span id="voucher_nums"></span>)
+                        </a>
+                    </div>
+                    <div id="voucherModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="voucher_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" href="#serviceDate">
+                    <i class="icon-chevron-down"></i>服务组数据
+                </a>
+            </div>
+            <div id="serviceDate" class="accordion-body collapse" style="margin-left:50px;">
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#orderyfModule" onclick="show('orderyf');">
+                            <i class="icon-chevron-down"></i> 药房复购预判　(<span id="orderyf_nums" style="color:red">{{orderyfcount}}</span>)
+                        </a>
+                    </div>
+                    <div id="orderyfModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="orderyf_history"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#khsldjModule" onclick="show('khsldj');">
+                            <i class="icon-chevron-down"></i> 空盒送礼登记　(<span id="khsldj_nums" style="color:red">{{khsldjcount}}</span>)
+                        </a>
+                    </div>
+                    <div id="khsldjModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="khsldj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" href="#fwtjfgModule" onclick="show('fwtjfg');">
+                            <i class="icon-chevron-down"></i> 推荐复购　(<span id="fwtjfg_nums"></span>)
+                        </a>
+                    </div>
+                    <div id="fwtjfgModule" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div id="fwtjfg_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                       border="0"/>正在费力加载中...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" href="#scratchdjModule" onclick="show('scratchdj');">
+                        <i class="icon-chevron-down"></i> 刮刮卡登记　(<span id="scratchdj_nums" style="color:red">{{scratchdjcount}}</span>)
+                    </a>
+                </div>
+                <div id="scratchdjModule" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                        <div id="scratchdj_list"><img src="{{ url_for('static',filename="img/ajax-loader.gif") }}"
+                                                   border="0"/>正在费力加载中...
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+{%- endblock -%}
+
+{% block sidebar -%}
+    {{ super() }}
+    <div style="font-size:12px;line-height: 18px;margin-top: 30px;text-align: right">
+        {% for log in assign_logs %}
+            <div style="border-bottom: #cccccc dashed 1px;margin-bottom: 8px;padding-right: 5px">{{ assign_log_output(log) }}</div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block ext_content %}
+
+    <div class="accordion-group  navbar navbar-fixed-bottom">
+        <div class="accordion-heading" style="background-color:#e0f2be">
+            <a class="accordion-toggle" data-toggle="collapse" href="#addDialogModule">
+                <i class="icon-chevron-down"></i> 增加沟通记录
+            </a>
+        </div>
+        <div id="addDialogModule" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <div class="row">
+                    <div class="span3">
+                        <select id="dialog_type" name="dialog_type">
+                            {% for dialog_type,name in config['DIALOG_TYPES'].iteritems() %}
+                                <option value="{{ dialog_type }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <br/>
+                        <textarea name="dialog_solution" id="dialog_solution"
+                                  style="width: 210px;height: 50px;margin-top: 10px" placeholder="解决方案"></textarea>
+
+                    </div>
+                    <div class="span4">
+                        <textarea name="dialog_content" id="dialog_content"
+                                  style="width:265px;height:90px;background-color:#f5f3ef;overflow-y: auto"
+                                  placeholder="沟通内容"></textarea>
+                    </div>
+                    <div class="span5">
+                        <div class="input-prepend">
+                            <span class="add-on">员工说：</span>
+                            <input name="yg" type="text" data-person="员工" class="say"
+                                   style="background-color: #fff">
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on">客户说：</span>
+                            <input name="kh" type="text" data-person="客户" class="say"
+                                   style="background-color: #fff">
+                        </div>
+                        <div class="input-prepend space">
+                            <span class="add-on">录音编号：</span>
+                            <input name="record_number" id="record_number" type="text" data-person="录音编号" class="say">
+                        </div>
+                        <a href="#" class="btn btn-success btn-mini" id="add_dialog">添加沟通记录</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+
+    var show_shipping_address = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_address_api',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var addresses = data.addresses;
+            if (!$.isEmptyObject(addresses)) {
+                var html = '<table class="table table-bordered table-condensed table-history"><thead><tr><th>收货人</th><th>手机号</th><th>电话</th><th>收货地址</th><th>邮编</th></tr></thead><tbody>';
+                $.each(addresses, function () {
+                    html += '<tr><td>' + this.ship_to + '</td><td>'+hide_phone(this.phone)+'</td><td>'+hide_phone(this.tel)+'</td><td>' + this.format_address + '</td><td>' + this.postcode + '</td></tr>';
+                });
+
+                html += '</tbody></table>';
+                $('#shipping_address').html(html);
+            }
+            else {
+                $('#shipping_address').html('无收货地址！');
+            }
+        });
+    };
+    //show_shipping_address();
+
+	var show_integration = function () {
+		var req = $.ajax({
+			url: '{{ url_for('admin.user_integration',user_id=user.user_id) }}',
+			dataType: "json",
+			cache: false,
+			type: 'GET'
+		});
+		req.done(function (data) {
+			var sms_list = data.result;
+			if (!$.isEmptyObject(sms_list)) {
+				var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>积分</th><th>类型</th><th>备注</th><th>操作人</th><th>时间</th></tr></thead><tbody>';
+				for (var i in sms_list) {
+					sms = sms_list[i];
+					html += '<tr><td>' + sms.integration + '</td><td>' + sms.type + '</td><td>' + sms.mero + '</td><td>' + sms.operator + '</td><td>' + sms.created + '</td></tr>';
+				}
+				html += '</tbody></table>';
+				$('#integration_history').html(html);
+			}
+			else {
+				$('#integration_history').html('无积分记录');
+			}
+		});
+	};
+
+    var show_orders = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_orders',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var orders = data.orders;
+            if (!$.isEmptyObject(orders)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>订单编号</th><th>付款方式</th><th>金额</th><th>状态</th><th>员工</th><th>下单时间</th><th></th></tr></thead><tbody>';
+                for (var i in orders) {
+                    order = orders[i];
+                    html += '<tr><td>' + order.id + '</td><td>' + order.payment + '</td><td>' + order.fee + '</td><td>' + order.status + '</td><td>' + order.op_name + '</td><td>' + order.time + '</td><td><a href="/order/detail/' + order.id + '">查看详情</a></td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#order_history').html(html);
+                $('#order_nums').html(orders.length);
+            }
+            else {
+                $('#order_history').html('尚无订购记录！');
+                $('#order_nums').html(0);
+            }
+
+            var order_items = data.order_items;
+            if (!$.isEmptyObject(order_items)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>商品名称</th><th>单价</th><th>订购数量</th><th>金额</th></tr></thead><tbody>';
+                for (var i in order_items) {
+                    order_item = order_items[i];
+                    html += '<tr><td>' + order_item.name + '</td><td>' + order_item.price + '</td><td>' + order_item.quantity + '</td><td>' + order_item.fee + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#order_item_history').html(html);
+            }
+        });
+    };
+    //show_orders();
+
+    var show_sms = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_sms',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>短信内容</th><th>状态</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.status + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#sms_history').html(html);
+                $('#sms_nums').html(sms_list.length);
+            }
+            else {
+                $('#sms_history').html('无短信记录');
+                $('#sms_nums').html(0);
+            }
+        });
+    };
+
+    //show_sms();
+
+
+    var show_voucher = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_voucher',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>代金券</th><th>备注</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.status + '</td></tr>';
+                }
+                html += '</tbody></table>';
+                $('#voucher_history').html(html);
+                $('#voucher_nums').html(sms_list.length);
+            }
+            else {
+                $('#voucher_history').html('无代金券');
+                $('#voucher_nums').html(0);
+            }
+        });
+    };
+    //show_voucher();
+	
+    var show_orderyf = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_orderyf',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th><th>操作</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td>';
+					html += "<td><a onclick='fgypdel(" + sms.id + ")'>删除</a></td></tr>";
+                }
+                html += '</tbody></table>';
+                $('#orderyf_history').html(html);
+                $('#orderyf_nums').html(sms_list.length);
+            }
+            else {
+                $('#orderyf_history').html('无药房复购预判');
+                $('#orderyf_nums').html(0);
+            }
+        });
+    };
+    //show_orderyf();
+
+
+var show_scratchdj = function () {
+	var req = $.ajax({
+		url: '{{ url_for('admin.user_show_scratchdj',user_id=user.user_id) }}',
+		dataType: "json",
+		cache: false,
+		type: 'GET'
+	});
+	req.done(function (data) {
+		var sms_list = data.result;
+		if (!$.isEmptyObject(sms_list)) {
+			var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>刮刮卡编码</th><th>登记时间</th><th>操作</th></tr></thead><tbody>';
+			for (var i in sms_list) {
+				sms = sms_list[i];
+				html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.date + '</td>';
+				html += "<td>&nbsp;<a href='#' onclick='scratchdjqx(" + sms.id + ");return false;'>删除</a></td></tr>";
+			}
+			html += '</tbody></table>';
+			$('#scratchdj_list').html(html);
+			$('#scratchdj_nums').html(sms_list.length);
+		}
+		else {
+			$('#scratchdj_list').html('无刮刮卡登记');
+			$('#scratchdj_nums').html(0);
+		}
+	});
+};
+    var show_khsldj = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_show_khsldj',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>空盒编码</th><th>礼品名称</th><th>礼品数量</th><th>药房地址</th><th>登记时间</th><th>是否领取</th><th>操作</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.qxhcode + '</td><td>' + sms.giftname + '</td><td>' + sms.giftcount + '</td><td>' + sms.province + sms.city + sms.district + sms.pharmacyaddress + '</td><td>' + sms.date + '</td>';
+					html += '<td>';
+					if(sms.receive){
+						var receives = '已领取';
+						if(sms.receive == '2'){receives = '拒接换购';}
+						html += receives;
+					}else{
+						if(!sms.status){
+							html += '无效';
+						}else{
+							//html += "未领取&nbsp;<a onclick='khsllq(" + sms.id + ")'>点此确认客户领取</a>&nbsp;<a onclick='khsldjqx(" + sms.id + ")'>点此取消</a>";
+						}
+					}
+					html += '</td>';
+					html += "<td><a onclick='khsldel(" + sms.id + ")'>删除</a></td></tr>";
+                }
+                html += '</tbody></table>';
+                $('#khsldj_list').html(html);
+                $('#khsldj_nums').html(sms_list.length);
+            }
+            else {
+                $('#khsldj_list').html('无空盒送礼登记');
+                $('#khsldj_nums').html(0);
+            }
+        });
+    };
+    //show_khsldj();
+
+    var show_fwtjfg = function () {
+        var req = $.ajax({
+            url: '{{ url_for('admin.user_show_fwtjfg',user_id=user.user_id) }}',
+            dataType: "json",
+            cache: false,
+            type: 'GET'
+        });
+        req.done(function (data) {
+            var sms_list = data.result;
+            if (!$.isEmptyObject(sms_list)) {
+                var html = '<table class="table table-bordered table-condensed table-hover table-history"><thead><tr><th>时间</th><th>大</th><th>中</th><th>小</th><th>芪枣</th><th>操作</th></tr></thead><tbody>';
+                for (var i in sms_list) {
+                    sms = sms_list[i];
+                    html += '<tr><td>' + sms.message + '</td><td>' + sms.bigcount + '</td><td>' + sms.mediumcount + '</td><td>' + sms.smallcount + '</td><td>' + sms.qizaocount + '</td>';
+					html += "<td><a onclick='tjfgdel(" + sms.id + ")'>删除</a></td></tr>";
+                }
+                html += '</tbody></table>';
+                $('#fwtjfg_list').html(html);
+                $('#fwtjfg_nums').html(sms_list.length);
+            }
+            else {
+                $('#fwtjfg_list').html('无推荐复购');
+                $('#fwtjfg_nums').html(0);
+            }
+        });
+    };
+
+function scratchdjqx(id){
+	bootbox.confirm('确认取消吗,确认取消后将不能更改!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.scratchdjqx') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+function khsldel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.khsldel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+function tjfgdel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.tjfgdel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+function fgypdel(id){
+	bootbox.confirm('确认删除吗,删除后将不能恢复!', function (result) {
+		if (result != true) {
+			return;
+		}
+		var req = $.ajax({
+			url: '{{ url_for('admin.fgypdel') }}',
+			dataType: "json",
+			type: 'POST',
+			data: {id: id}
+		});
+
+		req.done(function (data) {
+			if (data.result == true) {
+				window.location.reload();
+			}
+			else {
+				bootbox.alert('发生错误：' + data.error);
+			}
+		});
+		req.fail(function (request, status, error) {
+			bootbox.alert(error);
+		});
+	});
+}
+    //show_fwtjfg();
+var shdz = 0;
+var integration = 0;
+var lsgmjl = 0;
+var sms = 0;
+var voucher = 0;
+var orderyf = 0;
+var khsldj = 0;
+var fwtjfg = 0;
+var scratchdj = 0;
+//$('a#addressModule').click(show);
+function show(id) {
+//	alert(this);
+	if(id == 'shdz'){
+		if(shdz){
+		}else{
+			shdz = 1;
+			show_shipping_address();
+		}
+	}
+	if(id == 'integration'){
+		if(integration){
+		}else{
+			integration = 1;
+			show_integration();
+		}
+	}
+	if(id == 'lsgmjl'){
+		if(lsgmjl){
+		}else{
+			lsgmjl = 1;
+			show_orders();
+		}
+	}
+	if(id == 'sms'){
+		if(sms){
+		}else{
+			sms = 1;
+			show_sms();
+		}
+	}
+	if(id == 'voucher'){
+		if(voucher){
+		}else{
+			voucher = 1;
+			show_voucher();
+		}
+	}
+	if(id == 'orderyf'){
+		if(orderyf){
+		}else{
+			orderyf = 1;
+			show_orderyf();
+		}
+	}
+	if(id == 'khsldj'){
+		if(khsldj){
+		}else{
+			khsldj = 1;
+			show_khsldj();
+		}
+	}
+	if(id == 'fwtjfg'){
+		if(fwtjfg){
+		}else{
+			fwtjfg = 1;
+			show_fwtjfg();
+		}
+	}
+	if(id == 'scratchdj'){
+		if(scratchdj){
+		}else{
+			scratchdj = 1;
+			show_scratchdj();
+		}
+	}
+}
+</script>
+{% endblock %}

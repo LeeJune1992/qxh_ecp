@@ -8,6 +8,12 @@
                 placeholder:'快递公司',
                 allowClear:true
             })
+            $('#user_origin').select2({
+                width:'150px',
+                placeholder:'客户来源',
+                allowClear:true
+            })
+            
         });
     </script>
 {% endblock %}
@@ -19,6 +25,14 @@
             {%- for k,d in config['EXPRESS_CONFIG'].iteritems() -%}
                 <option value="{{ k }}" {% if k==express_id %}selected{% endif %}>{{ d['name'] }}</option>
             {%- endfor -%}
+        </select>
+        <select id="user_origin" name="user_origin">
+           {% set user_origin = request.args.get('user_origin',0)|int %}
+           <option value=""></option>
+              {% set user_origin = request.args.get('user_origin',0)|int %}
+              {%- for k,v in config['USER_ORIGINS'].iteritems() -%}
+                  <option value="{{ k }}" {% if k==user_origin %}selected="selected"{% endif %}>{{ v }}</option>
+              {%- endfor -%}                       
         </select>
         <input id="start_date" name="start_date" class="timepicker" type="text" value="{{ request.args['start_date'] }}" placeholder="开始时间" />
         <input id="end_date" name="end_date" class="timepicker" type="text" value="{{ request.args['end_date'] }}" placeholder="结束时间" />
@@ -41,6 +55,7 @@
             <th>订单类型</th>
             <th>快递单号</th>
             <th>客户姓名</th>
+            <th>客户来源</th>
             <th>省</th>
             <th>市</th>
             <th>县/地区</th>
@@ -65,6 +80,7 @@
                 <td rowspan="{{ num + 1 }}">{{ d['ordertype'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['enum'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['ship_to'] }}</td>
+                <td rowspan="{{ num + 1 }}">{{ config['USER_ORIGINS'][d['origin']] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['province'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['city'] }}</td>
                 <td rowspan="{{ num + 1 }}">{{ d['district'] }}</td>

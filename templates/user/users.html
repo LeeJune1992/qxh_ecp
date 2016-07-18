@@ -20,7 +20,7 @@
             background-color: #faf2cc;
         }
 {#        table td{#}
-{#            padding: 0;#}
+{#            padding: 0;#} 
 {#            margin: 0;#}
 {#        }#}
     </style>
@@ -522,7 +522,7 @@
                 <td><code>{{ user.user_type|user_label(user.order_num,user.label_id) }}</code></td>
                 {% endif %}
                 <td>{%if current_user and current_user.action('view_user_phone')%}
-                {{user.phone}}{% if user.phone2 %}<br />{{user.phone2}}{% endif %}
+                {% if user.phone %}{{user.phone}}{% endif %}{% if user.phone2 %}<br />{{user.phone2}}{% endif %}
                 {% else %}
                 {{user.phone|hide_phone}}{% if user.phone2 %}<br />{{user.phone2|hide_phone}}{% endif %}
                 {% endif %}
@@ -533,7 +533,7 @@
                 {{user.tel|hide_phone}}{% if user.tel2 %}<br />{{user.tel2|hide_phone}}{% endif %}
                 {% endif %}
                 </td>
-                <td>{{ user.intent_level }}</td>
+                <td>{{ user.intent_level[:1] }}</td>
                 <td>{{ user.join_time |format_date}}</td>
                 <td>{{ config['USER_ORIGINS'][user.origin] }}</td>
             	{% if 'member' in show_queries %}
@@ -570,7 +570,7 @@
                 <td>
                     {{ user.last_dialog_time|default('',true) }}
                     {% if user.expect_time %}<br/>
-                        <code style="color: blue">{{ user.expect_time|format_date('%m-%d %H:%M') }}</code>
+                        {% if user.expect_time|format_date('%Y-%m-%d') == times %}<code style="color: blue">{% else %}<code style="color: red">{% endif %}{{ user.expect_time|format_date('%m-%d %H:%M') }}</code>
                     {% endif %}
 
             </tr>

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% set category='user' %}
+{% block title %}介绍人管理{% endblock %}
+{% block js -%}
+{{ super() }}
+<script type="text/javascript">
+    function show_err(err) {
+            $('#error').show();
+            $('#error p').empty().html(err);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+    function show_success(info) {
+        $('#success').show();
+        $('#success p').empty().html(info);
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+    };
+
+    $('form').submit(function(){
+        var add_btn = $('button[type="submit"]');
+        var userID1 = $('#userID1').val()
+        var userID2 = $('#userID2').val()
+        if(userID1=='' || userID1==null){
+            show_err('介绍人不能为空！');
+            $('#userID1').focus();
+            return false;
+        }
+        if(userID2=='' || userID2==null){
+            show_err('转介绍人不能为空！')
+            $('#userID2').focus();
+            return false;
+        }
+
+        var req = $.ajax({
+            url: "/user/introduce_add",
+            dataType: "json",
+            type: "POST",
+            data: {userID1:userID1,userID2:userID2}
+        });
+
+        req.done(function(data){
+            if(data.result == true){
+                show_success(data.suc);
+                $('#userID1').val('');
+                $('#userID2').val('')
+            }else{
+                show_err(data.error);
+            }
+        });
+        return false;
+    });
+
+</script>
+{%- endblock %}
+{% block main %}
+    <form action="" method="post" class="form-search inline well well-small">
+        <div class="alert alert-block alert-error fade in" id="error" style="display: none">
+            <button type="button" class="close" onclick="$('#error').hide();">&times;</button>
+            <p></p>
+        </div>
+        <div class="alert alert-block alert-success fade in" id="success" style="display: none">
+            <button type="button" class="close" onclick="$('#success').hide();">&times;</button>
+            <p></p>
+        </div>
+        <div class="control-group">
+            <label class="control-label">介绍人</label>
+            <div class="controls">
+                <input type="text" name="userID1" id="userID1" placeholder="介绍人ID"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">转介绍人</label>
+            <div class="controls">
+                <input type="text" name="userID2" id="userID2" placeholder="转介绍人ID"/>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success" style="margin-left: 10px">确认</button>
+    </form>
+
+{% endblock %}
